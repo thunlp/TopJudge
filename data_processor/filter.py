@@ -4,14 +4,10 @@ import os
 import json
 
 in_path = "/disk/mysql/law_data/origin_split/"
-out_path = "/disk_mysql/law_data/formed_data"
+out_path = "/disk/mysql/law_data/formed_data"
 mid_text = u"  _(:з」∠)_  "
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
-
-print(len(title_list))
-
-gg
 
 
 def draw_out(in_path, out_path):
@@ -20,6 +16,8 @@ def draw_out(in_path, out_path):
 
     temped = None
     data_str = None
+    done_num = 0
+    gg_num = 0
     for line in inf:
         try:
             cnt = line.count(mid_text)
@@ -34,10 +32,15 @@ def draw_out(in_path, out_path):
                 else:
                     continue
             else:
+                #print(line)
+                gg_num += 1
+                print(gg_num)
+                #gg
                 temped = None
                 continue
 
             data_str = data_str.split(mid_text)
+            temped = None
 
             data = {}
 
@@ -47,13 +50,15 @@ def draw_out(in_path, out_path):
                 for a in data:
                     if data[a] == u"\\N":
                         data[a] = ""
+                data["document"] = data["document"].replace("\\","")
                 if data["document"] == "":
-                    data["docuemnt"] = "{\"content\":\"\"}"
+                    data["document"] = "{\"content\":\"\"}"
                 data["documnet"] = json.loads(data["document"])
 
-                print(json.dumps(data),file=ouf)
-
-                break
+                print(json.dumps(data,ensure_ascii=False),file=ouf)
+                done_num += 1
+                if done_num % 100000 == 0:
+                    print(done_num)
             else:
                 gg
 
@@ -63,7 +68,7 @@ def draw_out(in_path, out_path):
 
 
 def work(from_id, to_id):
-    for a in range(from_id, to_id):
+    for a in range(int(from_id), int(to_id)):
         print(str(a) + " begin to work")
         draw_out(os.path.join(in_path, str(a)), os.path.join(out_path, str(a)))
         print(str(a) + " work done")
@@ -73,8 +78,6 @@ num_file = 1
 num_process = 1
 
 if __name__ == "__main__":
-    gg
-
     import multiprocessing
 
     process_pool = []
