@@ -3,8 +3,8 @@
 import os
 import json
 
-in_path = "/disk/mysql/law_data/origin_split/"
-out_path = "/disk/mysql/law_data/formed_data"
+in_path = "/disk/mysql/mysql/Law1/out.txt"
+out_path = "/disk/mysql/law_data/formed_data/0"
 mid_text = u"  _(:з」∠)_  "
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
@@ -14,33 +14,24 @@ def draw_out(in_path, out_path):
     inf = open(in_path, "r")
     ouf = open(out_path, "w")
 
-    temped = None
-    data_str = None
+    data_str = ""
     done_num = 0
     gg_num = 0
     for line in inf:
         try:
-            cnt = line.count(mid_text)
-            if cnt == 16:
-                data_str = line[:-1]
-            elif cnt == 9:
-                temped = line[:-1]
+            data_str += line[:-1]
+            cnt = data_str.count(mid_text)
+            if cnt == len(title_list) - 1:
+                pass
+            elif cnt < len(title_list) - 1:
                 continue
-            elif cnt == 7:
-                if not (temped is None):
-                    data_str = temped + line[:-1]
-                else:
-                    continue
-            else:
-                #print(line)
+            else
                 gg_num += 1
                 print(gg_num)
-                #gg
-                temped = None
+                gg
                 continue
 
             data_str = data_str.split(mid_text)
-            temped = None
 
             data = {}
 
@@ -50,15 +41,17 @@ def draw_out(in_path, out_path):
                 for a in data:
                     if data[a] == u"\\N":
                         data[a] = ""
-                data["document"] = data["document"].replace("\\","")
+                data["document"] = data["document"].replace("\\", "")
                 if data["document"] == "":
                     data["document"] = "{\"content\":\"\"}"
                 data["documnet"] = json.loads(data["document"])
 
-                print(json.dumps(data,ensure_ascii=False),file=ouf)
+                print(json.dumps(data, ensure_ascii=False), file=ouf)
                 done_num += 1
                 if done_num % 100000 == 0:
                     print(done_num)
+
+                data_str = ""
             else:
                 gg
 
@@ -78,6 +71,8 @@ num_file = 1
 num_process = 1
 
 if __name__ == "__main__":
+    draw_out()
+    """
     import multiprocessing
 
     process_pool = []
@@ -90,4 +85,4 @@ if __name__ == "__main__":
         a.start()
 
     for a in process_pool:
-        a.join()
+        a.join()"""
