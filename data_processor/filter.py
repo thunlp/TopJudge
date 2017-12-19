@@ -4,19 +4,23 @@ import os
 import json
 
 in_path = "/disk/mysql/mysql/Law1/out.txt"
-out_path = "/disk/mysql/law_data/formed_data/0"
+out_path = "/disk/mysql/law_data/formed_data/"
 mid_text = u"  _(:з」∠)_  "
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
+num_file = 20
 
 
 def draw_out(in_path, out_path):
     inf = open(in_path, "r")
-    ouf = open(out_path, "w")
+    ouf = []
+    for a in range(0, num_file):
+        ouf.append(open(os.path.join(out_path, str(a)), "w"))
 
     data_str = ""
     done_num = 0
     gg_num = 0
+    count = 0
     for line in inf:
         try:
             data_str += line[:-1]
@@ -28,7 +32,6 @@ def draw_out(in_path, out_path):
             else:
                 gg_num += 1
                 print(gg_num)
-                gg
                 continue
 
             data_str = data_str.split(mid_text)
@@ -46,18 +49,21 @@ def draw_out(in_path, out_path):
                     data["document"] = "{\"content\":\"\"}"
                 data["documnet"] = json.loads(data["document"])
 
-                print(json.dumps(data, ensure_ascii=False), file=ouf)
+                print(json.dumps(data, ensure_ascii=False), file=ouf[count])
                 done_num += 1
+                count += 1
+                if count == num_file:
+                    count = 0
                 if done_num % 100000 == 0:
                     print(done_num)
-
-                data_str = ""
             else:
-                gg
+                continue
+
+            data_str = ""
 
         except Exception as e:
             print(e)
-            gg
+            data_str = ""
 
 
 def work(from_id, to_id):
@@ -67,11 +73,10 @@ def work(from_id, to_id):
         print(str(a) + " work done")
 
 
-num_file = 1
 num_process = 1
 
 if __name__ == "__main__":
-    draw_out(in_path,out_path)
+    draw_out(in_path, out_path)
     """
     import multiprocessing
 
