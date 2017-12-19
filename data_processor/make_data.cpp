@@ -12,11 +12,11 @@ FILE *f[100];
 
 int main()
 {
-	freopen("/data/disk1/private/guozhipeng/out1.txt","r",stdin);
+	freopen("/disk/mysql/mysql/Law1/out.txt","r",stdin);
 
 	for (int a=0;a<file_num;a++)
 	{
-		sprintf(djm,"%d",a);
+		sprintf(djm,"/disk/mysql/law_data/origin_split/%d",a);
 		f[a] = fopen(djm,"w");
 	}
 
@@ -27,10 +27,13 @@ int main()
 		fprintf(f[cnt],"%c",c);
 		if (c=='\n')
 		{
-			cnt++;
-			if (cnt==file_num) cnt=0;
 			line++;
-			if (line % 100000 == 0) printf("%d\n",line);
+			if (line % 100000 == 0) 
+			{
+				printf("%d\n",line);
+				cnt++;
+				if (cnt==file_num) cnt=0;
+			}
 		}
 	}
 
