@@ -25,7 +25,7 @@ def draw_out(in_path, out_path):
                 pass
             elif cnt < len(title_list) - 1:
                 continue
-            else
+            else:
                 gg_num += 1
                 print(gg_num)
                 gg
@@ -71,7 +71,7 @@ num_file = 1
 num_process = 1
 
 if __name__ == "__main__":
-    draw_out()
+    draw_out(in_path,out_path)
     """
     import multiprocessing
 
