@@ -3,3 +3,4 @@
 *.un~
 *~
 data_processor/make_data
+__pycache__

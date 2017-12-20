@@ -1,7 +1,7 @@
 import configparser
 
-#configFilePath = r"C:\work\law_pre\config\cnn_accusation_baseline.config"
-configFilePath = "/home/zhonghaoxi/law/config/cnn_accusation_baseline.config"
+configFilePath = r"C:\work\law_pre\config\cnn_accusation_baseline.config"
+# configFilePath = "/home/zhonghaoxi/law/config/cnn_accusation_baseline.config"
 config = configparser.RawConfigParser()
 config.read(configFilePath)
 
@@ -32,15 +32,15 @@ class Net(nn.Module):
         self.convs = nn.ModuleList(self.convs)
 
     def forward(self, x):
-        print(x.size())
         fc_input = []
         for conv in self.convs:
             fc_input.append(torch.max(conv(x), dim=2, keepdim=True)[0])
 
-        #for x in fc_input:
+        # for x in fc_input:
         #    print(x)
 
-        fc_input = torch.cat(fc_input, dim=1)
+        fc_input = torch.cat(fc_input, dim=1).view(-1, (
+        config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"))
 
         fc1_out = F.relu(self.fc1(fc_input))
         output = self.softmax(self.fc2(fc1_out))
@@ -72,7 +72,10 @@ train_data_loader = init_loader(batch_size)
 
 for epoch_num in range(0, epoch):
     running_loss = 0
+    cnt = 0
     for idx, data in enumerate(train_data_loader):
+        cnt += 1
+        print(cnt)
         input, label = data
         input, label = Variable(input), Variable(label)
 
@@ -85,7 +88,7 @@ for epoch_num in range(0, epoch):
 
         running_loss += loss.data[0]
 
-        if idx % output_time == output_time - 1:
+        if cnt % output_time == output_time - 1:
             print('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1, running_loss / 2000))
+                  (epoch_num + 1, idx + 1, running_loss / output_time))
             running_loss = 0.0
