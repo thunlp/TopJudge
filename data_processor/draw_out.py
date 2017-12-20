@@ -13,17 +13,18 @@ num_process = 1
 
 
 def draw_out(in_path, out_path):
+    print(in_path)
     inf = open(in_path, "r")
-    ouf = open(out_path,"w")
-
+    ouf = open(out_path, "w")
 
     cnt = 0
     for line in inf:
         try:
             data = json.loads(line)
-            data["document"] = json.loads(data["document"])
             if data["caseType"] == "1":
-                print(data["caseType"],data["document"]["content"][0:20])
+                print(data["caseType"], data["document"]["content"][0:20])
+                if "PJJG" in data["docuemnt"]:
+                    print(data["document"]["PJJG"])
             cnt += 1
             if cnt == 500:
                 break
@@ -38,6 +39,7 @@ def work(from_id, to_id):
         print(str(a) + " begin to work")
         draw_out(os.path.join(in_path, str(a)), os.path.join(out_path, str(a)))
         print(str(a) + " work done")
+
 
 if __name__ == "__main__":
     import multiprocessing
