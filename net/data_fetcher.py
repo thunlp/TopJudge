@@ -1,12 +1,13 @@
 import torch
 import random
 import torch.utils.data
+import torch.legacy as L
 
-data = []
-for a in range(0,1024):
-    data.append(torch.rand(1, 1, random.randint(1, 100), 100))
 
-loader = torch.utils.data.DataLoader(dataset=data,batch_size=16)
+def init_loader(batch_size):
+    data = []
+    for a in range(0, 1024):
+        data.append((torch.rand(1, 100, 100), random.randint(0, 3)))
+    loader = torch.utils.data.DataLoader(dataset=data, batch_size=batch_size)
 
-for batch in loader:
-    print(batch)
+    return loader
