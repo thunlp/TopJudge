@@ -3,8 +3,8 @@
 import os
 import json
 
-in_path = "/disk/mysql/law_data/critical_data/"
-out_path = "/disk/mysql/law_data/formed_data/"
+in_path = "/disk/mysql/law_data/temp_data/"
+out_path = "/disk/mysql/law_data/critical_data/"
 mid_text = u"  _(:з」∠)_  "
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
@@ -21,7 +21,12 @@ def draw_out(in_path, out_path):
     for line in inf:
         try:
             data = json.loads(line)
-            print(data["caseType"])
+            data["document"] = json.loads(data["document"])
+            if data["caseType"] == "1":
+                print(data["caseType"],data["document"]["content"][0:20])
+            cnt += 1
+            if cnt == 500:
+                break
 
         except Exception as e:
             print(e)

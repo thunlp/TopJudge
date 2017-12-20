@@ -47,7 +47,7 @@ def draw_out(in_path, out_path):
                 data["document"] = data["document"].replace("\\", "")
                 if data["document"] == "":
                     data["document"] = "{\"content\":\"\"}"
-                data["documnet"] = json.loads(data["document"])
+                data["document"] = json.loads(data["document"])
 
                 print(json.dumps(data, ensure_ascii=False), file=ouf[count])
                 done_num += 1
