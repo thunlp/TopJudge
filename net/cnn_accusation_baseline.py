@@ -1,6 +1,7 @@
 import configparser
 
-configFilePath = r"C:\work\law_pre\config\cnn_accusation_baseline.config"
+#configFilePath = r"C:\work\law_pre\config\cnn_accusation_baseline.config"
+configFilePath = "/home/zhonghaoxi/law/config/cnn_accusation_baseline.config"
 config = configparser.RawConfigParser()
 config.read(configFilePath)
 
@@ -34,10 +35,10 @@ class Net(nn.Module):
         print(x.size())
         fc_input = []
         for conv in self.convs:
-            fc_input.append(torch.max(conv(x), dim=2, keepdim=True))
+            fc_input.append(torch.max(conv(x), dim=2, keepdim=True)[0])
 
-        for x in fc_input:
-            print(type(x))
+        #for x in fc_input:
+        #    print(x)
 
         fc_input = torch.cat(fc_input, dim=1)
 
