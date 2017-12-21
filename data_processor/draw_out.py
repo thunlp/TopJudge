@@ -11,6 +11,11 @@ title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseT
 num_file = 1
 num_process = 1
 
+def parse(data):
+    result
+    if "PJJG" in data["document"]:
+
+
 
 def draw_out(in_path, out_path):
     print(in_path)
@@ -23,8 +28,8 @@ def draw_out(in_path, out_path):
             data = json.loads(line)
             if data["caseType"] == "1":
                 print(data["caseType"], data["document"]["content"][0:20])
-                if "PJJG" in data["docuemnt"]:
-                    print(data["document"]["PJJG"])
+
+                data["meta_info"] = parse(data)
             cnt += 1
             if cnt == 500:
                 break
