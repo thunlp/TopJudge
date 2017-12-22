@@ -12,7 +12,7 @@ mid_text = u"  _(:з」∠)_  "
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
 
-accusation_file = ""
+accusation_file = r"/home/zhx/law_pre/data_processor/accusation_list.txt"
 accusation_f = open(accusation_file, "r")
 accusation_list = json.loads(accusation_f.readline())
 
@@ -85,7 +85,7 @@ def parse_date_with_year_and_month_begin_from(s, begin, delta):
                     num2 = 1
                 num2 *= 10
             elif s[pos] == u"百" or s[pos] == u"千" or s[pos] == u"万":
-                print("1 " + s[x.start() - 10:pos + 20], file=erf)
+                print("1 " + s[begin - 10:pos + 20], file=erf)
                 return None
             else:
                 num2 = num2 + num_list[s[pos]]
@@ -142,9 +142,11 @@ def parse_name_of_accusation(data):
         result = []
         for x in accusation_list:
             if s.count(x) != 0:
-                result.append(s)
+                result.append(x)
 
         print(result)
+        if len(result) == 0:
+            print(data)
         return result
 
 
