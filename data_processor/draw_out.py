@@ -308,6 +308,7 @@ def sort_reason(l):
         gg = []
         for (y, z) in law_list[x]:
             gg.append((y, z))
+        gg=list(set(gg))
         gg.sort()
         for (y, z) in gg:
             result_list.append({"law_name": x, "tiao_num": y, "kuan_num": z})
@@ -339,8 +340,6 @@ def parse_name_of_law(data):
     for x in law_list:
         for (y, z) in law_list[x]:
             result_list.append({"law_name": x, "tiao_num": y, "kuan_num": z})
-
-    result_list.sort()
 
     return sort_reason(result_list)
 
