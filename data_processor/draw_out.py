@@ -132,7 +132,7 @@ def parse_term_of_imprisonment(data):
 
 
 def parse_name_of_accusation(data):
-    print(data["result"].replace(u"★i",""))
+    print(data["result"].replace(u"★",""))
 
 
 def parse(data):
