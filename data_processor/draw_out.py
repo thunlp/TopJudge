@@ -12,8 +12,8 @@ mid_text = u"  _(:з」∠)_  "
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
 
-accusation_file = r"/home/zhx/law_pre/data_processor/accusation_list.txt"
-accusation_f = open(accusation_file, "r")
+accusation_file = r"/home/zhx/law_pre/data_processor/accusation_list2.txt"
+accusation_f = open(accusation_file, "r",encoding='utf8')
 # accusation_list = json.loads(accusation_f.readline())
 accusation_list = []
 for line in accusation_f:
