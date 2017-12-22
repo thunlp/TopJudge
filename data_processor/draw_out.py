@@ -350,19 +350,23 @@ def parse_money(data):
 
     result_list = []
 
-    rex = re.compile(u"人民币[\d+]元")
+    rex = re.compile(u"人民币([\\d]*)元")
     result = rex.finditer(data["document"]["PJJG"])
 
     for x in result:
-        result_list.append(int(x))
+        datax = int(x.group(1))
+        result_list.append(datax)
+        print(x.group(1),datax)
 
-    rex = re.compile(u"人民币[" + num_str + "+]元")
+    rex = re.compile(u"人民币([" + num_str + "]*)元")
     result = rex.finditer(data["document"]["PJJG"])
 
     for x in result:
-        result_list.append(get_number_from_string(x))
+        datax = get_number_from_string(x.group(1))
+        result_list.append(datax)
+        print(x.group(1),datax)
 
-    print(result_list)
+    #print(result_list)
 
     return result_list
 
