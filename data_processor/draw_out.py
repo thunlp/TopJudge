@@ -14,7 +14,10 @@ title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseT
 
 accusation_file = r"/home/zhx/law_pre/data_processor/accusation_list.txt"
 accusation_f = open(accusation_file, "r")
-accusation_list = json.loads(accusation_f.readline())
+# accusation_list = json.loads(accusation_f.readline())
+accusation_list = []
+for line in accusation_f:
+    accusation_list.append(line[:-1])
 
 num_file = 1
 num_process = 1
@@ -136,13 +139,33 @@ def parse_term_of_imprisonment(data):
                 # print(youqi_arr, juyi_arr)
 
 
+def dfs_search(s, x, p, y):
+    if p >= len(x):
+        return s.count(y) != 0
+    if x[p] == "[":
+        pp = p
+        while x[pp] != "]":
+            pp += 1
+        subs = s[p + 1:pp].split(u"、")
+        for z in subs:
+            dfs_search(s, x, pp + 1, y + z)
+    else:
+        return dfs_search(s, x, p + 1, y + s[p])
+
+
+def check(x, s):
+    if s.count(x.replace("[", "").replace("]", "")) != 0:
+        return True
+    return dfs_search(s, x, p, "")
+
+
 def parse_name_of_accusation(data):
     if "PJJG" in data["document"]:
         s = data["document"]["PJJG"]
         result = []
         for x in accusation_list:
-            if s.count(x) != 0:
-                result.append(x)
+            if check(x, s):
+                result.append(x.replace("[", "").replace("]", ""))
 
         print(result)
         if len(result) == 0:
