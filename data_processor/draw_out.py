@@ -308,7 +308,7 @@ def sort_reason(l):
         gg = []
         for (y, z) in law_list[x]:
             gg.append((y, z))
-        gg=list(set(gg))
+        gg = list(set(gg))
         gg.sort()
         for (y, z) in gg:
             result_list.append({"law_name": x, "tiao_num": y, "kuan_num": z})
@@ -345,7 +345,23 @@ def parse_name_of_law(data):
 
 
 def parse_money(data):
-    pass
+    if not ("PJJG" in data["document"]):
+        return []
+
+    rex = re.compile(u"人民币[[" + num_str + u"]+[\d]+]元")
+    result = rex.finditer(data["document"]["PJJG"])
+
+    result_list = []
+
+    for x in result:
+        if x[0] in "0123456789":
+            result_list.append(int(x))
+        else
+            result_list.append(get_number_from_string(x))
+
+    print(result_list)
+
+    return result_list
 
 
 def parse(data):
@@ -355,6 +371,7 @@ def parse(data):
     result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
     result["name_of_accusation"] = parse_name_of_accusation(data)
     result["name_of_law"] = parse_name_of_law(data)
+    result["punish_of_money"] = parse_money(data)
 
     return result
 
@@ -371,14 +388,14 @@ def draw_out(in_path, out_path):
         if data["caseType"] == "1" and data["document"] != {} and "Title" in data["document"] and not (
                     re.search(u"判决书", data["document"]["Title"]) is None):
             data["meta_info"] = parse(data)
-            print(json.dumps(data),file=ouf)
+            print(json.dumps(data), file=ouf)
         cnt += 1
         if cnt == 5000:
             break
 
-        # except Exception as e:
-        #    print(e)
-        #    gg
+            # except Exception as e:
+            #    print(e)
+            #    gg
 
 
 def work(from_id, to_id):
