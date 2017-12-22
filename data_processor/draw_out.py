@@ -58,9 +58,14 @@ num_list = {
     u'万': 10000
 }
 
+num_str = ""
+
+for x in num_list:
+    num_str = num_str + x
+
 
 def parse_date_with_year_and_month_begin_from(s, begin, delta):
-    erf = open("error.log", "a")
+    # erf = open("error.log", "a")
     pos = begin + delta
     num1 = 0
     while s[pos] in num_list:
@@ -69,7 +74,7 @@ def parse_date_with_year_and_month_begin_from(s, begin, delta):
                 num1 = 1
             num1 *= 10
         elif s[pos] == u"百" or s[pos] == u"千" or s[pos] == u"万":
-            print("0 " + s[begin - 10:pos + 20], file=erf)
+            # print("0 " + s[begin - 10:pos + 20], file=erf)
             return None
         else:
             num1 = num1 + num_list[s[pos]]
@@ -88,7 +93,7 @@ def parse_date_with_year_and_month_begin_from(s, begin, delta):
                     num2 = 1
                 num2 *= 10
             elif s[pos] == u"百" or s[pos] == u"千" or s[pos] == u"万":
-                print("1 " + s[begin - 10:pos + 20], file=erf)
+                # print("1 " + s[begin - 10:pos + 20], file=erf)
                 return None
             else:
                 num2 = num2 + num_list[s[pos]]
@@ -97,14 +102,14 @@ def parse_date_with_year_and_month_begin_from(s, begin, delta):
         if s[pos] == u"个":
             pos += 1
         if num2 != 0 and s[pos] != u"月":
-            print("2 " + s[begin - 10:pos + 20], file=erf)
+            # print("2 " + s[begin - 10:pos + 20], file=erf)
             return None
         num = num1 * 12 + num2
     else:
         if s[pos] == u"个":
             pos += 1
         if s[pos] != u"月":
-            print("3 " + s[begin - 10:pos + 20], file=erf)
+            # print("3 " + s[begin - 10:pos + 20], file=erf)
             return None
         else:
             num = num1
@@ -156,7 +161,13 @@ def parse_term_of_imprisonment(data):
         if s.count("死刑") != 0:
             dead = True
 
-        print(youqi_arr, juyi_arr, guanzhi_arr, forever, dead)
+        result["youqi"] = youqi_arr
+        result["juyi"] = juyi_arr
+        result["guanzhi"] = guanzhi_arr
+        result["wuqi"] = forever
+        result["sixing"] = dead
+
+    return result
 
 
 def dfs_search(s, x, p, y):
@@ -189,10 +200,153 @@ def parse_name_of_accusation(data):
         for x in accusation_list:
             if check(x, s):
                 result.append(x.replace("[", "").replace("]", ""))
-        #print(result)
-        #if len(result) == 0:
+        # print(result)
+        # if len(result) == 0:
         #    print(s)
         return result
+    else:
+        return []
+
+
+key_word_list = [u"第", u"条", u"款", u"、", u"，", u"（", u"）"]
+
+
+def get_number_from_string(s):
+    for x in s:
+        if not (x in num_list):
+            print(s)
+            gg
+
+    value = 0
+    try:
+        value = int(s)
+    except ValueError:
+        nowbase = 1
+        addnew = True
+        for a in range(len(s) - 1, -1, -1):
+            if s[a] == u'十':
+                nowbase = 10
+                addnew = False
+            elif s[a] == u'百':
+                nowbase = 100
+                addnew = False
+            elif s[a] == u'千':
+                nowbase = 1000
+                addnew = False
+            elif s[a] == u'万':
+                nowbase = 10000
+                addnew = False
+            else:
+                value = value + nowbase * num_list[s[a]]
+                addnew = True
+
+        if not (addnew):
+            value += nowbase
+
+    return value
+
+
+def get_one_reason(content, rex):
+    pos = rex.start()
+    law_name = rex.group(1)
+    nows = rex.group().replace(u"（", u"").replace(u"）", u"")
+
+    result = []
+
+    p = 0
+    while nows[p] != u"》":
+        p += 1
+    while nows[p] != u"第":
+        p += 1
+
+    tiao_num = 0
+    kuan_num = 0
+    add_kuan = True
+    while p < len(nows):
+        nowp = p + 1
+        while not (nows[nowp] in key_word_list):
+            nowp += 1
+        num = get_number_from_string(nows[p + 1:nowp])
+        if nows[nowp] != u"款":
+            if not (add_kuan):
+                result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": 0})
+            tiao_num = num
+            add_kuan = False
+        else:
+            kuan_num = num
+            result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": kuan_num})
+            add_kuan = True
+
+        p = nowp
+
+        while p < len(nows) and nows[p] != u'第':
+            p += 1
+
+    if not (add_kuan):
+        result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": 0})
+
+    # print nows
+    # for x in result:
+    #    print x["law_name"], x["tiao_num"], x["kuan_num"]
+    # print
+
+    return result
+
+
+def sort_reason(l):
+    result_list = []
+
+    law_list = {}
+
+    for x in l:
+        z = x
+        if not (z["law_name"] in law_list):
+            law_list[z["law_name"]] = set()
+        law_list[z["law_name"]].add((z["tiao_num"], z["kuan_num"]))
+
+    for x in law_list:
+        gg = []
+        for (y, z) in law_list[x]:
+            gg.append((y, z))
+        gg.sort()
+        for (y, z) in gg:
+            result_list.append({"law_name": x, "tiao_num": y, "kuan_num": z})
+
+    return result_list
+
+
+def parse_name_of_law(data):
+    if not ("content" in data["document"]):
+        return []
+
+    key_word_str = num_str
+    for x in key_word_list:
+        key_word_str = key_word_str + x
+    rex = re.compile(u"《([^《》]*)》第[" + key_word_str + u"]*条")
+    result = rex.finditer(data["document"]["content"])
+
+    result_list = []
+
+    law_list = {}
+
+    for x in result:
+        y = get_one_reason(data["document"]["content"], x)
+        for z in y:
+            if not (z["law_name"] in law_list):
+                law_list[z["law_name"]] = set()
+            law_list[z["law_name"]].add((z["tiao_num"], z["kuan_num"]))
+
+    for x in law_list:
+        for (y, z) in law_list[x]:
+            result_list.append({"law_name": x, "tiao_num": y, "kuan_num": z})
+
+    result_list.sort()
+
+    return sort_reason(result_list)
+
+
+def parse_money(data):
+    pass
 
 
 def parse(data):
@@ -201,6 +355,9 @@ def parse(data):
 
     result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
     result["name_of_accusation"] = parse_name_of_accusation(data)
+    result["name_of_law"] = parse_name_of_law(data)
+
+    return result
 
 
 def draw_out(in_path, out_path):
@@ -215,9 +372,10 @@ def draw_out(in_path, out_path):
         if data["caseType"] == "1" and data["document"] != {} and "Title" in data["document"] and not (
                     re.search(u"判决书", data["document"]["Title"]) is None):
             data["meta_info"] = parse(data)
+            print(json.dumps(data),file=ouf)
         cnt += 1
-        # if cnt == 5000:
-        #    break
+        if cnt == 5000:
+            break
 
         # except Exception as e:
         #    print(e)
