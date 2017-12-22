@@ -151,8 +151,8 @@ def draw_out(in_path, out_path):
                     re.search(u"判决书", data["document"]["Title"]) is None):
             data["meta_info"] = parse(data)
         cnt += 1
-        # if cnt == 50000:
-        #    break
+        if cnt == 5000:
+            break
 
         # except Exception as e:
         #    print(e)
