@@ -189,9 +189,9 @@ def parse_name_of_accusation(data):
         for x in accusation_list:
             if check(x, s):
                 result.append(x.replace("[", "").replace("]", ""))
-        print(result)
-        if len(result) == 0:
-            print(s)
+        #print(result)
+        #if len(result) == 0:
+        #    print(s)
         return result
 
 
