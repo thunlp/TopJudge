@@ -14,10 +14,10 @@ title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseT
 
 accusation_file = r"/home/zhx/law_pre/data_processor/accusation_list2.txt"
 accusation_f = open(accusation_file, "r",encoding='utf8')
-# accusation_list = json.loads(accusation_f.readline())
-accusation_list = []
-for line in accusation_f:
-    accusation_list.append(line[:-1])
+accusation_list = json.loads(accusation_f.readline())
+#accusation_list = []
+#for line in accusation_f:
+#    accusation_list.append(line[:-1])
 
 num_file = 1
 num_process = 1
@@ -156,7 +156,7 @@ def dfs_search(s, x, p, y):
 def check(x, s):
     if s.count(x.replace("[", "").replace("]", "")) != 0:
         return True
-    return dfs_search(s, x, p, "")
+    return dfs_search(s, x, 0, "")
 
 
 def parse_name_of_accusation(data):
