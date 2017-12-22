@@ -4,8 +4,8 @@ import os
 import json
 import re
 
-#in_path = r"D:\work\law_pre\test\in"
-#out_path = r"D:\work\law_pre\test\out"
+# in_path = r"D:\work\law_pre\test\in"
+# out_path = r"D:\work\law_pre\test\out"
 in_path = r"/disk/mysql/law_data/formed_data"
 out_path = r"/disk/mysql/law_data/critical_data"
 mid_text = u"  _(:з」∠)_  "
@@ -51,69 +51,89 @@ num_list = {
 }
 
 
-def parse_term_of_imprisonment(data):
-    erf = open("error.log","a")
-    if "PJJG" in data["document"]:
-        s = data["document"]["PJJG"].replace('b','')
-        pattern = re.compile(u"拘役")
-        for x in pattern.finditer(s):
-            pos = x.start() + len(u"拘役")
-            num1 = 0
-            while s[pos] in num_list:
-                if s[pos] == u"十":
-                    if num1 == 0:
-                        num1 = 1
-                    num1 *= 10
-                elif s[pos] == u"百" or s[pos] == u"千" or s[pos] == u"万":
-                    print("0 "+s[x.start()-10:pos+20],file=erf)
-                    return None
-                else:
-                    num1 = num1 + num_list[s[pos]]
+def parse_date_with_year_and_month_begin_from(s, begin, delta):
+    erf = open("error.log", "a")
+    pos = begin + delta
+    num1 = 0
+    while s[pos] in num_list:
+        if s[pos] == u"十":
+            if num1 == 0:
+                num1 = 1
+            num1 *= 10
+        elif s[pos] == u"百" or s[pos] == u"千" or s[pos] == u"万":
+            print("0 " + s[begin - 10:pos + 20], file=erf)
+            return None
+        else:
+            num1 = num1 + num_list[s[pos]]
 
-                pos += 1
+        pos += 1
 
-            num = 0
-            if s[pos] == u"年":
-                num2 = 0
-                pos += 1
-                if s[pos] == u"又":
-                    pos += 1
-                while s[pos] in num_list:
-                    if s[pos] == u"十":
-                        if num2 == 0:
-                            num2 = 1
-                        num2 *= 10
-                    elif s[pos] == u"百" or s[pos] == u"千" or s[pos] == u"万":
-                        print("1 "+s[x.start()-10:pos+20],file=erf)
-                        return None
-                    else:
-                        num2 = num2 + num_list[s[pos]]
-
-                    pos += 1
-                if s[pos] == u"个":
-                    pos += 1
-                if num2!=0 and s[pos] != u"月":
-                    print("2 "+s[x.start()-10:pos+20],file=erf)
-                    return None
-                num = num1*12 + num2
+    num = 0
+    if s[pos] == u"年":
+        num2 = 0
+        pos += 1
+        if s[pos] == u"又":
+            pos += 1
+        while s[pos] in num_list:
+            if s[pos] == u"十":
+                if num2 == 0:
+                    num2 = 1
+                num2 *= 10
+            elif s[pos] == u"百" or s[pos] == u"千" or s[pos] == u"万":
+                print("1 " + s[x.start() - 10:pos + 20], file=erf)
+                return None
             else:
-                if s[pos] == u"个":
-                    pos += 1
-                if s[pos] != u"月":
-                    print("3 "+s[x.start()-10:pos+20],file=erf)
-                    return None
-                else:
-                    num = num1
+                num2 = num2 + num_list[s[pos]]
 
             pos += 1
-            #print(num,s[x.start():pos])
+        if s[pos] == u"个":
+            pos += 1
+        if num2 != 0 and s[pos] != u"月":
+            print("2 " + s[begin - 10:pos + 20], file=erf)
+            return None
+        num = num1 * 12 + num2
+    else:
+        if s[pos] == u"个":
+            pos += 1
+        if s[pos] != u"月":
+            print("3 " + s[begin - 10:pos + 20], file=erf)
+            return None
+        else:
+            num = num1
+
+    pos += 1
+    # print(num,s[x.start():pos])
+    return num
 
 
+def parse_term_of_imprisonment(data):
+    if "PJJG" in data["document"]:
+        s = data["document"]["PJJG"].replace('b', '')
+
+        # 有期徒刑
+        youqi_arr = []
+        pattern = re.compile(u"有期徒刑")
+        for x in pattern.finditer(s):
+            pos = x.start()
+            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"有期徒刑"))
+            if not (data is None):
+                youqi_arr.append(data)
+
+        # 拘役
+        juyi_arr = []
+        pattern = re.compile(u"拘役")
+        for x in pattern.finditer(s):
+            pos = x.start()
+            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"拘役"))
+            if not (data is None):
+                juyi_arr.append(data)
+
+        print(youqi_arr, juyi_arr)
 
 
 def parse(data):
     result = {}
-    #print(data["document"]["PJJG"])
+    # print(data["document"]["PJJG"])
 
     result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
 
@@ -125,15 +145,16 @@ def draw_out(in_path, out_path):
 
     cnt = 0
     for line in inf:
-        #try:
-            data = json.loads(line)
-            if data["caseType"] == "1" and data["document"] != {} and "Title" in data["document"] and not(re.search(u"判决书",data["document"]["Title"]) is None):
-                data["meta_info"] = parse(data)
-            cnt += 1
-            #if cnt == 50000:
-            #    break
+        # try:
+        data = json.loads(line)
+        if data["caseType"] == "1" and data["document"] != {} and "Title" in data["document"] and not (
+                    re.search(u"判决书", data["document"]["Title"]) is None):
+            data["meta_info"] = parse(data)
+        cnt += 1
+        # if cnt == 50000:
+        #    break
 
-        #except Exception as e:
+        # except Exception as e:
         #    print(e)
         #    gg
 
