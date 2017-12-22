@@ -131,8 +131,18 @@ def parse_term_of_imprisonment(data):
                 # print(youqi_arr, juyi_arr)
 
 
+accusation_list = set()
+
+
 def parse_name_of_accusation(data):
-    print(data["result"].replace(u"★",""))
+    s = data["result"].replace(u"★", "").replace("\\", "")
+    if s == "":
+        s = []
+    res = json.loads(s)
+    print(res)
+    global accusation_list
+    for x in res:
+        accusation_list.add(x)
 
 
 def parse(data):
@@ -159,9 +169,9 @@ def draw_out(in_path, out_path):
         if cnt == 5000:
             break
 
-        # except Exception as e:
-        #    print(e)
-        #    gg
+            # except Exception as e:
+            #    print(e)
+            #    gg
 
 
 def work(from_id, to_id):
