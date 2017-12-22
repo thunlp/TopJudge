@@ -55,9 +55,9 @@ def parse_term_of_imprisonment(data):
     erf = open("error.log","a")
     if "PJJG" in data["document"]:
         s = data["document"]["PJJG"].replace('b','')
-        pattern = re.compile(u"有期徒刑")
+        pattern = re.compile(u"拘役")
         for x in pattern.finditer(s):
-            pos = x.start() + len(u"有期徒刑")
+            pos = x.start() + len(u"拘役")
             num1 = 0
             while s[pos] in num_list:
                 if s[pos] == u"十":
@@ -65,7 +65,7 @@ def parse_term_of_imprisonment(data):
                         num1 = 1
                     num1 *= 10
                 elif s[pos] == u"百" or s[pos] == u"千" or s[pos] == u"万":
-                    print("0 "+s[x.start():pos+20],file=erf)
+                    print("0 "+s[x.start()-10:pos+20],file=erf)
                     return None
                 else:
                     num1 = num1 + num_list[s[pos]]
@@ -84,7 +84,7 @@ def parse_term_of_imprisonment(data):
                             num2 = 1
                         num2 *= 10
                     elif s[pos] == u"百" or s[pos] == u"千" or s[pos] == u"万":
-                        print("1 "+s[x.start():pos+20],file=erf)
+                        print("1 "+s[x.start()-10:pos+20],file=erf)
                         return None
                     else:
                         num2 = num2 + num_list[s[pos]]
@@ -93,14 +93,14 @@ def parse_term_of_imprisonment(data):
                 if s[pos] == u"个":
                     pos += 1
                 if num2!=0 and s[pos] != u"月":
-                    print("2 "+s[x.start():pos+20],file=erf)
+                    print("2 "+s[x.start()-10:pos+20],file=erf)
                     return None
                 num = num1*12 + num2
             else:
                 if s[pos] == u"个":
                     pos += 1
                 if s[pos] != u"月":
-                    print("3 "+s[x.start():pos+20],file=erf)
+                    print("3 "+s[x.start()-10:pos+20],file=erf)
                     return None
                 else:
                     num = num1
