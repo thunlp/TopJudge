@@ -128,7 +128,11 @@ def parse_term_of_imprisonment(data):
             if not (data is None):
                 juyi_arr.append(data)
 
-        print(youqi_arr, juyi_arr)
+                # print(youqi_arr, juyi_arr)
+
+
+def parse_name_of_accusation(data):
+    print(data["result"])
 
 
 def parse(data):
@@ -136,6 +140,7 @@ def parse(data):
     # print(data["document"]["PJJG"])
 
     result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
+    result["name_of_accusation"] = parse_name_of_accusation(data)
 
 
 def draw_out(in_path, out_path):
