@@ -247,6 +247,7 @@ def get_number_from_string(s):
                 addnew = False
             else:
                 value = value + nowbase * num_list[s[a]]
+                nowbase = nowbase * 10
                 addnew = True
 
         if not (addnew):
