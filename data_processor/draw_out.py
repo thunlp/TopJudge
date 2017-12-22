@@ -13,10 +13,10 @@ title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseT
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
 
 accusation_file = r"/home/zhx/law_pre/data_processor/accusation_list2.txt"
-accusation_f = open(accusation_file, "r",encoding='utf8')
+accusation_f = open(accusation_file, "r", encoding='utf8')
 accusation_list = json.loads(accusation_f.readline())
-#accusation_list = []
-#for line in accusation_f:
+# accusation_list = []
+# for line in accusation_f:
 #    accusation_list.append(line[:-1])
 
 num_file = 1
@@ -146,16 +146,19 @@ def dfs_search(s, x, p, y):
         pp = p
         while x[pp] != "]":
             pp += 1
-        subs = s[p + 1:pp].split(u"、")
+        subs = x[p + 1:pp].split(u"、")
         for z in subs:
-            dfs_search(s, x, pp + 1, y + z)
+            if dfs_search(s, x, pp + 1, y + z):
+                return True
+        if dfs_search(s, x, pp + 1, y + x[p + 1:pp]):
+            return True
+        else:
+            return False
     else:
         return dfs_search(s, x, p + 1, y + s[p])
 
 
 def check(x, s):
-    if s.count(x.replace("[", "").replace("]", "")) != 0:
-        return True
     return dfs_search(s, x, 0, "")
 
 
