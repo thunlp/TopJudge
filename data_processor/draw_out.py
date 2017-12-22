@@ -155,7 +155,7 @@ def dfs_search(s, x, p, y):
         else:
             return False
     else:
-        return dfs_search(s, x, p + 1, y + s[p])
+        return dfs_search(s, x, p + 1, y + x[p])
 
 
 def check(x, s):
@@ -169,10 +169,9 @@ def parse_name_of_accusation(data):
         for x in accusation_list:
             if check(x, s):
                 result.append(x.replace("[", "").replace("]", ""))
-
         print(result)
         if len(result) == 0:
-            print(data)
+            print(s)
         return result
 
 
@@ -197,8 +196,8 @@ def draw_out(in_path, out_path):
                     re.search(u"判决书", data["document"]["Title"]) is None):
             data["meta_info"] = parse(data)
         cnt += 1
-        if cnt == 5000:
-            break
+        #if cnt == 5000:
+        #    break
 
             # except Exception as e:
             #    print(e)
