@@ -350,13 +350,15 @@ def parse_money(data):
 
     rex = re.compile(u"人民币[[" + num_str + u"]+[\d]+]元")
     result = rex.finditer(data["document"]["PJJG"])
+    print(result)
 
     result_list = []
 
     for x in result:
+        print(x[0])
         if x[0] in "0123456789":
             result_list.append(int(x))
-        else
+        else:
             result_list.append(get_number_from_string(x))
 
     print(result_list)
