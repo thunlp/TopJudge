@@ -348,18 +348,19 @@ def parse_money(data):
     if not ("PJJG" in data["document"]):
         return []
 
-    rex = re.compile(u"人民币[[" + num_str + u"]+[\d]+]元")
-    result = rex.finditer(data["document"]["PJJG"])
-    print(result)
-
     result_list = []
 
+    rex = re.compile(u"人民币[\d+]元")
+    result = rex.finditer(data["document"]["PJJG"])
+
     for x in result:
-        print(x[0])
-        if x[0] in "0123456789":
-            result_list.append(int(x))
-        else:
-            result_list.append(get_number_from_string(x))
+        result_list.append(int(x))
+
+    rex = re.compile(u"人民币[" + num_str + "+]元")
+    result = rex.finditer(data["document"]["PJJG"])
+
+    for x in result:
+        result_list.append(get_number_from_string(x))
 
     print(result_list)
 
