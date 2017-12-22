@@ -225,13 +225,22 @@ def get_number_from_string(s):
         addnew = True
         for a in range(len(s) - 1, -1, -1):
             if s[a] == u'十':
-                nowbase = 10
+                if nowbase >= 10000:
+                    nowbase = 100000
+                else:
+                    nowbase = 10
                 addnew = False
             elif s[a] == u'百':
-                nowbase = 100
+                if nowbase >= 10000:
+                    nowbase = 1000000
+                else:
+                    nowbase = 100
                 addnew = False
             elif s[a] == u'千':
-                nowbase = 1000
+                if nowbase >= 10000:
+                    nowbase = 10000000
+                else:
+                    nowbase = 1000
                 addnew = False
             elif s[a] == u'万':
                 nowbase = 10000
@@ -356,7 +365,7 @@ def parse_money(data):
     for x in result:
         datax = int(x.group(1))
         result_list.append(datax)
-        print(x.group(1),datax)
+        print(x.group(1), datax)
 
     rex = re.compile(u"人民币([" + num_str + "]*)元")
     result = rex.finditer(data["document"]["PJJG"])
@@ -364,9 +373,9 @@ def parse_money(data):
     for x in result:
         datax = get_number_from_string(x.group(1))
         result_list.append(datax)
-        print(x.group(1),datax)
+        print(x.group(1), datax)
 
-    #print(result_list)
+    # print(result_list)
 
     return result_list
 
