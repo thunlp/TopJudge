@@ -11,6 +11,11 @@ out_path = r"/disk/mysql/law_data/critical_data"
 mid_text = u"  _(:з」∠)_  "
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
+
+accusation_file = ""
+accusation_f = open(accusation_file, "r")
+accusation_list = json.loads(accusation_f.readline())
+
 num_file = 1
 num_process = 1
 
@@ -131,18 +136,16 @@ def parse_term_of_imprisonment(data):
                 # print(youqi_arr, juyi_arr)
 
 
-accusation_list = set()
-
-
 def parse_name_of_accusation(data):
-    s = data["result"].replace(u"★", "").replace("\\", "")
-    if s == "":
-        s = []
-    res = json.loads(s)
-    print(res)
-    global accusation_list
-    for x in res:
-        accusation_list.add(x)
+    if "PJJG" in data["document"]:
+        s = data["document"]["PJJG"]
+        result = []
+        for x in accusation_list:
+            if s.count(x) != 0:
+                result.append(s)
+
+        print(result)
+        return result
 
 
 def parse(data):
