@@ -115,6 +115,7 @@ def parse_date_with_year_and_month_begin_from(s, begin, delta):
 
 
 def parse_term_of_imprisonment(data):
+    result = {}
     if "PJJG" in data["document"]:
         s = data["document"]["PJJG"].replace('b', '')
 
@@ -136,7 +137,26 @@ def parse_term_of_imprisonment(data):
             if not (data is None):
                 juyi_arr.append(data)
 
-                # print(youqi_arr, juyi_arr)
+        # 管制
+        guanzhi_arr = []
+        pattern = re.compile(u"管制")
+        for x in pattern.finditer(s):
+            pos = x.start()
+            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"管制"))
+            if not (data is None):
+                guanzhi_arr.append(data)
+
+        # 无期
+        forever = False
+        if s.count("无期徒刑") != 0:
+            forever = True
+
+        # 死刑
+        dead = False
+        if s.count("死刑") != 0:
+            dead = True
+
+        print(youqi_arr, juyi_arr, guanzhi_arr, forever, dead)
 
 
 def dfs_search(s, x, p, y):
@@ -196,12 +216,12 @@ def draw_out(in_path, out_path):
                     re.search(u"判决书", data["document"]["Title"]) is None):
             data["meta_info"] = parse(data)
         cnt += 1
-        #if cnt == 5000:
+        # if cnt == 5000:
         #    break
 
-            # except Exception as e:
-            #    print(e)
-            #    gg
+        # except Exception as e:
+        #    print(e)
+        #    gg
 
 
 def work(from_id, to_id):
