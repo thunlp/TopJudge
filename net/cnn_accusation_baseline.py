@@ -6,8 +6,8 @@ parser.add_argument('--config', '-c')
 args = parser.parse_args()
 
 configFilePath = args.config
-print(configFilePath)
-gg
+if configFilePath is None:
+    print("python *.py\t--config/-c\tconfigfile")
 config = configparser.RawConfigParser()
 config.read(configFilePath)
 
@@ -68,6 +68,8 @@ output_time = config.getint("debug", "output_time")
 test_time = config.getint("debug", "test_time")
 
 net = Net()
+if torch.cuda.is_available():
+    net = net.cuda()
 
 criterion = nn.NLLLoss()
 optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
@@ -83,7 +85,10 @@ for epoch_num in range(0, epoch):
         cnt += 1
         print(cnt)
         input, label = data
-        input, label = Variable(input), Variable(label)
+        if torch.cuda.is_available():
+            input, label = Variable(input.cuda()), Variable(label.cuda())
+        else:
+            input, label = Variable(input), Variable(label)
 
         optimizer.zero_grad()
 
