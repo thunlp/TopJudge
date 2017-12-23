@@ -56,6 +56,8 @@ def gen_guanzhi(data):
 
 
 def analyze_time(data):
+    if len(data) == 0:
+        return
     global youqi_list
     global juyi_list
     global guanzhi_list
@@ -104,6 +106,8 @@ def gen_money(data):
 
 
 def analyze_money(data):
+    if len(data) == 0:
+        return
     global money_list
     x = gen_money(data)
     if not (x in money_list):
@@ -118,11 +122,13 @@ law_list["name_tiao_kuan"] = {}
 
 
 def analyze_law(data):
+    if len(data) == 0:
+        return
     global law_list
     for r in data:
-        x = data["law_name"]
-        y = data["tiao_num"]
-        z = data["kuan_num"]
+        x = r["law_name"]
+        y = r["tiao_num"]
+        z = r["kuan_num"]
         if not (x in law_list["only_name"]):
             law_list["only_name"][x] = 0
             law_list["name_tiao"][x] = {}
@@ -145,6 +151,8 @@ for a in range(0, len(accusation_list)):
 
 
 def analyze_crit(data):
+    if len(data) == 0:
+        return
     global crit_list
     for x in data:
         for a in range(0, len(accusation_list)):
