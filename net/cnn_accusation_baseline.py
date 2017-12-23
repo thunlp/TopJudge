@@ -3,14 +3,16 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', '-c')
-parser.add_argument('--cpu')
+parser.add_argument('--use','-u')
 args = parser.parse_args()
 
 configFilePath = args.config
 if configFilePath is None:
     print("python *.py\t--config/-c\tconfigfile")
 usegpu = True
-if args.cpu is None:
+if args.use is None:
+    print("python *.py\t--use/-u\tcpu/gpu")
+if args.use == "cpu":
     usegpu = False
 config = configparser.RawConfigParser()
 config.read(configFilePath)
