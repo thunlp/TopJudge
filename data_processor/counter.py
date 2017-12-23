@@ -136,13 +136,13 @@ def analyze_law(data):
 
         law_list["only_name"][x] += 1
 
-        if not (y in law_list["name_tiao"][x]):
-            law_list["name_tiao"][x][y] = 0
-        law_list["name_tiao"][x][y] += 1
+        if not (str(y) in law_list["name_tiao"][x]):
+            law_list["name_tiao"][x][str(y)] = 0
+        law_list["name_tiao"][x][str(y)] += 1
 
-        if not ((y, z) in law_list["name_tiao_kuan"][x]):
-            law_list["name_tiao"][x][(y, z)] = 0
-        law_list["name_tiao"][x][(y, z)] += 1
+        if not (str((y, z)) in law_list["name_tiao_kuan"][x]):
+            law_list["name_tiao"][x][str((y, z))] = 0
+        law_list["name_tiao"][x][str((y, z))] += 1
 
 
 crit_list = []
@@ -181,8 +181,8 @@ def draw_out(in_path, out_path):
         data = json.loads(line)
         count(data["meta_info"])
         cnt += 1
-        if cnt == 5000:
-            break
+        if cnt % 500000 == 0:
+            print(cnt)
 
 
 def work(from_id, to_id):
@@ -193,19 +193,20 @@ def work(from_id, to_id):
 
 
 if __name__ == "__main__":
-    import multiprocessing
+    work(0,20)
+    #import multiprocessing
 
-    process_pool = []
+    #process_pool = []
 
-    for a in range(0, num_process):
-        process_pool.append(
-            multiprocessing.Process(target=work, args=(a * num_file / num_process, (a + 1) * num_file / num_process)))
+    #for a in range(0, num_process):
+    #    process_pool.append(
+    #        multiprocessing.Process(target=work, args=(a * num_file / num_process, (a + 1) * num_file / num_process)))
 
-    for a in process_pool:
-        a.start()
+    #for a in process_pool:
+    #    a.start()
 
-    for a in process_pool:
-        a.join()
+    #for a in process_pool:
+    #    a.join()
 
     ouf = open("result.txt", "w")
     data = {}
@@ -219,4 +220,4 @@ if __name__ == "__main__":
     data["law"] = law_list
     data["money"] = money_list
     data["crit"] = crit_list
-    print(json.dumps(data), file=ouf)
+    print(json.dumps(data),file=ouf)
