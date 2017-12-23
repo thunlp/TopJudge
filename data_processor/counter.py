@@ -56,7 +56,7 @@ def gen_guanzhi(data):
 
 
 def analyze_time(data):
-    if len(data) == 0:
+    if data == {}:
         return
     global youqi_list
     global juyi_list
@@ -209,6 +209,7 @@ if __name__ == "__main__":
 
     ouf = open("result.txt", "w")
     data = {}
+    data["total"] = total_cnt
     data["youqi"] = youqi_list
     data["wuqi"] = wuqi_cnt
     data["juyi"] = juyi_list
