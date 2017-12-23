@@ -1,7 +1,13 @@
 import configparser
+import argparse
 
-configFilePath = r"C:\work\law_pre\config\cnn_accusation_baseline.config"
-# configFilePath = "/home/zhonghaoxi/law/config/cnn_accusation_baseline.config"
+parser = argparse.ArgumentParser()
+parser.add_argument('--config', '-c')
+args = parser.parse_args()
+
+configFilePath = args.config
+print(configFilePath)
+gg
 config = configparser.RawConfigParser()
 config.read(configFilePath)
 
@@ -40,7 +46,7 @@ class Net(nn.Module):
         #    print(x)
 
         fc_input = torch.cat(fc_input, dim=1).view(-1, (
-        config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"))
+            config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"))
 
         fc1_out = F.relu(self.fc1(fc_input))
         output = self.softmax(self.fc2(fc1_out))
@@ -68,7 +74,7 @@ optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
 
 from data_fetcher import init_loader
 
-train_data_loader = init_loader(batch_size)
+train_data_loader = init_loader(config)
 
 for epoch_num in range(0, epoch):
     running_loss = 0
