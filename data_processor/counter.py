@@ -198,3 +198,16 @@ if __name__ == "__main__":
 
     for a in process_pool:
         a.join()
+
+    ouf = open("result.txt", "w")
+    data = {}
+    data["youqi"] = youqi_list
+    data["wuqi"] = wuqi_cnt
+    data["juyi"] = juyi_list
+    data["guanzhi"] = guanzhi_list
+    data["sixing"] = sixing_cnt
+
+    data["law"] = law_list
+    data["money"] = money_list
+    data["crit"] = crit_list
+    print(json.dumps(data), file=ouf)
