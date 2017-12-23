@@ -3,11 +3,15 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', '-c')
+parser.add_argument('--cpu')
 args = parser.parse_args()
 
 configFilePath = args.config
 if configFilePath is None:
     print("python *.py\t--config/-c\tconfigfile")
+usegpu = True
+if args.cpu is None:
+    usegpu = False
 config = configparser.RawConfigParser()
 config.read(configFilePath)
 
@@ -68,7 +72,7 @@ output_time = config.getint("debug", "output_time")
 test_time = config.getint("debug", "test_time")
 
 net = Net()
-if torch.cuda.is_available():
+if torch.cuda.is_available() and usegpu:
     net = net.cuda()
 
 criterion = nn.CrossEntropyLoss()
@@ -84,7 +88,7 @@ for epoch_num in range(0, epoch):
     for idx, data in enumerate(train_data_loader):
         cnt += 1
         input, label = data
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and usegpu:
             input, label = Variable(input.cuda()), Variable(label.cuda())
         else:
             input, label = Variable(input), Variable(label)
