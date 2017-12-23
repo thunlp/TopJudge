@@ -77,7 +77,7 @@ net = Net()
 if torch.cuda.is_available() and usegpu:
     net = net.cuda()
 
-criterion = nn.CrossEntropyLoss()
+criterion = nn.NLLLoss()
 optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
 
 from data_fetcher import init_loader
@@ -107,4 +107,5 @@ for epoch_num in range(0, epoch):
         if idx % output_time == output_time - 1:
             print('[%d, %5d] loss: %.3f' %
                   (epoch_num + 1, idx + 1, running_loss / output_time))
+            print(outputs)
             running_loss = 0.0
