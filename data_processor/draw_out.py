@@ -19,7 +19,7 @@ accusation_list = json.loads(accusation_f.readline())
 # for line in accusation_f:
 #    accusation_list.append(line[:-1])
 
-num_file = 1
+num_file = 20
 num_process = 1
 
 num_list = {
@@ -360,23 +360,15 @@ def parse_money(data):
 
     result_list = []
 
-    rex = re.compile(u"人民币([\\d]*)元")
-    result = rex.finditer(data["document"]["PJJG"])
-
-    for x in result:
-        datax = int(x.group(1))
-        result_list.append(datax)
-        print(x.group(1), datax)
-
     rex = re.compile(u"人民币([" + num_str + "]*)元")
     result = rex.finditer(data["document"]["PJJG"])
 
     for x in result:
         datax = get_number_from_string(x.group(1))
         result_list.append(datax)
-        print(x.group(1), datax)
+        #print(x.group(1), datax)
 
-    # print(result_list)
+    #print(result_list)
 
     return result_list
 
@@ -400,19 +392,20 @@ def draw_out(in_path, out_path):
 
     cnt = 0
     for line in inf:
-        # try:
-        data = json.loads(line)
-        if data["caseType"] == "1" and data["document"] != {} and "Title" in data["document"] and not (
-                    re.search(u"判决书", data["document"]["Title"]) is None):
-            data["meta_info"] = parse(data)
-            print(json.dumps(data), file=ouf)
-        cnt += 1
-        if cnt == 5000:
-            break
+        try:
+            data = json.loads(line)
+            if data["caseType"] == "1" and data["document"] != {} and "Title" in data["document"] and not (
+                        re.search(u"判决书", data["document"]["Title"]) is None):
+                data["meta_info"] = parse(data)
+                print(json.dumps(data), file=ouf)
+            cnt += 1
+            if cnt % 500000 == 0:
+                print(in_path,cnt)
+                #break
 
-            # except Exception as e:
-            #    print(e)
-            #    gg
+        except Exception as e:
+                print(e)
+                #gg
 
 
 def work(from_id, to_id):
