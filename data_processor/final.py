@@ -3,14 +3,14 @@
 import os
 import json
 
-in_path = "/disk/mysql/mysql/Law1/out.txt"
-out_path = "/disk/mysql/law_data/formed_data/"
+in_path = "/disk/mysql/law_data/critical_data/"
+out_path = "/disk/mysql/law_data/final_data/"
 mid_text = u"  _(:з」∠)_  "
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
 
 num_process = 1
-num_file = 20
+num_file = 1
 
 
 def draw_out(in_path, out_path):
@@ -19,19 +19,25 @@ def draw_out(in_path, out_path):
     ouf = open(out_path, "w")
 
     cnt = 0
+    cx = 0
     for line in inf:
         try:
             data = json.loads(line)
             if "AJJBQK" in data["document"] or "SSJL" in data["document"]:
                 if "AJJBQK" in data["document"]:
-                    print(len(data["document"]["AJJBQK"]))
+                    print(len(data["document"]["AJJBQK"]),cx)
+                    if cx == 1:
+                        print(data["document"]["AJJBQK"])
                 if "SSJL" in data["document"]:
-                    print(len(data["document"]["SSJL"]))
+                    print(len(data["document"]["SSJL"]),cx)
+                    if cx == 11:
+                        print(data["document"]["SSJL"])
+                cx += 1
 
             cnt += 1
             if cnt == 50:
-                print(in_path, cnt)
-                # break
+                print(in_path, cnt, cx)
+                break
 
         except Exception as e:
             print(e)
