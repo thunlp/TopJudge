@@ -15,9 +15,11 @@ title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseT
 min_length = 32
 max_length = 1024
 
-accusation_file = "/home/zhx/law_pre/data_processor/accusation_list.txt"
+accusation_file = "/home/zhx/law_pre/data_processor/accusation_list2.txt"
 f = open(accusation_file, "r")
 accusation_list = json.loads(f.readline())
+for a in range(0,len(accusation_list)):
+    accusation_list[a] = accusation_list[a].replace('[','').replace(']','')
 f.close()
 
 num_process = 1
@@ -64,10 +66,16 @@ def analyze_crit(data):
     if len(data) == 0:
         return None, False
     for a in range(0, len(data)):
+        find = False
         for b in range(0, len(accusation_list)):
             if data[a] == accusation_list[b]:
                 data[a] = b
+                find = True
                 break
+        if not(find):
+            print(accusation_list[38])
+            print(data[a])
+            gg
     data = list(set(data))
     # print(data)
     data.sort()
@@ -89,6 +97,8 @@ def cut(s):
     result = ""
     first = True
     for x, y in data:
+        if x == " ":
+            continue
         if first:
             first = False
         else:
@@ -117,7 +127,9 @@ def draw_out(in_path, out_path):
             s = data["document"]["AJJBQK"].replace("b", "").replace("\t", "")
             for x in filter_list:
                 s = s.replace(chr(x), ' ')
-            s = cut(s)
+            try:
+                s = cut(s)
+            
             l = len(s.split(mid_text))
             # print(l)
             if l >= min_length and l <= max_length:
@@ -134,12 +146,12 @@ def draw_out(in_path, out_path):
             print(json.dumps(res), file=ouf)
 
         cnt += 1
-        if cnt == 50:
+        if cnt % 50000 == 0:
             print(in_path, cnt, cx)
-            break
+            #break
 
-            # except Exception as e:
-            #    print(e)
+        except Exception as e:
+            print(e)
             # gg
 
 
