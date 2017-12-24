@@ -1,7 +1,19 @@
 import configparser
+import argparse
 
-configFilePath = r"C:\work\law_pre\config\cnn_accusation_baseline.config"
-# configFilePath = "/home/zhonghaoxi/law/config/cnn_accusation_baseline.config"
+parser = argparse.ArgumentParser()
+parser.add_argument('--config', '-c')
+parser.add_argument('--use','-u')
+args = parser.parse_args()
+
+configFilePath = args.config
+if configFilePath is None:
+    print("python *.py\t--config/-c\tconfigfile")
+usegpu = True
+if args.use is None:
+    print("python *.py\t--use/-u\tcpu/gpu")
+if args.use == "cpu":
+    usegpu = False
 config = configparser.RawConfigParser()
 config.read(configFilePath)
 
@@ -40,7 +52,7 @@ class Net(nn.Module):
         #    print(x)
 
         fc_input = torch.cat(fc_input, dim=1).view(-1, (
-        config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"))
+            config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"))
 
         fc1_out = F.relu(self.fc1(fc_input))
         output = self.softmax(self.fc2(fc1_out))
@@ -62,22 +74,26 @@ output_time = config.getint("debug", "output_time")
 test_time = config.getint("debug", "test_time")
 
 net = Net()
+if torch.cuda.is_available() and usegpu:
+    net = net.cuda()
 
 criterion = nn.NLLLoss()
 optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
 
 from data_fetcher import init_loader
 
-train_data_loader = init_loader(batch_size)
+train_data_loader = init_loader(config)
 
 for epoch_num in range(0, epoch):
     running_loss = 0
     cnt = 0
     for idx, data in enumerate(train_data_loader):
         cnt += 1
-        print(cnt)
         input, label = data
-        input, label = Variable(input), Variable(label)
+        if torch.cuda.is_available() and usegpu:
+            input, label = Variable(input.cuda()), Variable(label.cuda())
+        else:
+            input, label = Variable(input), Variable(label)
 
         optimizer.zero_grad()
 
@@ -88,7 +104,8 @@ for epoch_num in range(0, epoch):
 
         running_loss += loss.data[0]
 
-        if cnt % output_time == output_time - 1:
+        if idx % output_time == output_time - 1:
             print('[%d, %5d] loss: %.3f' %
                   (epoch_num + 1, idx + 1, running_loss / output_time))
+            print(outputs)
             running_loss = 0.0
