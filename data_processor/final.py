@@ -4,60 +4,39 @@ import os
 import json
 import thulac
 
-cutter = thulac.thulac(model_path=r"C:\work\thulac\Models_v1_v2\models", seg_only=True, filt=True)
+cutter = thulac.thulac(model_path=r"/home/zhx/models", seg_only=True, filt=False)
 
 in_path = "/disk/mysql/law_data/critical_data/"
 out_path = "/disk/mysql/law_data/final_data/"
-mid_text = u" qwq "
+mid_text = u"\t"
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
 
-min_length = 25
-max_length = 1000
+min_length = 32
+max_length = 1024
+
+accusation_file = "/home/zhx/law_pre/data_processor/accusation_list.txt"
+f = open(accusation_file,"r")
+accusation_list = json.loads(f.readline())
+f.close()
+
 
 num_process = 1
 num_file = 1
-
-
-def gen_youqi(data):
-    ans = -1
-    for x in data:
-        if x > ans:
-            ans = x
-    return ans
-
-
-def gen_juyi(data):
-    ans = -1
-    for x in data:
-        if x > ans:
-            ans = x
-    return ans
-
-
-def gen_guanzhi(data):
-    ans = -1
-    for x in data:
-        if x > ans:
-            ans = x
-    return ans
 
 
 def analyze_time(data):
     if data == {}:
         return None, False
     res = data
-    res["youqi"] = list(set(res[youqi]))
+    res["youqi"] = list(set(res["youqi"]))
     res["youqi"].sort()
-    res["guanzhi"] = list(set(res[youqi]))
+    res["guanzhi"] = list(set(res["guanzhi"]))
     res["guanzhi"].sort()
-    res["juyi"] = list(set(res[youqi]))
+    res["juyi"] = list(set(res["juyi"]))
     res["juyi"].sort()
 
     return res, True
-
-
-money_list = {}
 
 
 def analyze_money(data):
@@ -79,13 +58,19 @@ def analyze_law(data):
     res = list(set(res))
     res.sort()
 
-    return res, len(res) == 0
+    return res, len(res) != 0
 
 
 def analyze_crit(data):
     if len(data) == 0:
         return None, False
+    for a in range(0,len(data)):
+        for b in range(0,len(accusation_list)):
+            if data[a] == accusation_list[b]:
+                data[a] = b
+                break
     data = list(set(data))
+    #print(data)
     data.sort()
     return data, True
 
@@ -95,6 +80,7 @@ def analyze_meta(data):
     res["time"], able1 = analyze_time(data["term_of_imprisonment"])
     res["law"], able2 = analyze_law(data["name_of_law"])
     res["crit"], able3 = analyze_crit(data["name_of_accusation"])
+    #print(able1,able2,able3)
 
     return res, able1 and able2 and able3
 
@@ -120,29 +106,35 @@ def draw_out(in_path, out_path):
     cnt = 0
     cx = 0
     for line in inf:
-        try:
+        #try:
             data = json.loads(line)
             if "AJJBQK" in data["document"]:
                 res = {}
 
-                s = data["documnt"]["AJJBQK"].replace("b", "")
-                l = len(data["document"]["AJJBQK"])
+                s = data["document"]["AJJBQK"].replace("b", "").replace("\t","")
+                s = cut(s)
+                l = len(s.split(mid_text))
+                #print(l)
                 if l >= min_length and l <= max_length:
-                    res["content"] = cut(s)
+                    res["content"] = s
+                else:
+                    #print(s)
+                    continue
 
                 res["meta"], able = analyze_meta(data["meta_info"])
                 if not (able):
                     continue
 
+                cx += 1
                 print(json.dumps(res), file=ouf)
 
             cnt += 1
             if cnt == 50:
-                print(in_path, cnt, cx)
+                print(in_path, cnt,cx)
                 break
 
-        except Exception as e:
-            print(e)
+        #except Exception as e:
+        #    print(e)
             # gg
 
 
