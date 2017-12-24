@@ -18,8 +18,8 @@ max_length = 1024
 accusation_file = "/home/zhx/law_pre/data_processor/accusation_list2.txt"
 f = open(accusation_file, "r")
 accusation_list = json.loads(f.readline())
-for a in range(0,len(accusation_list)):
-    accusation_list[a] = accusation_list[a].replace('[','').replace(']','')
+for a in range(0, len(accusation_list)):
+    accusation_list[a] = accusation_list[a].replace('[', '').replace(']', '')
 f.close()
 
 num_process = 1
@@ -72,7 +72,7 @@ def analyze_crit(data):
                 data[a] = b
                 find = True
                 break
-        if not(find):
+        if not (find):
             print(accusation_list[38])
             print(data[a])
             gg
@@ -115,40 +115,40 @@ def draw_out(in_path, out_path):
     cnt = 0
     cx = 0
     for line in inf:
-        # try:
-        data = json.loads(line)
-        if "AJJBQK" in data["document"]:
-            res = {}
+        try:
+            data = json.loads(line)
+            if "AJJBQK" in data["document"]:
+                res = {}
 
-            filter_list = [65292, 12290, 65311, 65281, 65306, 65307, 8216, 8217, 8220, 8221, 12304, 12305,
-                           12289, 12298, 12299, 126, 183, 64, 124, 35, 65509, 37, 8230, 38, 42, 65288,
-                           65289, 8212, 45, 43, 61, 44, 46, 60, 62, 63, 47, 33, 59, 58, 39, 34, 123, 125,
-                           91, 93, 92, 124, 35, 36, 37, 94, 38, 42, 40, 41, 95, 45, 43, 61, 9700, 9734, 9733]
-            s = data["document"]["AJJBQK"].replace("b", "").replace("\t", "")
-            for x in filter_list:
-                s = s.replace(chr(x), ' ')
-            try:
+                filter_list = [65292, 12290, 65311, 65281, 65306, 65307, 8216, 8217, 8220, 8221, 12304, 12305,
+                               12289, 12298, 12299, 126, 183, 64, 124, 35, 65509, 37, 8230, 38, 42, 65288,
+                               65289, 8212, 45, 43, 61, 44, 46, 60, 62, 63, 47, 33, 59, 58, 39, 34, 123, 125,
+                               91, 93, 92, 124, 35, 36, 37, 94, 38, 42, 40, 41, 95, 45, 43, 61, 9700, 9734, 9733]
+                s = data["document"]["AJJBQK"].replace("b", "").replace("\t", "")
+                for x in filter_list:
+                    s = s.replace(chr(x), ' ')
+
                 s = cut(s)
-            
-            l = len(s.split(mid_text))
-            # print(l)
-            if l >= min_length and l <= max_length:
-                res["content"] = s
-            else:
-                # print(s)
-                continue
 
-            res["meta"], able = analyze_meta(data["meta_info"])
-            if not (able):
-                continue
+                l = len(s.split(mid_text))
+                # print(l)
+                if l >= min_length and l <= max_length:
+                    res["content"] = s
+                else:
+                    # print(s)
+                    continue
 
-            cx += 1
-            print(json.dumps(res), file=ouf)
+                res["meta"], able = analyze_meta(data["meta_info"])
+                if not (able):
+                    continue
 
-        cnt += 1
-        if cnt % 50000 == 0:
-            print(in_path, cnt, cx)
-            #break
+                cx += 1
+                print(json.dumps(res), file=ouf)
+
+            cnt += 1
+            if cnt % 50000 == 0:
+                print(in_path, cnt, cx)
+                # break
 
         except Exception as e:
             print(e)
