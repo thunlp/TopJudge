@@ -141,8 +141,8 @@ def analyze_law(data):
         law_list["name_tiao"][x][str(y)] += 1
 
         if not (str((y, z)) in law_list["name_tiao_kuan"][x]):
-            law_list["name_tiao"][x][str((y, z))] = 0
-        law_list["name_tiao"][x][str((y, z))] += 1
+            law_list["name_tiao_kuan"][x][str((y, z))] = 0
+        law_list["name_tiao_kuan"][x][str((y, z))] += 1
 
 
 crit_list = []
