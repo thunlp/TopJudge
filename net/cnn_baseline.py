@@ -11,7 +11,7 @@ configFilePath = args.config
 if configFilePath is None:
     print("python *.py\t--config/-c\tconfigfile")
 usegpu = True
-#if args.use is None:
+# if args.use is None:
 #    print("python *.py\t--use/-u\tcpu/gpu")
 if args.gpu is None:
     usegpu = False
@@ -42,9 +42,11 @@ momemtum = config.getfloat("train", "momentum")
 
 output_time = config.getint("debug", "output_time")
 test_time = config.getint("debug", "test_time")
-num_class = config.get("data", "type_of_label").replace(" ", "").split(",")
+class_name = config.get("data", "type_of_label").replace(" ", "").split(",")
 
 print("Building net...")
+
+
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -58,7 +60,7 @@ class Net(nn.Module):
             (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"),
             config.getint("net", "fc1_feature"))
         self.outfc = []
-        for x in num_class:
+        for x in class_name:
             self.outfc.append(nn.Linear(
                 config.getint("net", "fc1_feature"), get_num_classes(x)
             ))
@@ -111,8 +113,8 @@ for epoch_num in range(0, epoch):
     for idx, data in enumerate(train_data_loader):
         cnt += 1
         inputs, labels = data
-        #print(inputs)
-        #print(labels)
+        # print(inputs)
+        # print(labels)
         if torch.cuda.is_available() and usegpu:
             inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
         else:
@@ -121,10 +123,10 @@ for epoch_num in range(0, epoch):
         optimizer.zero_grad()
 
         outputs = net.forward(inputs)
-        #print(outputs)
+        # print(outputs)
         loss = 0
-        for a in range(0, len(num_class)):
-            loss = loss + criterion(outputs[a], labels.transpose(0,1)[a])
+        for a in range(0, len(class_name)):
+            loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
         # loss = criterion(outputs, label)
         print(loss.data[0])
         loss.backward()
@@ -140,7 +142,5 @@ for epoch_num in range(0, epoch):
 
         if cnt % test_time == 0:
             test()
-
-
 
 print("Training done")
