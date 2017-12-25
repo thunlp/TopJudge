@@ -20,7 +20,7 @@ accusation_list = json.loads(accusation_f.readline())
 #    accusation_list.append(line[:-1])
 
 num_file = 20
-num_process = 1
+num_process = 4
 
 num_list = {
     u"〇": 0,
@@ -208,7 +208,7 @@ def parse_name_of_accusation(data):
         return []
 
 
-key_word_list = [u"第", u"条", u"款", u"、", u"，", u"（", u"）"]
+key_word_list = [u"第", u"条", u"款", u"、", u"，", u"（", u"）", u"之"]
 
 
 def get_number_from_string(s):
@@ -260,6 +260,7 @@ def get_one_reason(content, rex):
     pos = rex.start()
     law_name = rex.group(1)
     nows = rex.group().replace(u"（", u"").replace(u"）", u"")
+    #print(nows)
 
     result = []
 
@@ -280,14 +281,16 @@ def get_one_reason(content, rex):
         num = get_number_from_string(nows[p + 1:nowp])
         if nows[nowp] != u"款":
             if not (add_kuan):
-                result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": 0})
+                result.append({"law_name": law_name, "tiao_num": tiao_num*2+zhiyi, "kuan_num": 0})
             tiao_num = num
             add_kuan = False
-            if nows[nowp + 1] == u"之" and nows[nowp + 2] == u"一":
+            if len(nows) > nowp+2 and nows[nowp + 1] == u"之" and nows[nowp + 2] == u"一":
                 zhiyi = 1
+            else:
+                zhiyi = 0
         else:
             kuan_num = num
-            result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": kuan_num})
+            result.append({"law_name": law_name, "tiao_num": tiao_num*2+zhiyi, "kuan_num": kuan_num})
             add_kuan = True
 
         p = nowp
@@ -297,6 +300,9 @@ def get_one_reason(content, rex):
 
     if not (add_kuan):
         result.append({"law_name": law_name, "tiao_num": tiao_num * 2 + zhiyi, "kuan_num": 0})
+    #print(result)
+    #if zhiyi == 1:
+    #    gg
 
     # print nows
     # for x in result:
@@ -336,7 +342,7 @@ def parse_name_of_law(data):
     key_word_str = num_str
     for x in key_word_list:
         key_word_str = key_word_str + x
-    rex = re.compile(u"《([^《》]*)》第[" + key_word_str + u"]*条")
+    rex = re.compile(u"《([^《》]*)》第[" + key_word_str + u"]*[条款]")
     result = rex.finditer(data["document"]["content"])
 
     result_list = []
@@ -408,7 +414,7 @@ def draw_out(in_path, out_path):
 
         except Exception as e:
             print(e)
-            # gg
+            #gg
 
 
 def work(from_id, to_id):

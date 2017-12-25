@@ -22,8 +22,8 @@ for a in range(0, len(accusation_list)):
     accusation_list[a] = accusation_list[a].replace('[', '').replace(']', '')
 f.close()
 
-num_process = 1
-num_file = 1
+num_process = 4
+num_file = 20
 
 
 def analyze_time(data):
@@ -151,7 +151,7 @@ def draw_out(in_path, out_path):
                 # break
 
         except Exception as e:
-            print(e)
+            pass#print(e)
             # gg
 
 

@@ -6,7 +6,7 @@ import re
 
 # in_path = r"D:\work\law_pre\test\in"
 # out_path = r"D:\work\law_pre\test\out"
-in_path = r"/disk/mysql/law_data/critical_data"
+in_path = r"/disk/mysql/law_data/final_data"
 out_path = r"/disk/mysql/law_data/count_data"
 mid_text = u"  _(:з」∠)_  "
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
@@ -164,6 +164,7 @@ def analyze_crit(data):
 def count(data):
     global total_cnt
     total_cnt += 1
+    return
 
     analyze_time(data["term_of_imprisonment"])
     analyze_money(data["punish_of_money"])
@@ -179,7 +180,7 @@ def draw_out(in_path, out_path):
     cnt = 0
     for line in inf:
         data = json.loads(line)
-        count(data["meta_info"])
+        count(data["meta"])
         cnt += 1
         if cnt % 500000 == 0:
             print(cnt)
