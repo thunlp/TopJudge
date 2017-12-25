@@ -84,7 +84,7 @@ class Net(nn.Module):
         fc1_out = F.relu(self.fc1(fc_input))
         outputs = []
         for fc in self.outfc:
-            outputs.append(self.softmax(fc(fc1_out)))
+            outputs.append(fc(fc1_out))
             # output = self.softmax(self.fc2(fc1_out))
 
         return outputs
