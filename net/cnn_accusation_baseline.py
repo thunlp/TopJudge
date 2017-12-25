@@ -39,7 +39,7 @@ class Net(nn.Module):
             config.getint("net", "fc1_feature"), config.getint("data", "num_classes")
         )
 
-        self.softmax = nn.LogSoftmax(dim=1)
+        self.softmax = nn.Softmax(dim=1)
 
         self.convs = nn.ModuleList(self.convs)
 
