@@ -11,8 +11,8 @@ configFilePath = args.config
 if configFilePath is None:
     print("python *.py\t--config/-c\tconfigfile")
 usegpu = True
-if args.use is None:
-    print("python *.py\t--use/-u\tcpu/gpu")
+#if args.use is None:
+#    print("python *.py\t--use/-u\tcpu/gpu")
 if args.gpu is None:
     usegpu = False
 else:
@@ -37,13 +37,14 @@ train_data_loader, test_data_loader = init_loader(config)
 epoch = config.getint("train", "epoch")
 batch_size = config.getint("data", "batch_size")
 learning_rate = config.getfloat("train", "learning_rate")
+print(learning_rate)
 momemtum = config.getfloat("train", "momentum")
 
 output_time = config.getint("debug", "output_time")
 test_time = config.getint("debug", "test_time")
 num_class = config.get("data", "type_of_label").replace(" ", "").split(",")
 
-
+print("Building net...")
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -79,19 +80,20 @@ class Net(nn.Module):
             config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"))
 
         fc1_out = F.relu(self.fc1(fc_input))
-        output = []
+        outputs = []
         for fc in self.outfc:
-            output.append(self.softmax(fc(fc1_out)))
+            outputs.append(self.softmax(fc(fc1_out)))
             # output = self.softmax(self.fc2(fc1_out))
 
-        return output
+        return outputs
 
 
 net = Net()
 if torch.cuda.is_available() and usegpu:
     net = net.cuda()
+print("Net building done.")
 
-criterion = nn.NLLLoss()
+criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
 
 
@@ -101,24 +103,30 @@ def test():
 
 total_loss = []
 
+print("Training begin")
+
 for epoch_num in range(0, epoch):
     running_loss = 0
     cnt = 0
     for idx, data in enumerate(train_data_loader):
         cnt += 1
-        input, label = data
+        inputs, labels = data
+        #print(inputs)
+        #print(labels)
         if torch.cuda.is_available() and usegpu:
-            input, label = Variable(input.cuda()), Variable(label.cuda())
+            inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
         else:
-            input, label = Variable(input), Variable(label)
+            inputs, labels = Variable(inputs), Variable(labels)
 
         optimizer.zero_grad()
 
-        outputs = net.forward(input)
+        outputs = net.forward(inputs)
+        #print(outputs)
         loss = 0
         for a in range(0, len(num_class)):
-            loss = loss + criterion(outputs[a], label[a])
+            loss = loss + criterion(outputs[a], labels.transpose(0,1)[a])
         # loss = criterion(outputs, label)
+        print(loss.data[0])
         loss.backward()
         optimizer.step()
 
@@ -132,3 +140,7 @@ for epoch_num in range(0, epoch):
 
         if cnt % test_time == 0:
             test()
+
+
+
+print("Training done")

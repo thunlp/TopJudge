@@ -27,6 +27,8 @@ def analyze_law(data, config):
 
 
 def analyze_time(data, config):
+    #print(data)
+    #gg
     if data["sixing"]:
         return 0
     if data["wuqi"]:
@@ -82,9 +84,9 @@ def generate_vector(data, config):
             vec.append(y)
 
     while len(vec) < config.getint("data", "pad_length"):
-        vec.append(torch.FloatTensor)
+        vec.append(torch.FloatTensor(config.getint("data","vec_size")))
 
-    return torch.cat(vec, dim=0)
+    return torch.stack([torch.stack(vec)])
 
 
 def parse(data, config):
@@ -96,9 +98,9 @@ def parse(data, config):
         if x == "law":
             label.append(analyze_law(data["meta"]["law"], config))
         if x == "time":
-            label.append(analyze_time(data["meta"]["crit"], config))
+            label.append(analyze_time(data["meta"]["time"], config))
     vector = generate_vector(data["content"], config)
-    return vector, label
+    return vector, torch.LongTensor(label)
 
 
 def check(data, config):
@@ -113,13 +115,19 @@ def check(data, config):
 def create_loader(file_list, config):
     dataset = []
     for file_name in file_list:
+        print("Loading data from "+file_name+".")
         file_path = os.path.join(config.get("data", "data_path"), str(file_name))
+        cnt = 0
         f = open(file_path, "r")
         for line in f:
             data = json.loads(line)
             if check(data, config):
+                if cnt % 10000 == 0:
+                    print("Already load "+str(cnt)+" data...")
                 dataset.append(parse(data, config))
+                cnt += 1
         f.close()
+        print("Loading " + str(cnt)+ " data from "+file_name + " end.")
 
     return DataLoader(dataset, batch_size=config.getint("data", "batch_size"),
                       shuffle=config.getboolean("data", "shuffle"))
