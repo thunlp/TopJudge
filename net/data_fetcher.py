@@ -4,6 +4,16 @@ from torch.utils.data import DataLoader
 import torch
 
 
+def get_num_classes(s):
+    if s == "crit":
+        return 3
+    if s == "law":
+        return 4
+    if s == "time":
+        return 14
+    gg
+
+
 def get_data_list(d):
     return d.replace(" ", "").split(",")
 

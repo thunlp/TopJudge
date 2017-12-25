@@ -1,9 +1,10 @@
 import configparser
 import argparse
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', '-c')
-parser.add_argument('--use','-u')
+parser.add_argument('--gpu', '-g')
 args = parser.parse_args()
 
 configFilePath = args.config
@@ -12,8 +13,12 @@ if configFilePath is None:
 usegpu = True
 if args.use is None:
     print("python *.py\t--use/-u\tcpu/gpu")
-if args.use == "cpu":
+if args.gpu is None:
     usegpu = False
+else:
+    usegpu = True
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+
 config = configparser.RawConfigParser()
 config.read(configFilePath)
 
@@ -21,6 +26,22 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
+import math
+import time
+import torch.optim as optim
+
+from data_fetcher import init_loader, get_num_classes
+
+train_data_loader, test_data_loader = init_loader(config)
+
+epoch = config.getint("train", "epoch")
+batch_size = config.getint("data", "batch_size")
+learning_rate = config.getfloat("train", "learning_rate")
+momemtum = config.getfloat("train", "momentum")
+
+output_time = config.getint("debug", "output_time")
+test_time = config.getint("debug", "test_time")
+num_class = config.get("data", "type_of_label").replace(" ", "").split(",")
 
 
 class Net(nn.Module):
@@ -35,13 +56,16 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(
             (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"),
             config.getint("net", "fc1_feature"))
-        self.fc2 = nn.Linear(
-            config.getint("net", "fc1_feature"), config.getint("data", "num_classes")
-        )
+        self.outfc = []
+        for x in num_class:
+            self.outfc.append(nn.Linear(
+                config.getint("net", "fc1_feature"), get_num_classes(x)
+            ))
 
         self.softmax = nn.Softmax(dim=1)
 
         self.convs = nn.ModuleList(self.convs)
+        self.outfc = nn.ModuleList(self.outfc)
 
     def forward(self, x):
         fc_input = []
@@ -55,23 +79,13 @@ class Net(nn.Module):
             config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"))
 
         fc1_out = F.relu(self.fc1(fc_input))
-        output = self.softmax(self.fc2(fc1_out))
+        output = []
+        for fc in self.outfc:
+            output.append(self.softmax(fc(fc1_out)))
+            # output = self.softmax(self.fc2(fc1_out))
 
         return output
 
-
-import math
-import time
-import torch.optim as optim
-
-epoch = config.getint("train", "epoch")
-iteration = config.getint("train", "iteration")
-batch_size = config.getint("train", "batch_size")
-learning_rate = config.getfloat("train", "learning_rate")
-momemtum = config.getfloat("train", "momentum")
-
-output_time = config.getint("debug", "output_time")
-test_time = config.getint("debug", "test_time")
 
 net = Net()
 if torch.cuda.is_available() and usegpu:
@@ -80,9 +94,12 @@ if torch.cuda.is_available() and usegpu:
 criterion = nn.NLLLoss()
 optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
 
-from data_fetcher import init_loader
 
-train_data_loader = init_loader(config)
+def test():
+    pass
+
+
+total_loss = []
 
 for epoch_num in range(0, epoch):
     running_loss = 0
@@ -98,14 +115,20 @@ for epoch_num in range(0, epoch):
         optimizer.zero_grad()
 
         outputs = net.forward(input)
-        loss = criterion(outputs, label)
+        loss = 0
+        for a in range(0, len(num_class)):
+            loss = loss + criterion(outputs[a], label[a])
+        # loss = criterion(outputs, label)
         loss.backward()
         optimizer.step()
 
         running_loss += loss.data[0]
 
-        if idx % output_time == output_time - 1:
+        if cnt % output_time == 0:
             print('[%d, %5d] loss: %.3f' %
                   (epoch_num + 1, idx + 1, running_loss / output_time))
-            print(outputs)
+            total_loss.append(running_loss / output_time)
             running_loss = 0.0
+
+        if cnt % test_time == 0:
+            test()
