@@ -272,6 +272,7 @@ def get_one_reason(content, rex):
     tiao_num = 0
     kuan_num = 0
     add_kuan = True
+    zhiyi = 0
     while p < len(nows):
         nowp = p + 1
         while not (nows[nowp] in key_word_list):
@@ -282,6 +283,8 @@ def get_one_reason(content, rex):
                 result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": 0})
             tiao_num = num
             add_kuan = False
+            if nows[nowp + 1] == u"之" and nows[nowp + 2] == u"一":
+                zhiyi = 1
         else:
             kuan_num = num
             result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": kuan_num})
@@ -293,7 +296,7 @@ def get_one_reason(content, rex):
             p += 1
 
     if not (add_kuan):
-        result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": 0})
+        result.append({"law_name": law_name, "tiao_num": tiao_num * 2 + zhiyi, "kuan_num": 0})
 
     # print nows
     # for x in result:
@@ -366,9 +369,9 @@ def parse_money(data):
     for x in result:
         datax = get_number_from_string(x.group(1))
         result_list.append(datax)
-        #print(x.group(1), datax)
+        # print(x.group(1), datax)
 
-    #print(result_list)
+    # print(result_list)
 
     return result_list
 
@@ -400,12 +403,12 @@ def draw_out(in_path, out_path):
                 print(json.dumps(data), file=ouf)
             cnt += 1
             if cnt % 500000 == 0:
-                print(in_path,cnt)
-                #break
+                print(in_path, cnt)
+                # break
 
         except Exception as e:
-                print(e)
-                #gg
+            print(e)
+            # gg
 
 
 def work(from_id, to_id):
