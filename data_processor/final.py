@@ -53,8 +53,9 @@ def analyze_law(data):
         x = r["law_name"]
         y = r["tiao_num"]
         z = r["kuan_num"]
+        f = r["zhiyi"]
         if x == u"中华人民共和国刑法":
-            res.append((y, z))
+            res.append((y, z, f))
 
     res = list(set(res))
     res.sort()
@@ -151,7 +152,7 @@ def draw_out(in_path, out_path):
                 # break
 
         except Exception as e:
-            pass#print(e)
+            pass  # print(e)
             # gg
 
 
