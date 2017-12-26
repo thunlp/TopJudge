@@ -100,7 +100,7 @@ optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
 
 
 def calc_accuracy(outputs, labels):
-    return ((outputs.max(dim=1)[1].eq(labels)).sum(),len(labels))
+    return ((outputs.max(dim=1)[1].eq(labels)).sum(), len(labels))
 
 
 def test():
@@ -113,6 +113,9 @@ print("Training begin")
 
 for epoch_num in range(0, epoch):
     running_loss = 0
+    running_acc = []
+    for a in range(0, len(task_name)):
+        running_acc.append((0, 0))
     cnt = 0
     for idx, data in enumerate(train_data_loader):
         cnt += 1
@@ -129,11 +132,11 @@ for epoch_num in range(0, epoch):
         outputs = net.forward(inputs)
         # print(outputs)
         loss = 0
-        acc = []
         for a in range(0, len(task_name)):
             loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
-            acc.append(calc_accuracy(outputs[a], labels.transpose(0, 1)[a]))
-        print(acc)
+            x, y = running_acc[a]
+            r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
+            running_acc[a] = (x + r, y + z)
         # loss = criterion(outputs, label)
         # print(loss.data[0])
         loss.backward()
@@ -142,10 +145,16 @@ for epoch_num in range(0, epoch):
         running_loss += loss.data[0]
 
         if cnt % output_time == 0:
-            print('[%d, %5d] loss: %.3f' %
+            print('[%d, %d, %5d] loss: %.3f' %
                   (epoch_num + 1, idx + 1, running_loss / output_time))
+            print('accuracy:')
+            for a in range(0, len(task_name)):
+                print("%s\t%.3f" % (task_name[a], running_acc[a][0] / running_acc[a][1]))
             total_loss.append(running_loss / output_time)
             running_loss = 0.0
+            running_acc = []
+            for a in range(0, len(task_name)):
+                running_acc[a] = (0, 0)
 
         if cnt % test_time == 0:
             test()
