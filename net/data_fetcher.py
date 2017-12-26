@@ -130,7 +130,7 @@ def create_loader(file_list, config):
         print("Loading " + str(cnt) + " data from " + file_name + " end.")
 
     return DataLoader(dataset, batch_size=config.getint("data", "batch_size"),
-                      shuffle=config.getboolean("data", "shuffle"))
+                      shuffle=config.getboolean("data", "shuffle"),drop_last = True,num_workers=4)
 
 
 def init_train_loader(config):

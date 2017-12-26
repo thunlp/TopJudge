@@ -145,14 +145,16 @@ for epoch_num in range(0, epoch):
         running_loss += loss.data[0]
 
         if cnt % output_time == 0:
-            print('[%d, %d, %5d] loss: %.3f' %
-                  (epoch_num + 1, idx + 1, running_loss / output_time))
+            print('[%d, %5d, %5d] loss: %.3f' %
+                  (epoch_num + 1, cnt, idx + 1, running_loss / output_time))
             print('accuracy:')
+            #print(running_acc)
             for a in range(0, len(task_name)):
-                print("%s\t%.3f" % (task_name[a], running_acc[a][0] / running_acc[a][1]))
+                #print(running_acc[a][0].data[0],running_acc[a][1])
+                print("%s\t%.3f\t%d\t%d" % (task_name[a], running_acc[a][0].data[0] / running_acc[a][1],running_acc[a][0].data[0],running_acc[a][1]))
+            print("")
             total_loss.append(running_loss / output_time)
             running_loss = 0.0
-            running_acc = []
             for a in range(0, len(task_name)):
                 running_acc[a] = (0, 0)
 
