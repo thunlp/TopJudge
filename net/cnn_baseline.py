@@ -1,6 +1,7 @@
 import configparser
 import argparse
 import os
+import pdb
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', '-c')
@@ -144,6 +145,7 @@ total_loss = []
 
 print("Training begin")
 
+pdb.set_trace()
 for epoch_num in range(0, epoch):
     running_loss = 0
     running_acc = []
