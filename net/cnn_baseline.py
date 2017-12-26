@@ -100,7 +100,7 @@ optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
 
 
 def calc_accuracy(outputs, labels):
-    return (outputs.max(dim=1)[1].eq(labels)).sum()
+    return ((outputs.max(dim=1)[1].eq(labels)).sum(),len(labels))
 
 
 def test():
@@ -133,6 +133,7 @@ for epoch_num in range(0, epoch):
         for a in range(0, len(task_name)):
             loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
             acc.append(calc_accuracy(outputs[a], labels.transpose(0, 1)[a]))
+        print(acc)
         # loss = criterion(outputs, label)
         # print(loss.data[0])
         loss.backward()
