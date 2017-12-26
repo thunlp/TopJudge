@@ -128,7 +128,7 @@ for epoch_num in range(0, epoch):
         for a in range(0, len(task_name)):
             loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
         # loss = criterion(outputs, label)
-        print(loss.data[0])
+        #print(loss.data[0])
         loss.backward()
         optimizer.step()
 
