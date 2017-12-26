@@ -104,7 +104,34 @@ def calc_accuracy(outputs, labels):
 
 
 def test():
-    pass
+    running_acc = []
+    for a in range(0, len(task_name)):
+        running_acc.append((0, 0))
+    for idx, data in enumerate(test_data_loader):
+        inputs, labels = data
+
+        if torch.cuda.is_available() and usegpu:
+            inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
+        else:
+            inputs, labels = Variable(inputs), Variable(labels)
+
+        outputs = net.forward(inputs)
+        for a in range(0, len(task_name)):
+            x, y = running_acc[a]
+            r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
+            running_acc[a] = (x + r, y + z)
+        # loss = criterion(outputs, label)
+        # print(loss.data[0])
+        optimizer.step()
+
+    print('Test accuracy:')
+    # print(running_acc)
+    for a in range(0, len(task_name)):
+        # print(running_acc[a][0].data[0],running_acc[a][1])
+        print("%s\t%.3f\t%d\t%d" % (
+            task_name[a], running_acc[a][0].data[0] / running_acc[a][1], running_acc[a][0].data[0],
+            running_acc[a][1]))
+    print("")
 
 
 total_loss = []
@@ -148,10 +175,12 @@ for epoch_num in range(0, epoch):
             print('[%d, %5d, %5d] loss: %.3f' %
                   (epoch_num + 1, cnt, idx + 1, running_loss / output_time))
             print('accuracy:')
-            #print(running_acc)
+            # print(running_acc)
             for a in range(0, len(task_name)):
-                #print(running_acc[a][0].data[0],running_acc[a][1])
-                print("%s\t%.3f\t%d\t%d" % (task_name[a], running_acc[a][0].data[0] / running_acc[a][1],running_acc[a][0].data[0],running_acc[a][1]))
+                # print(running_acc[a][0].data[0],running_acc[a][1])
+                print("%s\t%.3f\t%d\t%d" % (
+                    task_name[a], running_acc[a][0].data[0] / running_acc[a][1], running_acc[a][0].data[0],
+                    running_acc[a][1]))
             print("")
             total_loss.append(running_loss / output_time)
             running_loss = 0.0
