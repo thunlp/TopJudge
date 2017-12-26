@@ -115,8 +115,10 @@ def check(data, config):
 def create_loader(file_list, config):
     dataset = []
     for file_name in file_list:
-        print("Loading data from " + file_name + ".")
         file_path = os.path.join(config.get("data", "data_path"), str(file_name))
+        if not(os.path.isfile(file_path)):
+            continue
+        print("Loading data from " + file_name + ".")
         cnt = 0
         f = open(file_path, "r")
         for line in f:

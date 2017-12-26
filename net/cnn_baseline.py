@@ -100,6 +100,12 @@ optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
 
 
 def calc_accuracy(outputs, labels):
+    #print(labels)
+    #print(outputs[0])
+    #print(outputs[1])
+    #print(outputs[2])
+    #print(outputs.max(dim=1)[1])
+    #print(outputs.max(dim=1)[1]-labels)
     return ((outputs.max(dim=1)[1].eq(labels)).sum(), len(labels))
 
 
@@ -147,6 +153,9 @@ for epoch_num in range(0, epoch):
     for idx, data in enumerate(train_data_loader):
         cnt += 1
         inputs, labels = data
+        #print(inputs)
+        print(net.fc1)
+        #gg
         # print(inputs)
         # print(labels)
         if torch.cuda.is_available() and usegpu:
