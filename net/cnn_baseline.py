@@ -145,7 +145,6 @@ total_loss = []
 
 print("Training begin")
 
-pdb.set_trace()
 for epoch_num in range(0, epoch):
     running_loss = 0
     running_acc = []
@@ -156,7 +155,7 @@ for epoch_num in range(0, epoch):
         cnt += 1
         inputs, labels = data
         #print(inputs)
-        print(net.fc1)
+        #print(net.fc1)
         #gg
         # print(inputs)
         # print(labels)
