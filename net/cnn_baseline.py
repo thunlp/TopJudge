@@ -42,7 +42,7 @@ momemtum = config.getfloat("train", "momentum")
 
 output_time = config.getint("debug", "output_time")
 test_time = config.getint("debug", "test_time")
-class_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
 
 print("Building net...")
 
@@ -60,7 +60,7 @@ class Net(nn.Module):
             (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"),
             config.getint("net", "fc1_feature"))
         self.outfc = []
-        for x in class_name:
+        for x in task_name:
             self.outfc.append(nn.Linear(
                 config.getint("net", "fc1_feature"), get_num_classes(x)
             ))
@@ -125,7 +125,7 @@ for epoch_num in range(0, epoch):
         outputs = net.forward(inputs)
         # print(outputs)
         loss = 0
-        for a in range(0, len(class_name)):
+        for a in range(0, len(task_name)):
             loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
         # loss = criterion(outputs, label)
         print(loss.data[0])

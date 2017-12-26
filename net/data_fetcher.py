@@ -27,8 +27,8 @@ def analyze_law(data, config):
 
 
 def analyze_time(data, config):
-    #print(data)
-    #gg
+    # print(data)
+    # gg
     if data["sixing"]:
         return 0
     if data["wuqi"]:
@@ -84,7 +84,7 @@ def generate_vector(data, config):
             vec.append(y)
 
     while len(vec) < config.getint("data", "pad_length"):
-        vec.append(torch.FloatTensor(config.getint("data","vec_size")))
+        vec.append(torch.zeros(config.getint("data", "vec_size")))
 
     return torch.stack([torch.stack(vec)])
 
@@ -115,7 +115,7 @@ def check(data, config):
 def create_loader(file_list, config):
     dataset = []
     for file_name in file_list:
-        print("Loading data from "+file_name+".")
+        print("Loading data from " + file_name + ".")
         file_path = os.path.join(config.get("data", "data_path"), str(file_name))
         cnt = 0
         f = open(file_path, "r")
@@ -123,11 +123,11 @@ def create_loader(file_list, config):
             data = json.loads(line)
             if check(data, config):
                 if cnt % 10000 == 0:
-                    print("Already load "+str(cnt)+" data...")
+                    print("Already load " + str(cnt) + " data...")
                 dataset.append(parse(data, config))
                 cnt += 1
         f.close()
-        print("Loading " + str(cnt)+ " data from "+file_name + " end.")
+        print("Loading " + str(cnt) + " data from " + file_name + " end.")
 
     return DataLoader(dataset, batch_size=config.getint("data", "batch_size"),
                       shuffle=config.getboolean("data", "shuffle"))

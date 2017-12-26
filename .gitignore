@@ -4,3 +4,5 @@
 *~
 data_processor/make_data
 __pycache__
+data_processor/result
+temp
