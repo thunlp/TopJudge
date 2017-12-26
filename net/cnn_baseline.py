@@ -99,6 +99,10 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
 
 
+def calc_accuracy(outputs, labels):
+    return (outputs.max(dim=1)[1].eq(labels)).sum()
+
+
 def test():
     pass
 
@@ -125,10 +129,12 @@ for epoch_num in range(0, epoch):
         outputs = net.forward(inputs)
         # print(outputs)
         loss = 0
+        acc = []
         for a in range(0, len(task_name)):
             loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
+            acc.append(calc_accuracy(outputs[a], labels.transpose(0, 1)[a]))
         # loss = criterion(outputs, label)
-        #print(loss.data[0])
+        # print(loss.data[0])
         loss.backward()
         optimizer.step()
 
