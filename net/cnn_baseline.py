@@ -57,13 +57,13 @@ class Net(nn.Module):
         for a in range(config.getint("net", "min_gram"), config.getint("net", "max_gram") + 1):
             self.convs.append(nn.Conv2d(1, config.getint("net", "filters"), (a, config.getint("data", "vec_size"))))
 
-        self.fc1 = nn.Linear(
-            (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"),
-            config.getint("net", "fc1_feature"))
+        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
+                                                                                                             "filters")
+        #self.fc1 = nn.Linear(features, config.getint("net", "fc1_feature"))
         self.outfc = []
         for x in task_name:
             self.outfc.append(nn.Linear(
-                config.getint("net", "fc1_feature"), get_num_classes(x)
+                features, get_num_classes(x)
             ))
 
         self.softmax = nn.Softmax(dim=1)
@@ -78,14 +78,15 @@ class Net(nn.Module):
 
         # for x in fc_input:
         #    print(x)
+        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
+                                                                                                             "filters")
 
-        fc_input = torch.cat(fc_input, dim=1).view(-1, (
-            config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net", "filters"))
+        fc_input = torch.cat(fc_input, dim=1).view(-1, features)
 
-        fc1_out = F.relu(self.fc1(fc_input))
+        #fc1_out = F.relu(self.fc1(fc_input))
         outputs = []
         for fc in self.outfc:
-            outputs.append(fc(fc1_out))
+            outputs.append(fc(fc_input))
             # output = self.softmax(self.fc2(fc1_out))
 
         return outputs
@@ -101,12 +102,12 @@ optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
 
 
 def calc_accuracy(outputs, labels):
-    #print(labels)
-    #print(outputs[0])
-    #print(outputs[1])
-    #print(outputs[2])
-    #print(outputs.max(dim=1)[1])
-    #print(outputs.max(dim=1)[1]-labels)
+    # print(labels)
+    # print(outputs[0])
+    # print(outputs[1])
+    # print(outputs[2])
+    # print(outputs.max(dim=1)[1])
+    # print(outputs.max(dim=1)[1]-labels)
     return ((outputs.max(dim=1)[1].eq(labels)).sum(), len(labels))
 
 
@@ -154,9 +155,9 @@ for epoch_num in range(0, epoch):
     for idx, data in enumerate(train_data_loader):
         cnt += 1
         inputs, labels = data
-        #print(inputs)
-        #print(net.fc1)
-        #gg
+        # print(inputs)
+        # print(net.fc1)
+        # gg
         # print(inputs)
         # print(labels)
         if torch.cuda.is_available() and usegpu:
