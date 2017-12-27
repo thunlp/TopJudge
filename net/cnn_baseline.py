@@ -60,7 +60,7 @@ class Net(nn.Module):
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
-        #self.fc1 = nn.Linear(features, config.getint("net", "fc1_feature"))
+        # self.fc1 = nn.Linear(features, config.getint("net", "fc1_feature"))
         self.outfc = []
         for x in task_name:
             self.outfc.append(nn.Linear(
@@ -84,7 +84,7 @@ class Net(nn.Module):
 
         fc_input = torch.cat(fc_input, dim=1).view(-1, features)
 
-        #fc1_out = F.relu(self.fc1(fc_input))
+        # fc1_out = F.relu(self.fc1(fc_input))
         outputs = []
         for fc in self.outfc:
             outputs.append(fc(fc_input))
@@ -117,14 +117,15 @@ def test():
     for a in range(0, len(task_name)):
         running_acc.append((0, 0))
     for idx, data in enumerate(test_data_loader):
-        inputs, labels = data
+        inputs, doc_len, labels = data
 
         if torch.cuda.is_available() and usegpu:
-            inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
+            inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
         else:
-            inputs, labels = Variable(inputs), Variable(labels)
+            inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
         outputs = net.forward(inputs)
+        pdb.set_trace()
         for a in range(0, len(task_name)):
             x, y = running_acc[a]
             r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
@@ -132,6 +133,7 @@ def test():
         # loss = criterion(outputs, label)
         # print(loss.data[0])
         optimizer.step()
+        pdb.set_trace()
 
     print('Test accuracy:')
     # print(running_acc)
@@ -155,16 +157,16 @@ for epoch_num in range(0, epoch):
     cnt = 0
     for idx, data in enumerate(train_data_loader):
         cnt += 1
-        inputs, lens, labels = data
+        inputs, doc_len, labels = data
         # print(inputs)
         # print(net.fc1)
         # gg
         # print(inputs)
         # print(labels)
         if torch.cuda.is_available() and usegpu:
-            inputs, lens, labels = Variable(inputs.cuda()), Variable(lens.cuda()), Variable(labels.cuda())
+            inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
         else:
-            inputs, labels = Variable(inputs), Variable(lens), Variable(labels)
+            inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
         optimizer.zero_grad()
 

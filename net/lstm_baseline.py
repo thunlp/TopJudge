@@ -55,7 +55,7 @@ class Net(nn.Module):
         self.data_size = config.getint("data", "vec_size")
         self.hidden_dim = config.getint("net", "hidden_size")
 
-        self.lstm = nn.LSTM(self.data_size, self.hidden_dim, batch_first = True)
+        self.lstm = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
 
         self.outfc = []
         for x in task_name:
@@ -67,29 +67,30 @@ class Net(nn.Module):
 
     def init_hidden(self):
         if torch.cuda.is_available() and usegpu:
-            return (torch.autograd.Variable(torch.zeros(1, config.getint("data","batch_size"), self.hidden_dim).cuda()),
-                    torch.autograd.Variable(torch.zeros(1, config.getint("data","batch_size"), self.hidden_dim).cuda()))
+            return (
+            torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+            torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
         else:
-            return (torch.autograd.Variable(torch.zeros(1, config.getint("data","batch_size"), self.hidden_dim)),
-                    torch.autograd.Variable(torch.zeros(1, config.getint("data","batch_size"), self.hidden_dim)))
+            return (torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
+                    torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
 
-    def forward(self, x, lens):
-        #x = x.transpose(0,1)
-        x = x.view(config.getint("data","batch_size"), config.getint("data", "pad_length"),
+    def forward(self, x, doc_len):
+        # x = x.transpose(0,1)
+        x = x.view(config.getint("data", "batch_size"), config.getint("data", "pad_length"),
                    config.getint("data", "vec_size"))
         # print(x)
         lstm_out, self.hidden = self.lstm(x, self.hidden)
-        #print(lstm_out)
-        #gg
-        #lstm_out = lstm_out.transpose(0,1)
-        #print(lstm_out)
-        #lstm_out = lstm_out.permute(1,0,2)
-        #print(lens)
+        # print(lstm_out)
+        # gg
+        # lstm_out = lstm_out.transpose(0,1)
+        # print(lstm_out)
+        # lstm_out = lstm_out.permute(1,0,2)
+        # print(doc_len)
         outv = []
-        for a in range(0,len(lens)):
-            outv.append(lstm_out[a][lens[a]-1])
+        for a in range(0, len(doc_len)):
+            outv.append(lstm_out[a][doc_len[a] - 1])
         lstm_out = torch.cat(outv)
-        #lstm_out = lstm_out[:,-1]#lstm_out.view(config.getint("data", "batch_size"), -1)
+        # lstm_out = lstm_out[:,-1]#lstm_out.view(config.getint("data", "batch_size"), -1)
 
         outputs = []
         for fc in self.outfc:
@@ -126,14 +127,14 @@ def test():
     for idx, data in enumerate(test_data_loader):
 
         net.hidden = net.init_hidden()
-        inputs, labels = data
+        inputs, doc_len, labels = data
 
         if torch.cuda.is_available() and usegpu:
-            inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
+            inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
         else:
-            inputs, labels = Variable(inputs), Variable(labels)
+            inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
-        outputs = net.forward(inputs)
+        outputs = net.forward(inputs, doc_len)
         for a in range(0, len(task_name)):
             x, y = running_acc[a]
             r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
@@ -165,20 +166,20 @@ for epoch_num in range(0, epoch):
     for idx, data in enumerate(train_data_loader):
         net.hidden = net.init_hidden()
         cnt += 1
-        inputs, lens, labels = data
+        inputs, doc_len, labels = data
         # print(inputs)
         # print(net.fc1)
         # gg
         # print(inputs)
         # print(labels)
         if torch.cuda.is_available() and usegpu:
-            inputs, lens, labels = Variable(inputs.cuda()), Variable(lens.cuda()), Variable(labels.cuda())
+            inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
         else:
-            inputs, lens, labels = Variable(inputs), Variable(lens), Variable(labels)
+            inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
         optimizer.zero_grad()
 
-        outputs = net.forward(inputs, lens)
+        outputs = net.forward(inputs, doc_len)
         # print(outputs)
         loss = 0
         for a in range(0, len(task_name)):
