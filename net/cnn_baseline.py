@@ -56,6 +56,7 @@ class Net(nn.Module):
 
         for a in range(config.getint("net", "min_gram"), config.getint("net", "max_gram") + 1):
             self.convs.append(nn.Conv2d(1, config.getint("net", "filters"), (a, config.getint("data", "vec_size"))))
+        nn.Conv2d()
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
@@ -202,3 +203,5 @@ for epoch_num in range(0, epoch):
             test()
 
 print("Training done")
+
+test()
