@@ -56,7 +56,6 @@ class Net(nn.Module):
 
         for a in range(config.getint("net", "min_gram"), config.getint("net", "max_gram") + 1):
             self.convs.append(nn.Conv2d(1, config.getint("net", "filters"), (a, config.getint("data", "vec_size"))))
-        nn.Conv2d()
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
@@ -125,7 +124,6 @@ def test():
             inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
         outputs = net.forward(inputs)
-        pdb.set_trace()
         for a in range(0, len(task_name)):
             x, y = running_acc[a]
             r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
@@ -133,7 +131,6 @@ def test():
         # loss = criterion(outputs, label)
         # print(loss.data[0])
         optimizer.step()
-        pdb.set_trace()
 
     print('Test accuracy:')
     # print(running_acc)
@@ -180,8 +177,10 @@ for epoch_num in range(0, epoch):
             running_acc[a] = (x + r, y + z)
         # loss = criterion(outputs, label)
         # print(loss.data[0])
+        pdb.set_trace()
         loss.backward()
         optimizer.step()
+        pdb.set_trace()
 
         running_loss += loss.data[0]
 
