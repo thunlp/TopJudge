@@ -60,22 +60,30 @@ class Net(nn.Module):
         self.outfc = []
         for x in task_name:
             self.outfc.append(nn.Linear(
-                self.hidden_dim, get_num_classes(x)
+                self.hidden_dim*config.getint("data","pad_length"), get_num_classes(x)
             ))
         self.outfc = nn.ModuleList(self.outfc)
         self.hidden = self.init_hidden()
 
     def init_hidden(self):
-        return (torch.autograd.Variable(torch.zeros(1, 1, self.hidden_dim)),
-                torch.autograd.Variable(torch.zeros(1, 1, self.hidden_dim)))
+        if torch.cuda.is_available() and usegpu:
+            return (torch.autograd.Variable(torch.zeros(1, 1, self.hidden_dim).cuda()),
+                    torch.autograd.Variable(torch.zeros(1, 1, self.hidden_dim).cuda()))
+        else:
+            return (torch.autograd.Variable(torch.zeros(1, 1, self.hidden_dim)),
+                    torch.autograd.Variable(torch.zeros(1, 1, self.hidden_dim)))
 
     def forward(self, x):
+        x = x.view(config.getint("data","batch_size"),config.getint("data","pad_length"),config.getint("data","vec_size"))
+        #print(x)
         lstm_out, self.hidden = self.lstm(x, self.hidden)
+        lstm_out = lstm_out.view(config.getint("data","batch_size"),-1)
 
         outputs = []
         for fc in self.outfc:
             outputs.append(fc(lstm_out))
             # output = self.softmax(self.fc2(fc1_out))
+        #print(outputs)
 
         return outputs
 
