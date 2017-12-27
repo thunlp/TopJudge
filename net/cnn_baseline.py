@@ -155,16 +155,16 @@ for epoch_num in range(0, epoch):
     cnt = 0
     for idx, data in enumerate(train_data_loader):
         cnt += 1
-        inputs, labels = data
+        inputs, lens, labels = data
         # print(inputs)
         # print(net.fc1)
         # gg
         # print(inputs)
         # print(labels)
         if torch.cuda.is_available() and usegpu:
-            inputs, labels = Variable(inputs.cuda()), Variable(labels.cuda())
+            inputs, lens, labels = Variable(inputs.cuda()), Variable(lens.cuda()), Variable(labels.cuda())
         else:
-            inputs, labels = Variable(inputs), Variable(labels)
+            inputs, labels = Variable(inputs), Variable(lens), Variable(labels)
 
         optimizer.zero_grad()
 

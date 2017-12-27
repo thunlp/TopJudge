@@ -2,7 +2,9 @@ import os
 import json
 from torch.utils.data import DataLoader
 import torch
+from word2vec import word2vec
 
+transformer = word2vec()
 
 def get_num_classes(s):
     if s == "crit":
@@ -69,10 +71,16 @@ word_dict = {}
 
 
 def get_word_vec(x, config):
-    if not (x in word_dict):
-        word_dict[x] = torch.rand(config.getint("data", "vec_size"))
+    #if not (x in word_dict):
+    #    word_dict[x] = torch.rand(config.getint("data", "vec_size"))
+    vec = transformer.load(x)
+    #print(type(vec))
+    if vec is None:
+        return None,False
+    else:
+        return vec,True
 
-    return word_dict[x], True
+    #return word_dict[x], True
 
 
 def generate_vector(data, config):
@@ -80,13 +88,15 @@ def generate_vector(data, config):
     vec = []
     for x in data:
         y, z = get_word_vec(x, config)
+        #print(y,z)
         if z:
-            vec.append(y)
-
+            vec.append(torch.from_numpy(y))
+    len_vec = len(vec)
     while len(vec) < config.getint("data", "pad_length"):
         vec.append(torch.zeros(config.getint("data", "vec_size")))
-
-    return torch.stack([torch.stack(vec)])
+   
+    #print(torch.stack(vec))
+    return torch.stack([torch.stack(vec)]), len_vec
 
 
 def parse(data, config):
@@ -99,8 +109,8 @@ def parse(data, config):
             label.append(analyze_law(data["meta"]["law"], config))
         if x == "time":
             label.append(analyze_time(data["meta"]["time"], config))
-    vector = generate_vector(data["content"], config)
-    return vector, torch.LongTensor(label)
+    vector, len_vec = generate_vector(data["content"], config)
+    return vector, len_vec, torch.LongTensor(label)
 
 
 def check(data, config):
