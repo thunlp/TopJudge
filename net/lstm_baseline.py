@@ -141,7 +141,6 @@ def test():
             running_acc[a] = (x + r, y + z)
         # loss = criterion(outputs, label)
         # print(loss.data[0])
-        optimizer.step()
 
     print('Test accuracy:')
     # print(running_acc)
