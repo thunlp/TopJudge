@@ -130,7 +130,7 @@ def test():
             running_acc[a] = (x + r, y + z)
         # loss = criterion(outputs, label)
         # print(loss.data[0])
-        optimizer.step()
+        #optimizer.step()
 
     print('Test accuracy:')
     # print(running_acc)
@@ -177,10 +177,10 @@ for epoch_num in range(0, epoch):
             running_acc[a] = (x + r, y + z)
         # loss = criterion(outputs, label)
         # print(loss.data[0])
-        pdb.set_trace()
+        #pdb.set_trace()
         loss.backward()
         optimizer.step()
-        pdb.set_trace()
+        #pdb.set_trace()
 
         running_loss += loss.data[0]
 
