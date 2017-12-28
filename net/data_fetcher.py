@@ -5,6 +5,13 @@ from word2vec import word2vec
 
 transformer = word2vec()
 
+unk = torch.randn(200)
+unk = unk / torch.norm(unk)
+unk = unk.numpy()
+pad = torch.randn(200)
+pad = pad / torch.norm(pad)
+pad = pad.numpy()
+
 def get_num_classes(s):
     if s == "crit":
         return 3
@@ -75,7 +82,7 @@ def get_word_vec(x, config):
     vec = transformer.load(x)
     #print(type(vec))
     if vec is None:
-        return None,False
+        return unk,True
     else:
         return vec,True
 
@@ -92,7 +99,8 @@ def generate_vector(data, config):
             vec.append(torch.from_numpy(y))
     len_vec = len(vec)
     while len(vec) < config.getint("data", "pad_length"):
-        vec.append(torch.zeros(config.getint("data", "vec_size")))
+        #vec.append(torch.zeros(config.getint("data", "vec_size")))
+        vec.append(torch.from_numpy(pad))
    
     #print(torch.stack(vec))
     return torch.stack([torch.stack(vec)]), len_vec
@@ -115,8 +123,8 @@ def parse(data, config):
 def check(data, config):
     if len(data["meta"]["crit"]) > 1:
         return False
-    if len(data["meta"]["law"]) > 1:
-        return False
+    #if len(data["meta"]["law"]) > 1:
+    #    return False
 
     return True
 
