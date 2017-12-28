@@ -29,21 +29,24 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import math
 import time
+from torch.utils.data import DataLoader
 import torch.optim as optim
 
-from data_fetcher import init_loader, get_num_classes
+from data_fetcher import init_dataset, get_num_classes
 
-train_data_loader, test_data_loader = init_loader(config)
+train_dataset, test_dataset = init_dataset(config)
 
 epoch = config.getint("train", "epoch")
 batch_size = config.getint("data", "batch_size")
 learning_rate = config.getfloat("train", "learning_rate")
 print(learning_rate)
 momemtum = config.getfloat("train", "momentum")
+shuffle = config.getboolean("data", "shuffle")
 
 output_time = config.getint("debug", "output_time")
 test_time = config.getint("debug", "test_time")
 task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+optimizer_type = config.get("train", "optimizer")
 
 print("Building net...")
 
@@ -68,8 +71,8 @@ class Net(nn.Module):
     def init_hidden(self):
         if torch.cuda.is_available() and usegpu:
             return (
-            torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
-            torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
         else:
             return (torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
                     torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
@@ -107,23 +110,36 @@ if torch.cuda.is_available() and usegpu:
 print("Net building done.")
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
+if optimizer_type == "adam":
+    optimizer = optim.Adam(net.parameters(), lr=learning_rate)
+elif optimizer_type == "sgd":
+    optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
+else:
+    gg
 
 
 def calc_accuracy(outputs, labels):
-    # print(labels)
-    # print(outputs[0])
-    # print(outputs[1])
-    # print(outputs[2])
-    # print(outputs.max(dim=1)[1])
-    # print(outputs.max(dim=1)[1]-labels)
-    return ((outputs.max(dim=1)[1].eq(labels)).sum(), len(labels))
+    v1 = int((outputs.max(dim=1)[1].eq(labels)).sum().data.cpu().numpy())
+    v2 = 0
+    for a in range(0, len(labels)):
+        nowl = outputs[a].max(dim=0)[1]
+        v2 += int(torch.eq(nowl, labels[a]).data.cpu().numpy())
+
+        # if torch.eq(nowl,labels[a]) == 1:
+        #    v2 += 1
+    v3 = len(labels)
+    if v1 != v2:
+        print(outputs.max(dim=1))
+        print(labels)
+        gg
+    return (v2, v3)
 
 
 def test():
     running_acc = []
     for a in range(0, len(task_name)):
         running_acc.append((0, 0))
+    test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=4)
     for idx, data in enumerate(test_data_loader):
 
         net.hidden = net.init_hidden()
@@ -139,15 +155,11 @@ def test():
             x, y = running_acc[a]
             r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
             running_acc[a] = (x + r, y + z)
-        # loss = criterion(outputs, label)
-        # print(loss.data[0])
 
     print('Test accuracy:')
-    # print(running_acc)
     for a in range(0, len(task_name)):
-        # print(running_acc[a][0].data[0],running_acc[a][1])
         print("%s\t%.3f\t%d\t%d" % (
-            task_name[a], running_acc[a][0].data[0] / running_acc[a][1], running_acc[a][0].data[0],
+            task_name[a], running_acc[a][0] / running_acc[a][1], running_acc[a][0],
             running_acc[a][1]))
     print("")
 
@@ -162,15 +174,11 @@ for epoch_num in range(0, epoch):
     for a in range(0, len(task_name)):
         running_acc.append((0, 0))
     cnt = 0
+    train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle, drop_last=True, num_workers=4)
     for idx, data in enumerate(train_data_loader):
         net.hidden = net.init_hidden()
         cnt += 1
         inputs, doc_len, labels = data
-        # print(inputs)
-        # print(net.fc1)
-        # gg
-        # print(inputs)
-        # print(labels)
         if torch.cuda.is_available() and usegpu:
             inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
         else:
@@ -186,8 +194,7 @@ for epoch_num in range(0, epoch):
             x, y = running_acc[a]
             r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
             running_acc[a] = (x + r, y + z)
-        # loss = criterion(outputs, label)
-        # print(loss.data[0])
+
         loss.backward()
         optimizer.step()
 
@@ -199,9 +206,8 @@ for epoch_num in range(0, epoch):
             print('accuracy:')
             # print(running_acc)
             for a in range(0, len(task_name)):
-                # print(running_acc[a][0].data[0],running_acc[a][1])
                 print("%s\t%.3f\t%d\t%d" % (
-                    task_name[a], running_acc[a][0].data[0] / running_acc[a][1], running_acc[a][0].data[0],
+                    task_name[a] + "accuracy", running_acc[a][0] / running_acc[a][1], running_acc[a][0],
                     running_acc[a][1]))
             print("")
             total_loss.append(running_loss / output_time)
