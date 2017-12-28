@@ -102,7 +102,7 @@ print("Net building done.")
 
 criterion = nn.CrossEntropyLoss()
 if optimizer_type == "adam":
-    optimizer = optim.Adam(net.parameters(), lr=learning_rate, momemtum=momemtum)
+    optimizer = optim.Adam(net.parameters(), lr=learning_rate)
 elif optimizer_type == "sgd":
     optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
 else:
@@ -110,16 +110,19 @@ else:
 
 
 def calc_accuracy(outputs, labels):
-    v1 = (outputs.max(dim=1)[1].eq(labels)).sum()
+    v1 = int((outputs.max(dim=1)[1].eq(labels)).sum().data.cpu().numpy())
     v2 = 0
     for a in range(0, len(labels)):
-        nowl = outputs[a].max()[1]
-        if nowl == labels[a]:
-            v2 += 1
+        nowl = outputs[a].max(dim=0)[1]
+        v2 += int(torch.eq(nowl,labels[a]).data.cpu().numpy())
+        
+        #if torch.eq(nowl,labels[a]) == 1:
+        #    v2 += 1
     v3 = len(labels)
-    if v1 != v2 or v3 != batch_size:
+    if v1 != v2:
         print(outputs.max(dim=1))
         print(labels)
+        gg
     return (v2, v3)
 
 
@@ -145,7 +148,7 @@ def test():
     print('Test accuracy:')
     for a in range(0, len(task_name)):
         print("%s\t%.3f\t%d\t%d" % (
-            task_name[a], running_acc[a][0].data[0] / running_acc[a][1], running_acc[a][0].data[0],
+            task_name[a], running_acc[a][0] / running_acc[a][1], running_acc[a][0],
             running_acc[a][1]))
     print("")
 
@@ -192,7 +195,7 @@ for epoch_num in range(0, epoch):
             # print(running_acc)
             for a in range(0, len(task_name)):
                 print("%s\t%.3f\t%d\t%d" % (
-                    task_name[a] + "accuracy", running_acc[a][0].data[0] / running_acc[a][1], running_acc[a][0].data[0],
+                    task_name[a] + "accuracy", running_acc[a][0] / running_acc[a][1], running_acc[a][0],
                     running_acc[a][1]))
             print("")
             total_loss.append(running_loss / output_time)

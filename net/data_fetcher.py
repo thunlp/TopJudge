@@ -152,7 +152,7 @@ def init_test_dataset(config):
     return create_dataset(get_data_list(config.get("data", "test_data")), config)
 
 
-def init_loader(config):
+def init_dataset(config):
     train_dataset = init_train_dataset(config)
     test_dataset = init_test_dataset(config)
 
