@@ -2,8 +2,10 @@ import os
 import json
 import torch
 from word2vec import word2vec
+import random
 
 transformer = word2vec()
+
 
 def get_num_classes(s):
     if s == "crit":
@@ -70,26 +72,26 @@ word_dict = {}
 
 
 def get_word_vec(x, config):
-    #if not (x in word_dict):
+    # if not (x in word_dict):
     #    word_dict[x] = torch.rand(config.getint("data", "vec_size"))
     vec = transformer.load(x)
-    #print(type(vec))
+    # print(type(vec))
     return vec
 
-    #return word_dict[x], True
+    # return word_dict[x], True
 
 
 def generate_vector(data, config):
     data = data.split("\t")
     vec = []
     for x in data:
-        y= get_word_vec(x, config)
+        y = get_word_vec(x, config)
         vec.append(torch.from_numpy(y))
     len_vec = len(vec)
     while len(vec) < config.getint("data", "pad_length"):
         vec.append(torch.from_numpy(transformer.load("BLANK")))
-   
-    #print(torch.stack(vec))
+
+    # print(torch.stack(vec))
     return torch.stack([torch.stack(vec)]), len_vec
 
 
@@ -110,33 +112,58 @@ def parse(data, config):
 def check(data, config):
     if len(data["meta"]["crit"]) > 1:
         return False
-    #if len(data["meta"]["law"]) > 1:
-    #    return False
 
     return True
 
 
-def create_dataset(file_list, config):
-    dataset = []
-    for file_name in file_list:
-        file_path = os.path.join(config.get("data", "data_path"), str(file_name))
-        if not(os.path.isfile(file_path)):
-            continue
-        print("Loading data from " + file_name + ".")
-        cnt = 0
-        f = open(file_path, "r")
-        for line in f:
-            data = json.loads(line)
-            if check(data, config):
-                if cnt % 10000 == 0:
-                    print("Already load " + str(cnt) + " data...")
-                dataset.append(parse(data, config))
-                cnt += 1
-        f.close()
-        print("Loading " + str(cnt) + " data from " + file_name + " end.")
+class reader():
+    def __init__(self, file_list):
+        self.file_list = []
+        self.use_list = []
+        for a in range(0, len(file_list)):
+            self.use_list.append(False)
+        self.data_list = []
+        self.temp_file = None
+        self.rest = len(self.file_list)
 
-    return dataset#DataLoader(dataset, batch_size=config.getint("data", "batch_size"),
-             #         shuffle=config.getboolean("data", "shuffle"), drop_last=True, num_workers=4)
+    def gen_new_file(self, config):
+        if self.rest == 0:
+            return
+        self.rest -= 1
+        p = random.randint(0, len(self.file_list))
+        while self.use_list[p]:
+            p = random.randint(0, len(self.file_list))
+
+        self.use_list[p] = True
+
+        self.temp_file = open(os.path.join(config.get("data", "data_path"), str(self.file_list[p])), "r")
+
+    def fetch_data(self, config):
+        batch_size = config.getint("data", "batch_size")
+
+        if batch_size > len(self.data_list):
+            if self.temp_file is None:
+                self.gen_new_file()
+
+            while len(self.data_list) < 4 * batch_size:
+                now_line = self.temp_file.readline()
+                if now_line == '':
+                    break
+                data = json.loads(now_line)
+                if check(data, config):
+                    self.data_list.append(parse(data, config))
+
+            if len(self.data_list) < batch_size:
+                return None
+
+        data = torch.stack(self.data[0:batch_size])
+        self.data_list = self.data_list[batch_size:-1]
+
+        return data
+
+
+def create_dataset(file_list, config):
+    return reader(file_list)
 
 
 def init_train_dataset(config):
