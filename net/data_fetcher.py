@@ -1,6 +1,5 @@
 import os
 import json
-from torch.utils.data import DataLoader
 import torch
 from word2vec import word2vec
 
@@ -122,7 +121,7 @@ def check(data, config):
     return True
 
 
-def create_loader(file_list, config):
+def create_dataset(file_list, config):
     dataset = []
     for file_name in file_list:
         file_path = os.path.join(config.get("data", "data_path"), str(file_name))
@@ -141,20 +140,20 @@ def create_loader(file_list, config):
         f.close()
         print("Loading " + str(cnt) + " data from " + file_name + " end.")
 
-    return DataLoader(dataset, batch_size=config.getint("data", "batch_size"),
-                      shuffle=config.getboolean("data", "shuffle"), drop_last=True, num_workers=4)
+    return dataset#DataLoader(dataset, batch_size=config.getint("data", "batch_size"),
+             #         shuffle=config.getboolean("data", "shuffle"), drop_last=True, num_workers=4)
 
 
-def init_train_loader(config):
-    return create_loader(get_data_list(config.get("data", "train_data")), config)
+def init_train_dataset(config):
+    return create_dataset(get_data_list(config.get("data", "train_data")), config)
 
 
-def init_test_loader(config):
-    return create_loader(get_data_list(config.get("data", "test_data")), config)
+def init_test_dataset(config):
+    return create_dataset(get_data_list(config.get("data", "test_data")), config)
 
 
 def init_loader(config):
-    train_loader = init_train_loader(config)
-    test_loader = init_test_loader(config)
+    train_dataset = init_train_dataset(config)
+    test_dataset = init_test_dataset(config)
 
-    return train_loader, test_loader
+    return train_dataset, test_dataset
