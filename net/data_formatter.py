@@ -6,16 +6,17 @@ import random
 
 transformer = word2vec()
 accusation_list = []
-f = open("result/result.txt","r")
-
+f = open("result/result.txt", "r")
+for line in accusation_list:
+    accusation_list.append(int(line[:-1].replace("\n","").split(" ")[1]))
 
 def get_num_classes(s):
     if s == "crit":
-        return 3
+        return 50
     if s == "law":
         return 4
     if s == "time":
-        return 14
+        return gg
     gg
 
 
@@ -114,7 +115,11 @@ def parse(data, config):
 
 
 def check(data, config):
-    if len(data["meta"]["crit"]) > 1:
+    if len(data["meta"]["crit"]) > 1 or len(data["meta"]["crit"]) == 0:
+        return False
+    if not(data["meta"]["crit"][0] in accusation_list):
+        return False
+    if len(data["content"].split("\t")) > config.getint("data","pad_length"):
         return False
 
     return True
