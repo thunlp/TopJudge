@@ -9,11 +9,12 @@ accusation_list = []
 accusation_dict = {}
 f = open("result/result_bac.txt", "r")
 for line in f:
-    data = int(line[:-1].replace("\n","").split(" ")[1])
+    data = int(line[:-1].replace("\n", "").split(" ")[1])
     accusation_list.append(data)
-    accusation_dict[data] = len(accusation_list)-1
+    accusation_dict[data] = len(accusation_list) - 1
 print(accusation_list)
 print(accusation_dict)
+
 
 def get_num_classes(s):
     if s == "crit":
@@ -30,7 +31,7 @@ def get_data_list(d):
 
 
 def analyze_crit(data, config):
-    return data[0]
+    return accusation_dict[data[0]]
 
 
 def analyze_law(data, config):
@@ -122,9 +123,9 @@ def parse(data, config):
 def check(data, config):
     if len(data["meta"]["crit"]) > 1 or len(data["meta"]["crit"]) == 0:
         return False
-    if not(int(data["meta"]["crit"][0]) in accusation_dict):
+    if not (int(data["meta"]["crit"][0]) in accusation_dict):
         return False
-    if len(data["content"].split("\t")) > config.getint("data","pad_length"):
+    if len(data["content"].split("\t")) > config.getint("data", "pad_length"):
         return False
 
     return True
