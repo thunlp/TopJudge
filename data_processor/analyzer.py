@@ -1,4 +1,4 @@
-file_path = r"C:\work\law_pre\data_processor\result.txt"
+file_path = r"C:\work\law_pre\data_processor\result\result.txt"
 crit_path = r"C:\work\law_pre\data_processor\accusation_list2.txt"
 f = open(file_path, "r")
 
@@ -15,7 +15,7 @@ print("total:", data["total"])
 
 
 def analyze_lawname():
-    f = open("name_result.txt", "w")
+    f = open("result/name_result.txt", "w")
     cnt = 0
     for x in data["law"]["name_tiao_kuan"].keys():
         if x == u"中华人民共和国刑法":
@@ -37,7 +37,7 @@ def analyze_lawname():
 
 def analyze_critname():
     cnt = 0
-    f = open("crit_result.txt", "w")
+    f = open("result/crit_result.txt", "w")
     for a in range(0, len(crit_list)):
         print(crit_list[a], data["crit"][a], file=f)
         cnt += data["crit"][a]
@@ -47,7 +47,7 @@ def analyze_critname():
 
 
 def analyze_time():
-    f = open("time_result.txt", "w")
+    f = open("result/time_result.txt", "w")
     youqi_time = [0, 2, 3, 5, 7, 10, 15, 25]
     res = {}
     res["[0,0]"] = 0

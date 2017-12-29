@@ -156,7 +156,7 @@ def analyze_crit(data):
     global crit_list
     for x in data:
         for a in range(0, len(accusation_list)):
-            if x == accusation_list[a]:
+            if x.replace("[", "").replace("]", "") == accusation_list[a].replace("[", "").replace("]", ""):
                 crit_list[a] += 1
                 break
 
@@ -164,7 +164,6 @@ def analyze_crit(data):
 def count(data):
     global total_cnt
     total_cnt += 1
-    return
 
     analyze_time(data["term_of_imprisonment"])
     analyze_money(data["punish_of_money"])
@@ -194,22 +193,22 @@ def work(from_id, to_id):
 
 
 if __name__ == "__main__":
-    work(0,20)
-    #import multiprocessing
+    work(0, 20)
+    # import multiprocessing
 
-    #process_pool = []
+    # process_pool = []
 
-    #for a in range(0, num_process):
+    # for a in range(0, num_process):
     #    process_pool.append(
     #        multiprocessing.Process(target=work, args=(a * num_file / num_process, (a + 1) * num_file / num_process)))
 
-    #for a in process_pool:
+    # for a in process_pool:
     #    a.start()
 
-    #for a in process_pool:
+    # for a in process_pool:
     #    a.join()
 
-    ouf = open("result.txt", "w")
+    ouf = open("result/result.txt", "w")
     data = {}
     data["total"] = total_cnt
     data["youqi"] = youqi_list
@@ -221,4 +220,4 @@ if __name__ == "__main__":
     data["law"] = law_list
     data["money"] = money_list
     data["crit"] = crit_list
-    print(json.dumps(data),file=ouf)
+    print(json.dumps(data), file=ouf)

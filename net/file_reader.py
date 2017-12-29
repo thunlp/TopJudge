@@ -2,6 +2,7 @@ import random
 import os
 import json
 from data_formatter import parse, check, get_data_list, get_num_classes
+from torch.utils.data import DataLoader
 
 
 class reader():
@@ -30,19 +31,17 @@ class reader():
         batch_size = config.getint("data", "batch_size")
 
         if batch_size > len(self.data_list):
-            if self.temp_file is None:
+            if self.rest != 0:
                 self.gen_new_file(config)
+                data = self.temp_file.read().split("\n")
+                cnt = 0
+                for x in data:
+                    y = json.loads(data)
+                    if check(data, config):
+                        self.data_list.append(parse(data, config))
+                        cnt += 1
 
-            while len(self.data_list) < 4 * batch_size:
-                now_line = self.temp_file.readline()
-                if now_line == '':
-                    if self.rest == 0:
-                        break
-                    self.gen_new_file(config)
-                    continue
-                data = json.loads(now_line)
-                if check(data, config):
-                    self.data_list.append(parse(data, config))
+                print("Loda %d data", cnt)
 
             if len(self.data_list) < batch_size:
                 for a in range(0, len(self.file_list)):
