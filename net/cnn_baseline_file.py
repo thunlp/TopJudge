@@ -132,7 +132,7 @@ def test():
         running_acc.append((0, 0))
 
     while True:
-        data = test_dataset.fetch_data()
+        data = test_dataset.fetch_data(config)
         if data is None:
             break
 
@@ -148,6 +148,7 @@ def test():
             x, y = running_acc[a]
             r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
             running_acc[a] = (x + r, y + z)
+        break
 
     print('Test accuracy:')
     for a in range(0, len(task_name)):
@@ -169,7 +170,7 @@ for epoch_num in range(0, epoch):
     cnt = 0
     idx = 0
     while True:
-        data = train_dataset.fetch_data()
+        data = train_dataset.fetch_data(config)
         if data is None:
             break
         idx += batch_size
@@ -212,8 +213,8 @@ for epoch_num in range(0, epoch):
             for a in range(0, len(task_name)):
                 running_acc[a] = (0, 0)
 
-        if cnt % test_time == 0:
-            test()
+        #if cnt % test_time == 0:
+    test()
 
 print("Training done")
 

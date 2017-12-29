@@ -6,7 +6,7 @@ from data_formatter import parse, check, get_data_list
 
 class reader():
     def __init__(self, file_list):
-        self.file_list = []
+        self.file_list = file_list
         self.use_list = []
         for a in range(0, len(file_list)):
             self.use_list.append(False)
@@ -18,9 +18,9 @@ class reader():
         if self.rest == 0:
             return
         self.rest -= 1
-        p = random.randint(0, len(self.file_list))
+        p = random.randint(0, len(self.file_list) - 1)
         while self.use_list[p]:
-            p = random.randint(0, len(self.file_list))
+            p = random.randint(0, len(self.file_list) - 1)
 
         self.use_list[p] = True
 
@@ -31,23 +31,34 @@ class reader():
 
         if batch_size > len(self.data_list):
             if self.temp_file is None:
-                self.gen_new_file()
+                self.gen_new_file(config)
 
             while len(self.data_list) < 4 * batch_size:
                 now_line = self.temp_file.readline()
                 if now_line == '':
-                    break
+                    if self.rest == 0:
+                        break
+                    self.gen_new_file(config)
+                    continue
                 data = json.loads(now_line)
                 if check(data, config):
                     self.data_list.append(parse(data, config))
 
             if len(self.data_list) < batch_size:
+                for a in range(0, len(self.file_list)):
+                    self.use_list[a] = False
+                self.data_list = []
+                self.rest = len(self.file_list)
+                self.temp_file = None
                 return None
 
-        data = torch.stack(self.data[0:batch_size])
-        self.data_list = self.data_list[batch_size:-1]
+        dataloader = DataLoader(self.data_list[0:batch_size], batch_size=batch_size,
+                                shuffle=config.getboolean("data", "shuffle"))
+        self.data_list = self.data_list[batch_size:len(self.data_list) - 1]
+        for idx, data in enumerate(dataloader):
+            return data
 
-        return data
+        return None
 
 
 def create_dataset(file_list, config):

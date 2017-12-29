@@ -25,7 +25,7 @@ class word2vec:
         try:
             return self.vec[self.word2id[word]].astype(dtype=np.float32)
         except:
-            return None
+            return self.vec[self.word2id['UNK']].astype(dtype=np.float32)
 
 if __name__ == "__main__":
     a = word2vec()

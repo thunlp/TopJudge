@@ -87,7 +87,7 @@ def generate_vector(data, config):
     for x in data:
         y = get_word_vec(x, config)
         vec.append(torch.from_numpy(y))
-        if len(vec) == config.getint("data","pad_length"):
+        if len(vec) == config.getint("data", "pad_length"):
             break
     len_vec = len(vec)
     while len(vec) < config.getint("data", "pad_length"):
