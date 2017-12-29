@@ -36,9 +36,9 @@ class reader():
                 data = self.temp_file.read().split("\n")
                 cnt = 0
                 for x in data:
-                    y = json.loads(data)
-                    if check(data, config):
-                        self.data_list.append(parse(data, config))
+                    y = json.loads(x)
+                    if check(y, config):
+                        self.data_list.append(parse(y, config))
                         cnt += 1
 
                 print("Loda %d data", cnt)

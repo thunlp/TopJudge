@@ -13,11 +13,11 @@ mid_text = u"  _(:з」∠)_  "
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
 
-accusation_file = r"../accusation_list2.txt"
+accusation_file = r"../data_processor/accusation_list2.txt"
 accusation_f = open(accusation_file, "r", encoding='utf8')
 accusation_list = json.loads(accusation_f.readline())
-for a in range(0, len(accusation_list)):
-    accusation_list[a] = accusation_list[a].replace("[", "").replace("]", "")
+#for a in range(0, len(accusation_list)):
+#    accusation_list[a] = accusation_list[a].replace("[", "").replace("]", "")
 # accusation_list = []
 # for line in accusation_f:
 #    accusation_list.append(line[:-1])
@@ -53,7 +53,7 @@ def draw_out(in_path, out_path):
     cnt = 0
     for line in inf:
         data = json.loads(line)
-        if not (check(data)):
+        if not (check(data,None)):
             continue
         count(data["meta"])
         cnt += 1
@@ -74,9 +74,13 @@ if __name__ == "__main__":
     ouf = open("result/result.txt", "w")
     data = {}
     print(total_cnt)
+    gg = 0
     for a in range(0, len(crit_list)):
-        print(accusation_list[a], crit_list[a])
+        if crit_list[a] > 1000:
+            print(accusation_list[a], a, crit_list[a],file=ouf)
+            gg += crit_list[a]
+    print(gg)
     data["total"] = total_cnt
 
     data["crit"] = crit_list
-    print(json.dumps(data), file=ouf)
+    #print(json.dumps(data), file=ouf)
