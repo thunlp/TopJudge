@@ -1,7 +1,7 @@
 import random
 import os
 import json
-from data_formatter import parse, check, get_data_list
+from data_formatter import parse, check, get_data_list, get_num_classes
 
 
 class reader():
