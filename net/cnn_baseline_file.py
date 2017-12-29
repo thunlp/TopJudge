@@ -149,6 +149,8 @@ def test():
             r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
             running_acc[a] = (x + r, y + z)
         break
+    if running_acc[a][1] == 0:
+        return
 
     print('Test accuracy:')
     for a in range(0, len(task_name)):
@@ -213,8 +215,8 @@ for epoch_num in range(0, epoch):
             for a in range(0, len(task_name)):
                 running_acc[a] = (0, 0)
 
-        #if cnt % test_time == 0:
-    test()
+        if cnt % test_time == 0:
+            test()
 
 print("Training done")
 

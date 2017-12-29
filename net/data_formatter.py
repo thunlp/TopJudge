@@ -20,9 +20,9 @@ def get_num_classes(s):
     if s == "crit":
         return 50
     if s == "law":
-        return 4
-    if s == "time":
         return gg
+    if s == "time":
+        return 14
     gg
 
 

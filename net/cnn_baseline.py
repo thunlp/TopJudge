@@ -144,6 +144,8 @@ def test():
             x, y = running_acc[a]
             r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
             running_acc[a] = (x + r, y + z)
+    if running_acc[a][1] == 0:
+        return
 
     print('Test accuracy:')
     for a in range(0, len(task_name)):
