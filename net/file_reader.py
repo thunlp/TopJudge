@@ -36,6 +36,8 @@ class reader():
                 data = self.temp_file.read().split("\n")
                 cnt = 0
                 for x in data:
+                    if x == "":
+                        continue
                     y = json.loads(x)
                     if check(y, config):
                         self.data_list.append(parse(y, config))

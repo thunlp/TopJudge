@@ -5,6 +5,8 @@ from word2vec import word2vec
 import random
 
 transformer = word2vec()
+accusation_list = []
+f = open("result/result.txt","r")
 
 
 def get_num_classes(s):
