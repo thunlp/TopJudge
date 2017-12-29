@@ -76,7 +76,7 @@ if __name__ == "__main__":
     print(total_cnt)
     gg = 0
     for a in range(0, len(crit_list)):
-        if crit_list[a] > 1000:
+        #if crit_list[a] > 1000:
             print(accusation_list[a], a, crit_list[a],file=ouf)
             gg += crit_list[a]
     print(gg)
