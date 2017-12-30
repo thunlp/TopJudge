@@ -1,7 +1,6 @@
 import torch
 
 
-
 def get_num_classes(s):
     if s == "crit":
         return 50
@@ -36,7 +35,7 @@ def gen_result(res):
         total["TP"] += res[a]["TP"]
         total["FP"] += res[a]["FP"]
         total["FN"] += res[a]["FN"]
-        if res[a]["TP"] + res[a]["FP"] !=0:
+        if res[a]["TP"] + res[a]["FP"] != 0:
             precision.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FP"]))
         else:
             precision.append(0)
@@ -52,6 +51,7 @@ def gen_result(res):
     # for a in range(0, len(res)):
     #    print("Class\t%d:\tprecesion\t%.3f\trecall\t%.3f\tf1\t%.3f" % (a, precesion[a], recall[a], f1[a]))
 
+    print(total["TP"], total["FP"], total["FN"])
     micro_precision = total["TP"] / (total["TP"] + total["FP"])
     macro_precision = 0
     micro_recall = total["TP"] / (total["TP"] + total["FN"])
