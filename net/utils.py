@@ -1,6 +1,17 @@
 import torch
 
 
+
+def get_num_classes(s):
+    if s == "crit":
+        return 50
+    if s == "law":
+        return gg
+    if s == "time":
+        return 12
+    gg
+
+
 def calc_accuracy(outputs, labels, res):
     for a in range(0, len(labels)):
         it_is = int(outputs[a].max(dim=0)[1].data.cpu().numpy())

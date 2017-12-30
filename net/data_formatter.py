@@ -16,15 +16,6 @@ print(accusation_list)
 print(accusation_dict)
 
 
-def get_num_classes(s):
-    if s == "crit":
-        return 50
-    if s == "law":
-        return gg
-    if s == "time":
-        return 12
-    gg
-
 
 def get_data_list(d):
     return d.replace(" ", "").split(",")

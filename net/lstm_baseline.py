@@ -103,13 +103,7 @@ if torch.cuda.is_available() and usegpu:
     net = net.cuda()
 print("Net building done.")
 
-criterion = nn.CrossEntropyLoss()
-if optimizer_type == "adam":
-    optimizer = optim.Adam(net.parameters(), lr=learning_rate)
-elif optimizer_type == "sgd":
-    optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
-else:
-    gg
+
 
 
 def test():
@@ -119,7 +113,7 @@ def test():
         for b in range(0, get_num_classes(task_name[a])):
             running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
 
-    test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=4)
+    test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=1)
     for idx, data in enumerate(test_data_loader):
 
         net.hidden = net.init_hidden()
@@ -158,7 +152,7 @@ for epoch_num in range(0, epoch):
             running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
 
     cnt = 0
-    train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle, drop_last=True, num_workers=4)
+    train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle, drop_last=True, num_workers=1)
     for idx, data in enumerate(train_data_loader):
         net.hidden = net.init_hidden()
         cnt += 1

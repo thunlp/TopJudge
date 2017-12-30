@@ -43,7 +43,7 @@ class reader():
                         self.data_list.append(parse(y, config))
                         cnt += 1
 
-                print("Loda %d data", cnt)
+                print("Loda %d data" % cnt)
 
             if len(self.data_list) < batch_size:
                 for a in range(0, len(self.file_list)):

@@ -69,13 +69,14 @@ class Net(nn.Module):
                 features, get_num_classes(x)
             ))
 
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.convs = nn.ModuleList(self.convs)
         self.outfc = nn.ModuleList(self.outfc)
 
     def forward(self, x):
         fc_input = []
         for conv in self.convs:
-            fc_input.append(torch.max(conv(x), dim=2, keepdim=True)[0])
+            fc_input.append(self.dropout(torch.max(conv(x), dim=2, keepdim=True)[0]))
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
@@ -104,6 +105,7 @@ else:
 
 
 def test():
+    net.eval()
     running_acc = []
     for a in range(0, len(task_name)):
         running_acc.append([])
@@ -125,10 +127,11 @@ def test():
         outputs = net.forward(inputs)
         for a in range(0, len(task_name)):
             running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
+    net.train()
 
     print('Test result:')
     for a in range(0, len(task_name)):
-        print("%s result:" %  task_name[a])
+        print("%s result:" % task_name[a])
         try:
             gen_result(running_acc[a])
         except Exception as e:
