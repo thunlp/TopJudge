@@ -32,7 +32,9 @@ import time
 from torch.utils.data import DataLoader
 import torch.optim as optim
 
-from file_reader import init_dataset, get_num_classes
+from data_fetcher import init_dataset, get_num_classes
+from utils import calc_accuracy, gen_result
+
 
 train_dataset, test_dataset = init_dataset(config)
 
@@ -62,14 +64,11 @@ class Net(nn.Module):
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
-        # self.fc1 = nn.Linear(features, config.getint("net", "fc1_feature"))
         self.outfc = []
         for x in task_name:
             self.outfc.append(nn.Linear(
                 features, get_num_classes(x)
             ))
-
-        self.softmax = nn.Softmax(dim=1)
 
         self.convs = nn.ModuleList(self.convs)
         self.outfc = nn.ModuleList(self.outfc)
@@ -79,18 +78,15 @@ class Net(nn.Module):
         for conv in self.convs:
             fc_input.append(torch.max(conv(x), dim=2, keepdim=True)[0])
 
-        # for x in fc_input:
-        #    print(x)
+
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
 
         fc_input = torch.cat(fc_input, dim=1).view(-1, features)
 
-        # fc1_out = F.relu(self.fc1(fc_input))
         outputs = []
         for fc in self.outfc:
             outputs.append(fc(fc_input))
-            # output = self.softmax(self.fc2(fc1_out))
 
         return outputs
 
@@ -109,27 +105,13 @@ else:
     gg
 
 
-def calc_accuracy(outputs, labels):
-    v1 = int((outputs.max(dim=1)[1].eq(labels)).sum().data.cpu().numpy())
-    v2 = 0
-    for a in range(0, len(labels)):
-        nowl = outputs[a].max(dim=0)[1]
-        v2 += int(torch.eq(nowl, labels[a]).data.cpu().numpy())
-
-        # if torch.eq(nowl,labels[a]) == 1:
-        #    v2 += 1
-    v3 = len(labels)
-    if v1 != v2:
-        print(outputs.max(dim=1))
-        print(labels)
-        gg
-    return (v2, v3)
-
 
 def test():
     running_acc = []
     for a in range(0, len(task_name)):
-        running_acc.append((0, 0))
+        running_acc.append([])
+        for b in range(0, get_num_classes(task_name[a])):
+            running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
 
     while True:
         data = test_dataset.fetch_data(config)
