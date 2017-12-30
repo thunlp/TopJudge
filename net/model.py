@@ -102,8 +102,8 @@ def test(net, test_dataset, usegpu, config):
     batch_size = config.getint("data", "batch_size")
     for a in range(0, len(task_name)):
         running_acc.append([])
-    for b in range(0, get_num_classes(task_name[a])):
-        running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
+        for b in range(0, get_num_classes(task_name[a])):
+            running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
 
     test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=1)
     for idx, data in enumerate(test_data_loader):
@@ -122,10 +122,10 @@ def test(net, test_dataset, usegpu, config):
     print('Test result:')
     for a in range(0, len(task_name)):
         print("%s result:" % task_name[a])
-    try:
-        gen_result(running_acc[a])
-    except Exception as e:
-        pass
+        try:
+            gen_result(running_acc[a])
+        except Exception as e:
+            pass
     print("")
 
 
@@ -153,6 +153,7 @@ def train(net, train_dataset, test_dataset, usegpu, config):
 
     print("Training begin")
     net.train()
+    first = True
 
     for epoch_num in range(0, epoch):
         running_loss = 0
@@ -181,7 +182,11 @@ def train(net, train_dataset, test_dataset, usegpu, config):
                 loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
                 running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
 
-            loss.backward()
+            if first:
+                loss.backward(retain_graph = True)
+                first = False
+            else:
+                loss.backward(retain_graph = True)
             optimizer.step()
 
             running_loss += loss.data[0]
@@ -269,6 +274,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
         gg
 
     total_loss = []
+    first = True
 
     print("Training begin")
     for epoch_num in range(0, epoch):
@@ -302,7 +308,12 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                 loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
                 running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
 
-            loss.backward()
+            if first:
+                loss.backward(retain_graph = True)
+                first = False
+            else:
+                loss.backward()
+
             optimizer.step()
 
             running_loss += loss.data[0]
