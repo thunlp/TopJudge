@@ -109,6 +109,9 @@ def test(net, test_dataset, usegpu, config):
     for idx, data in enumerate(test_data_loader):
         inputs, doc_len, labels = data
 
+        if isinstance(net, LSTM):
+            net.hidden = net.init_hidden(config, usegpu)
+
         if torch.cuda.is_available() and usegpu:
             inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
         else:
@@ -174,6 +177,8 @@ def train(net, train_dataset, test_dataset, usegpu, config):
             else:
                 inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
+            if isinstance(net, LSTM):
+                net.hidden = net.init_hidden(config, usegpu)
             optimizer.zero_grad()
 
             outputs = net.forward(inputs, doc_len, config)
@@ -228,6 +233,9 @@ def test_file(net, test_dataset, usegpu, config):
             break
 
         inputs, doc_len, labels = data
+
+        if isinstance(net, LSTM):
+            net.hidden = net.init_hidden(config, usegpu)
 
         if torch.cuda.is_available() and usegpu:
             inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
@@ -297,6 +305,8 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             else:
                 inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
+            if isinstance(net, LSTM):
+                net.hidden = net.init_hidden(config, usegpu)
             optimizer.zero_grad()
 
             outputs = net.forward(inputs, doc_len, config)
