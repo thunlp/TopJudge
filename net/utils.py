@@ -10,7 +10,6 @@ def calc_accuracy(outputs, labels, res):
         else:
             res[it_is]["FP"] += 1
             res[should_be]["FN"] += 1
-
     return res
 
 
@@ -26,9 +25,18 @@ def gen_result(res):
         total["TP"] += res[a]["TP"]
         total["FP"] += res[a]["FP"]
         total["FN"] += res[a]["FN"]
-        precision.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FP"]))
-        recall.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FN"]))
-        f1.append(2 * precision[a] * recall[a] / (precision[a] + recall[a]))
+        if res[a]["TP"] + res[a]["FP"] !=0:
+            precision.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FP"]))
+        else:
+            precision.append(0)
+        if res[a]["TP"] + res[a]["FN"] != 0:
+            recall.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FN"]))
+        else:
+            recall.append(0)
+        if precision[a] + recall[a] != 0:
+            f1.append(2 * precision[a] * recall[a] / (precision[a] + recall[a]))
+        else:
+            f1.append(0)
 
     # for a in range(0, len(res)):
     #    print("Class\t%d:\tprecesion\t%.3f\trecall\t%.3f\tf1\t%.3f" % (a, precesion[a], recall[a], f1[a]))

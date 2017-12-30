@@ -22,7 +22,7 @@ def get_num_classes(s):
     if s == "law":
         return gg
     if s == "time":
-        return 14
+        return 12
     gg
 
 
@@ -39,6 +39,36 @@ def analyze_law(data, config):
 
 
 def analyze_time(data, config):
+    if data["sixing"]:
+        return 0
+    if data["wuqi"]:
+        return 1
+    v = 0
+    for x in data["youqi"]:
+        v = max(x, v)
+    for x in data["juyi"]:
+        v = max(x, v)
+    for x in data["guanzhi"]:
+        v = max(x, v)
+    if v > 10 * 12:
+        return 2
+    if v > 7 * 12:
+        return 3
+    if v > 5 * 12:
+        return 4
+    if v > 3 * 12:
+        return 5
+    if v > 2 * 12:
+        return 6
+    if v > 1 * 12:
+        return 7
+    if v > 9:
+        return 8
+    if v > 6:
+        return 9
+    if v > 0:
+        return 10
+    return 11
     # print(data)
     # gg
     if data["sixing"]:

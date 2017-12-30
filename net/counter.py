@@ -3,7 +3,7 @@
 import os
 import json
 import re
-from data_formatter import check
+from data_formatter import check, analyze_time
 
 # in_path = r"D:\work\law_pre\test\in"
 # out_path = r"D:\work\law_pre\test\out"
@@ -30,7 +30,13 @@ total_cnt = 0
 crit_list = []
 for a in range(0, len(accusation_list)):
     crit_list.append(0)
+time_dict = {}
 
+def analyze_times(data):
+     x = analyze_time(data,None)
+     if not(x in time_dict):
+         time_dict[x] = 0
+     time_dict[x] += 1
 
 def analyze_crit(data):
     if len(data) == 0:
@@ -44,6 +50,7 @@ def count(data):
     total_cnt += 1
 
     analyze_crit(data["crit"])
+    analyze_times(data["time"])
 
 
 def draw_out(in_path, out_path):
@@ -71,16 +78,18 @@ def work(from_id, to_id):
 if __name__ == "__main__":
     work(0, 20)
 
-    ouf = open("result/result.txt", "w")
+    #ouf = open("result/result.txt", "w")
     data = {}
     print(total_cnt)
     gg = 0
     for a in range(0, len(crit_list)):
         #if crit_list[a] > 1000:
-            print(accusation_list[a], a, crit_list[a],file=ouf)
+            #print(accusation_list[a], a, crit_list[a],file=ouf)
             gg += crit_list[a]
     print(gg)
     data["total"] = total_cnt
 
     data["crit"] = crit_list
+    for x in time_dict.keys():
+        print(x,time_dict[x])
     #print(json.dumps(data), file=ouf)

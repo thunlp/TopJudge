@@ -161,9 +161,7 @@ for epoch_num in range(0, epoch):
         loss = 0
         for a in range(0, len(task_name)):
             loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
-            x, y = running_acc[a]
-            r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
-            running_acc[a] = (x + r, y + z)
+            running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
 
         loss.backward()
         optimizer.step()
@@ -180,8 +178,11 @@ for epoch_num in range(0, epoch):
 
             total_loss.append(running_loss / output_time)
             running_loss = 0.0
+            running_acc = []
             for a in range(0, len(task_name)):
-                running_acc[a] = (0, 0)
+                 running_acc.append([])
+                 for b in range(0, get_num_classes(task_name[a])):
+                     running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
 
     test()
 
