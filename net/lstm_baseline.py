@@ -142,6 +142,7 @@ def test():
             gen_result(running_acc[a])
         except Exception as e:
             pass
+    print("")
 
 
 total_loss = []
