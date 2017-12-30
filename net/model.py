@@ -109,14 +109,14 @@ def test(net, test_dataset, usegpu, config):
     for idx, data in enumerate(test_data_loader):
         inputs, doc_len, labels = data
 
-    if torch.cuda.is_available() and usegpu:
-        inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
-    else:
-        inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
+        if torch.cuda.is_available() and usegpu:
+            inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
+        else:
+            inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
-    outputs = net.forward(inputs, doc_len, config)
-    for a in range(0, len(task_name)):
-        running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
+        outputs = net.forward(inputs, doc_len, config)
+        for a in range(0, len(task_name)):
+            running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
     net.train()
 
     print('Test result:')
@@ -235,6 +235,7 @@ def test_file(net, test_dataset, usegpu, config):
         outputs = net.forward(inputs, doc_len, config)
         for a in range(0, len(task_name)):
             running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
+
     net.train()
 
     print('Test result:')
