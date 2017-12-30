@@ -65,7 +65,7 @@ def test(net, test_dataset, usegpu, config):
     else:
         inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
-    outputs = net.forward(inputs, doc_len)
+    outputs = net.forward(inputs, doc_len, config)
     for a in range(0, len(task_name)):
         running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
     net.train()
@@ -126,7 +126,7 @@ def train(net, train_dataset, test_dataset, usegpu, config):
 
             optimizer.zero_grad()
 
-            outputs = net.forward(inputs, doc_len)
+            outputs = net.forward(inputs, doc_len, config)
             loss = 0
             for a in range(0, len(task_name)):
                 loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
