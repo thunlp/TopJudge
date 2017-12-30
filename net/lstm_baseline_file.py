@@ -138,7 +138,7 @@ def test():
 
     print('Test result:')
     for a in range(0, len(task_name)):
-        print("%s result:", task_name[a])
+        print("%s result:" % task_name[a])
         try:
             gen_result(running_acc[a])
         except Exception as e:

@@ -32,7 +32,7 @@ import time
 from torch.utils.data import DataLoader
 import torch.optim as optim
 
-from data_fetcher import init_dataset, get_num_classes
+from file_reader import init_dataset, get_num_classes
 from utils import calc_accuracy, gen_result
 
 train_dataset, test_dataset = init_dataset(config)
@@ -128,7 +128,7 @@ def test():
 
     print('Test result:')
     for a in range(0, len(task_name)):
-        print("%s result:", task_name[a])
+        print("%s result:" %  task_name[a])
         try:
             gen_result(running_acc[a])
         except Exception as e:
