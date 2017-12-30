@@ -177,16 +177,13 @@ def train(net, train_dataset, test_dataset, usegpu, config):
             optimizer.zero_grad()
 
             outputs = net.forward(inputs, doc_len, config)
-            loss = 0
+            losses = []
             for a in range(0, len(task_name)):
-                loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
+                losses.append(criterion(outputs[a], labels.transpose(0, 1)[a]))
                 running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
+            loss = torch.sum(torch.stack(losses))
 
-            if first:
-                loss.backward(retain_graph = True)
-                first = False
-            else:
-                loss.backward(retain_graph = True)
+            loss.backward()
             optimizer.step()
 
             running_loss += loss.data[0]
@@ -309,7 +306,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                 running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
 
             if first:
-                loss.backward(retain_graph = True)
+                loss.backward(retain_graph=True)
                 first = False
             else:
                 loss.backward()
