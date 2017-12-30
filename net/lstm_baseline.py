@@ -33,6 +33,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 
 from data_fetcher import init_dataset, get_num_classes
+from utils import calc_accuracy, gen_result
 
 train_dataset, test_dataset = init_dataset(config)
 
@@ -78,28 +79,21 @@ class Net(nn.Module):
                     torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
 
     def forward(self, x, doc_len):
-        # x = x.transpose(0,1)
+
         x = x.view(config.getint("data", "batch_size"), config.getint("data", "pad_length"),
                    config.getint("data", "vec_size"))
-        # print(x)
+
         lstm_out, self.hidden = self.lstm(x, self.hidden)
-        # print(lstm_out)
-        # gg
-        # lstm_out = lstm_out.transpose(0,1)
-        # print(lstm_out)
-        # lstm_out = lstm_out.permute(1,0,2)
-        # print(doc_len)
+
         outv = []
         for a in range(0, len(doc_len)):
             outv.append(lstm_out[a][doc_len[a] - 1])
         lstm_out = torch.cat(outv)
-        # lstm_out = lstm_out[:,-1]#lstm_out.view(config.getint("data", "batch_size"), -1)
+
 
         outputs = []
         for fc in self.outfc:
             outputs.append(fc(lstm_out))
-            # output = self.softmax(self.fc2(fc1_out))
-        # print(outputs)
 
         return outputs
 
@@ -118,27 +112,13 @@ else:
     gg
 
 
-def calc_accuracy(outputs, labels):
-    v1 = int((outputs.max(dim=1)[1].eq(labels)).sum().data.cpu().numpy())
-    v2 = 0
-    for a in range(0, len(labels)):
-        nowl = outputs[a].max(dim=0)[1]
-        v2 += int(torch.eq(nowl, labels[a]).data.cpu().numpy())
-
-        # if torch.eq(nowl,labels[a]) == 1:
-        #    v2 += 1
-    v3 = len(labels)
-    if v1 != v2:
-        print(outputs.max(dim=1))
-        print(labels)
-        gg
-    return (v2, v3)
-
-
 def test():
     running_acc = []
     for a in range(0, len(task_name)):
-        running_acc.append((0, 0))
+        running_acc.append([])
+        for b in range(0, get_num_classes(task_name[a])):
+            running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
+
     test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=4)
     for idx, data in enumerate(test_data_loader):
 
@@ -152,16 +132,16 @@ def test():
 
         outputs = net.forward(inputs, doc_len)
         for a in range(0, len(task_name)):
-            x, y = running_acc[a]
-            r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
-            running_acc[a] = (x + r, y + z)
+            running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
 
-    print('Test accuracy:')
+
+    print('Test result:')
     for a in range(0, len(task_name)):
-        print("%s\t%.3f\t%d\t%d" % (
-            task_name[a], running_acc[a][0] / running_acc[a][1], running_acc[a][0],
-            running_acc[a][1]))
-    print("")
+        print("%s result:", task_name[a])
+        try:
+            gen_result(running_acc[a])
+        except Exception as e:
+            pass
 
 
 total_loss = []
@@ -172,7 +152,10 @@ for epoch_num in range(0, epoch):
     running_loss = 0
     running_acc = []
     for a in range(0, len(task_name)):
-        running_acc.append((0, 0))
+        running_acc.append([])
+        for b in range(0, get_num_classes(task_name[a])):
+            running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
+
     cnt = 0
     train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle, drop_last=True, num_workers=4)
     for idx, data in enumerate(train_data_loader):
@@ -187,13 +170,11 @@ for epoch_num in range(0, epoch):
         optimizer.zero_grad()
 
         outputs = net.forward(inputs, doc_len)
-        # print(outputs)
+
         loss = 0
         for a in range(0, len(task_name)):
             loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
-            x, y = running_acc[a]
-            r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
-            running_acc[a] = (x + r, y + z)
+            running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
 
         loss.backward()
         optimizer.step()
@@ -203,17 +184,18 @@ for epoch_num in range(0, epoch):
         if cnt % output_time == 0:
             print('[%d, %5d, %5d] loss: %.3f' %
                   (epoch_num + 1, cnt, idx + 1, running_loss / output_time))
-            print('accuracy:')
-            # print(running_acc)
             for a in range(0, len(task_name)):
-                print("%s\t%.3f\t%d\t%d" % (
-                    task_name[a] + "accuracy", running_acc[a][0] / running_acc[a][1], running_acc[a][0],
-                    running_acc[a][1]))
+                print("%s result:" % task_name[a])
+                gen_result(running_acc[a])
             print("")
+
             total_loss.append(running_loss / output_time)
             running_loss = 0.0
+            running_acc = []
             for a in range(0, len(task_name)):
-                running_acc[a] = (0, 0)
+                 running_acc.append([])
+                 for b in range(0, get_num_classes(task_name[a])):
+                     running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
 
         if cnt % test_time == 0:
             test()

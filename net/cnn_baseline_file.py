@@ -35,7 +35,6 @@ import torch.optim as optim
 from data_fetcher import init_dataset, get_num_classes
 from utils import calc_accuracy, gen_result
 
-
 train_dataset, test_dataset = init_dataset(config)
 
 epoch = config.getint("train", "epoch")
@@ -78,7 +77,6 @@ class Net(nn.Module):
         for conv in self.convs:
             fc_input.append(torch.max(conv(x), dim=2, keepdim=True)[0])
 
-
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
 
@@ -105,7 +103,6 @@ else:
     gg
 
 
-
 def test():
     running_acc = []
     for a in range(0, len(task_name)):
@@ -127,19 +124,15 @@ def test():
 
         outputs = net.forward(inputs)
         for a in range(0, len(task_name)):
-            x, y = running_acc[a]
-            r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
-            running_acc[a] = (x + r, y + z)
-        break
-    if running_acc[a][1] == 0:
-        return
+            running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
 
-    print('Test accuracy:')
+    print('Test result:')
     for a in range(0, len(task_name)):
-        print("%s\t%.3f\t%d\t%d" % (
-            task_name[a], running_acc[a][0] / running_acc[a][1], running_acc[a][0],
-            running_acc[a][1]))
-    print("")
+        print("%s result:", task_name[a])
+        try:
+            gen_result(running_acc[a])
+        except Exception as e:
+            pass
 
 
 total_loss = []
@@ -150,7 +143,10 @@ for epoch_num in range(0, epoch):
     running_loss = 0
     running_acc = []
     for a in range(0, len(task_name)):
-        running_acc.append((0, 0))
+        running_acc.append([])
+        for b in range(0, get_num_classes(task_name[a])):
+            running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
+
     cnt = 0
     idx = 0
     while True:
@@ -172,33 +168,30 @@ for epoch_num in range(0, epoch):
         loss = 0
         for a in range(0, len(task_name)):
             loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
-            x, y = running_acc[a]
-            r, z = calc_accuracy(outputs[a], labels.transpose(0, 1)[a])
-            running_acc[a] = (x + r, y + z)
-        # pdb.set_trace()
+            running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
+
         loss.backward()
         optimizer.step()
-        # pdb.set_trace()
 
         running_loss += loss.data[0]
 
         if cnt % output_time == 0:
             print('[%d, %5d, %5d] loss: %.3f' %
                   (epoch_num + 1, cnt, idx + 1, running_loss / output_time))
-            print('accuracy:')
-            # print(running_acc)
             for a in range(0, len(task_name)):
-                print("%s\t%.3f\t%d\t%d" % (
-                    task_name[a] + "accuracy", running_acc[a][0] / running_acc[a][1], running_acc[a][0],
-                    running_acc[a][1]))
+                print("%s result:" % task_name[a])
+                gen_result(running_acc[a])
             print("")
+
             total_loss.append(running_loss / output_time)
             running_loss = 0.0
+            running_acc = []
             for a in range(0, len(task_name)):
-                running_acc[a] = (0, 0)
+                running_acc.append([])
+                for b in range(0, get_num_classes(task_name[a])):
+                    running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
 
-        if cnt % test_time == 0:
-            test()
+    test()
 
 print("Training done")
 
