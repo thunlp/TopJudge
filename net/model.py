@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 import torch.optim as optim
+import os
 
 from utils import calc_accuracy, gen_result, get_num_classes
 
@@ -181,7 +182,7 @@ def test(net, test_dataset, usegpu, config):
     for a in range(0, len(task_name)):
         print("%s result:" % task_name[a])
         try:
-            gen_result(running_acc[a],True)
+            gen_result(running_acc[a], True)
         except Exception as e:
             pass
     print("")
@@ -198,6 +199,8 @@ def train(net, train_dataset, test_dataset, usegpu, config):
     test_time = config.getint("debug", "test_time")
     task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
     optimizer_type = config.get("train", "optimizer")
+
+    model_path = config.get("train", "model_path")
 
     criterion = nn.CrossEntropyLoss()
     if optimizer_type == "adam":
@@ -221,7 +224,7 @@ def train(net, train_dataset, test_dataset, usegpu, config):
             for b in range(0, get_num_classes(task_name[a])):
                 running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
                 running_acc[a][-1]["list"] = []
-                for c in range(0,get_num_classes(task_name[a])):
+                for c in range(0, get_num_classes(task_name[a])):
                     running_acc[a][-1]["list"].append(0)
 
         cnt = 0
@@ -234,7 +237,6 @@ def train(net, train_dataset, test_dataset, usegpu, config):
                 inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
             else:
                 inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
-
 
             net.hidden = net.init_hidden(config, usegpu)
             optimizer.zero_grad()
@@ -268,6 +270,9 @@ def train(net, train_dataset, test_dataset, usegpu, config):
                         running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
 
         test(net, test_dataset, usegpu, config)
+        if not(os.path.exists(model_path)):
+            os.makedirs(os.path)
+        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % epoch_num))
 
     print("Training done")
 
@@ -328,6 +333,8 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
     task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
     optimizer_type = config.get("train", "optimizer")
 
+    model_path = config.get("train", "model_path")
+
     criterion = nn.CrossEntropyLoss()
     if optimizer_type == "adam":
         optimizer = optim.Adam(net.parameters(), lr=learning_rate)
@@ -362,7 +369,6 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                 inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
             else:
                 inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
-
 
             net.hidden = net.init_hidden(config, usegpu)
             optimizer.zero_grad()
@@ -400,6 +406,9 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                         running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
 
         test_file(net, test_dataset, usegpu, config)
+        if not(os.path.exists(model_path)):
+            os.makedirs(os.path)
+        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % epoch_num))
 
     print("Training done")
 
