@@ -29,6 +29,9 @@ class CNN(nn.Module):
         self.convs = nn.ModuleList(self.convs)
         self.outfc = nn.ModuleList(self.outfc)
 
+    def init_hidden(self, config, usegpu):
+        return None
+
     def forward(self, x, doc_len, config):
         fc_input = []
         for conv in self.convs:
@@ -54,6 +57,58 @@ class LSTM(nn.Module):
         self.hidden_dim = config.getint("net", "hidden_size")
 
         self.lstm = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
+
+        self.outfc = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for x in task_name:
+            self.outfc.append(nn.Linear(
+                self.hidden_dim, get_num_classes(x)
+            ))
+
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
+        self.outfc = nn.ModuleList(self.outfc)
+        self.hidden = self.init_hidden(config, usegpu)
+
+    def init_hidden(self, config, usegpu):
+        if torch.cuda.is_available() and usegpu:
+            return (
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+        else:
+            return (torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
+                    torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
+
+    def forward(self, x, doc_len, config):
+
+        x = x.view(config.getint("data", "batch_size"), config.getint("data", "pad_length"),
+                   config.getint("data", "vec_size"))
+
+        lstm_out, self.hidden = self.lstm(x, self.hidden)
+        lstm_out = self.dropout(lstm_out)
+
+        outv = []
+        for a in range(0, len(doc_len)):
+            outv.append(lstm_out[a][doc_len[a] - 1])
+        lstm_out = torch.cat(outv)
+
+        outputs = []
+        for fc in self.outfc:
+            outputs.append(fc(lstm_out))
+
+        return outputs
+
+
+class ATTENTION(nn.Module):
+    def __init__(self, config, usegpu):
+        super(LSTM, self).__init__()
+
+        self.data_size = config.getint("data", "vec_size")
+        self.hidden_dim = config.getint("net", "hidden_size")
+
+        self.lstm = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
+
+        self.attention = nn.Linear(self.hidden_dim * 2, config.getint("data", "pad_length"))
+        self.attention_combine = nn.Linear(self.hidden_dim * 2, self.hidden_dim)
 
         self.outfc = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
@@ -126,7 +181,7 @@ def test(net, test_dataset, usegpu, config):
     for a in range(0, len(task_name)):
         print("%s result:" % task_name[a])
         try:
-            gen_result(running_acc[a])
+            gen_result(running_acc[a],True)
         except Exception as e:
             pass
     print("")
@@ -165,6 +220,9 @@ def train(net, train_dataset, test_dataset, usegpu, config):
             running_acc.append([])
             for b in range(0, get_num_classes(task_name[a])):
                 running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
+                running_acc[a][-1]["list"] = []
+                for c in range(0,get_num_classes(task_name[a])):
+                    running_acc[a][-1]["list"].append(0)
 
         cnt = 0
         train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle, drop_last=True,
@@ -177,8 +235,8 @@ def train(net, train_dataset, test_dataset, usegpu, config):
             else:
                 inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
-            if isinstance(net, LSTM):
-                net.hidden = net.init_hidden(config, usegpu)
+
+            net.hidden = net.init_hidden(config, usegpu)
             optimizer.zero_grad()
 
             outputs = net.forward(inputs, doc_len, config)
@@ -305,8 +363,8 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             else:
                 inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
-            if isinstance(net, LSTM):
-                net.hidden = net.init_hidden(config, usegpu)
+
+            net.hidden = net.init_hidden(config, usegpu)
             optimizer.zero_grad()
 
             outputs = net.forward(inputs, doc_len, config)

@@ -20,10 +20,12 @@ def calc_accuracy(outputs, labels, res):
         else:
             res[it_is]["FP"] += 1
             res[should_be]["FN"] += 1
+
+        res[should_be]["list"][it_is] += 1
     return res
 
 
-def gen_result(res):
+def gen_result(res, test=False):
     precision = []
     recall = []
     f1 = []
@@ -51,7 +53,7 @@ def gen_result(res):
     # for a in range(0, len(res)):
     #    print("Class\t%d:\tprecesion\t%.3f\trecall\t%.3f\tf1\t%.3f" % (a, precesion[a], recall[a], f1[a]))
 
-    print(total["TP"], total["FP"], total["FN"])
+    #print(total["TP"], total["FP"], total["FN"])
     micro_precision = total["TP"] / (total["TP"] + total["FP"])
     macro_precision = 0
     micro_recall = total["TP"] / (total["TP"] + total["FN"])
@@ -73,3 +75,16 @@ def gen_result(res):
     print("Macro recall\t%.3f" % macro_recall)
     print("Micro f1\t%.3f" % micro_f1)
     print("Macro f1\t%.3f" % macro_f1)
+
+    if test:
+        print(" \t")
+        for a in range(0, len(res)):
+            print("%d\t" % a, end='')
+        print("")
+        for a in range(0, len(res)):
+            print("%d\t" % a, end='')
+            for b in range(0, len(res)):
+                print("%d\t" % res[a]["list"][b], end='')
+            print("")
+
+    print("")
