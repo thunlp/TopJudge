@@ -151,11 +151,14 @@ class ATTENTION(nn.Module):
         return outputs
 
 
-def test(net, test_dataset, usegpu, config):
+def test(net, test_dataset, usegpu, config, epoch):
     net.eval()
     running_acc = []
     task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
     batch_size = config.getint("data", "batch_size")
+    if not (os.path.exists(config.get("train", "test_path"))):
+        os.makedirs(config.get("train", "test_path"))
+    test_result_path = os.path.join(config.get("train", "test_path"), str(epoch))
     for a in range(0, len(task_name)):
         running_acc.append([])
         for b in range(0, get_num_classes(task_name[a])):
@@ -185,7 +188,7 @@ def test(net, test_dataset, usegpu, config):
     for a in range(0, len(task_name)):
         print("%s result:" % task_name[a])
         try:
-            gen_result(running_acc[a], True)
+            gen_result(running_acc[a], True, file=test_result_path)
         except Exception as e:
             pass
     print("")
@@ -275,22 +278,25 @@ def train(net, train_dataset, test_dataset, usegpu, config):
                         for c in range(0, get_num_classes(task_name[a])):
                             running_acc[a][-1]["list"].append(0)
 
-        test(net, test_dataset, usegpu, config)
-        if not(os.path.exists(model_path)):
-            os.makedirs(os.path)
+        test(net, test_dataset, usegpu, config, epoch_num)
+        if not (os.path.exists(model_path)):
+            os.makedirs(model_path)
         torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % epoch_num))
 
     print("Training done")
 
-    test(net, test_dataset, usegpu, config)
+    test(net, test_dataset, usegpu, config, 0)
 
     return net
 
 
-def test_file(net, test_dataset, usegpu, config):
+def test_file(net, test_dataset, usegpu, config, epoch):
     net.eval()
     running_acc = []
     task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+    if not (os.path.exists(config.get("train", "test_path"))):
+        os.makedirs(config.get("train", "test_path"))
+    test_result_path = os.path.join(config.get("train", "test_path"), str(epoch))
     for a in range(0, len(task_name)):
         running_acc.append([])
         for b in range(0, get_num_classes(task_name[a])):
@@ -324,7 +330,7 @@ def test_file(net, test_dataset, usegpu, config):
     for a in range(0, len(task_name)):
         print("%s result:" % task_name[a])
         try:
-            gen_result(running_acc[a])
+            gen_result(running_acc[a], True, file=test_result_path)
         except Exception as e:
             pass
     print("")
@@ -420,11 +426,11 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                         for c in range(0, get_num_classes(task_name[a])):
                             running_acc[a][-1]["list"].append(0)
 
-        test_file(net, test_dataset, usegpu, config)
-        if not(os.path.exists(model_path)):
+        test_file(net, test_dataset, usegpu, config, epoch_num)
+        if not (os.path.exists(model_path)):
             os.makedirs(os.path)
         torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % epoch_num))
 
     print("Training done")
 
-    test_file(net, test_dataset, usegpu, config)
+    test_file(net, test_dataset, usegpu, config, 0)

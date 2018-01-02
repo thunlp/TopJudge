@@ -25,7 +25,7 @@ def calc_accuracy(outputs, labels, res):
     return res
 
 
-def gen_result(res, test=False):
+def gen_result(res, test=False, file_path=None):
     precision = []
     recall = []
     f1 = []
@@ -53,7 +53,7 @@ def gen_result(res, test=False):
     # for a in range(0, len(res)):
     #    print("Class\t%d:\tprecesion\t%.3f\trecall\t%.3f\tf1\t%.3f" % (a, precesion[a], recall[a], f1[a]))
 
-    #print(total["TP"], total["FP"], total["FN"])
+    # print(total["TP"], total["FP"], total["FN"])
     micro_precision = total["TP"] / (total["TP"] + total["FP"])
     macro_precision = 0
     micro_recall = total["TP"] / (total["TP"] + total["FN"])
@@ -77,14 +77,22 @@ def gen_result(res, test=False):
     print("Macro f1\t%.3f" % macro_f1)
 
     if test:
-        print(" \t")
+        f = open(file_path, "w")
+        print("Micro precisison\t%.3f" % micro_precision, file=f)
+        print("Macro precisison\t%.3f" % macro_precision, file=f)
+        print("Micro recall\t%.3f" % micro_recall, file=f)
+        print("Macro recall\t%.3f" % macro_recall, file=f)
+        print("Micro f1\t%.3f" % micro_f1, file=f)
+        print("Macro f1\t%.3f" % macro_f1, file=f)
+        print(" \t", file=f)
         for a in range(0, len(res)):
-            print("%d\t" % a, end='')
-        print("")
+            print("%d\t" % a, end='', file=f)
+        print("", file=f)
         for a in range(0, len(res)):
-            print("%d\t" % a, end='')
+            print("%d\t" % a, end='', file=f)
             for b in range(0, len(res)):
-                print("%d\t" % res[a]["list"][b], end='')
-            print("")
+                print("%d\t" % res[a]["list"][b], end='', file=f)
+            print("", file=f)
+        f.close()
 
     print("")
