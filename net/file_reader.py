@@ -54,7 +54,7 @@ class reader():
                 return None
 
         dataloader = DataLoader(self.data_list[0:batch_size], batch_size=batch_size,
-                                shuffle=config.getboolean("data", "shuffle"))
+                                shuffle=config.getboolean("data", "shuffle"), drop_last=True)
         self.data_list = self.data_list[batch_size:len(self.data_list) - 1]
         for idx, data in enumerate(dataloader):
             return data

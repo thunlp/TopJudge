@@ -188,7 +188,7 @@ def test(net, test_dataset, usegpu, config, epoch):
     for a in range(0, len(task_name)):
         print("%s result:" % task_name[a])
         try:
-            gen_result(running_acc[a], True, file=test_result_path)
+            gen_result(running_acc[a], True, file_path=test_result_path+"-"+task_name[a])
         except Exception as e:
             pass
     print("")
@@ -278,14 +278,15 @@ def train(net, train_dataset, test_dataset, usegpu, config):
                         for c in range(0, get_num_classes(task_name[a])):
                             running_acc[a][-1]["list"].append(0)
 
-        test(net, test_dataset, usegpu, config, epoch_num)
+        test(net, test_dataset, usegpu, config, epoch_num+1)
         if not (os.path.exists(model_path)):
             os.makedirs(model_path)
-        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % epoch_num))
+        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % (epoch_num+1)))
 
     print("Training done")
 
     test(net, test_dataset, usegpu, config, 0)
+    torch.save(net.state_dict(), os.path.join(model_path, "model-0.pkl"))
 
     return net
 
@@ -330,7 +331,7 @@ def test_file(net, test_dataset, usegpu, config, epoch):
     for a in range(0, len(task_name)):
         print("%s result:" % task_name[a])
         try:
-            gen_result(running_acc[a], True, file=test_result_path)
+            gen_result(running_acc[a], True, file_path=test_result_path+"-"+task_name[a])
         except Exception as e:
             pass
     print("")
@@ -426,11 +427,12 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                         for c in range(0, get_num_classes(task_name[a])):
                             running_acc[a][-1]["list"].append(0)
 
-        test_file(net, test_dataset, usegpu, config, epoch_num)
+        test_file(net, test_dataset, usegpu, config, epoch_num+1)
         if not (os.path.exists(model_path)):
-            os.makedirs(os.path)
-        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % epoch_num))
+            os.makedirs(model_path)
+        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % (epoch_num+1)))
 
     print("Training done")
 
     test_file(net, test_dataset, usegpu, config, 0)
+    torch.save(net.state_dict(), os.path.join(model_path, "model-0.pkl"))
