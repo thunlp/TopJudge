@@ -160,6 +160,9 @@ def test(net, test_dataset, usegpu, config):
         running_acc.append([])
         for b in range(0, get_num_classes(task_name[a])):
             running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
+            running_acc[a][-1]["list"] = []
+            for c in range(0, get_num_classes(task_name[a])):
+                running_acc[a][-1]["list"].append(0)
 
     test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=1)
     for idx, data in enumerate(test_data_loader):
@@ -268,6 +271,9 @@ def train(net, train_dataset, test_dataset, usegpu, config):
                     running_acc.append([])
                     for b in range(0, get_num_classes(task_name[a])):
                         running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
+                        running_acc[a][-1]["list"] = []
+                        for c in range(0, get_num_classes(task_name[a])):
+                            running_acc[a][-1]["list"].append(0)
 
         test(net, test_dataset, usegpu, config)
         if not(os.path.exists(model_path)):
@@ -289,6 +295,9 @@ def test_file(net, test_dataset, usegpu, config):
         running_acc.append([])
         for b in range(0, get_num_classes(task_name[a])):
             running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
+            running_acc[a][-1]["list"] = []
+            for c in range(0, get_num_classes(task_name[a])):
+                running_acc[a][-1]["list"].append(0)
 
     while True:
         data = test_dataset.fetch_data(config)
@@ -354,6 +363,9 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             running_acc.append([])
             for b in range(0, get_num_classes(task_name[a])):
                 running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
+                running_acc[a][-1]["list"] = []
+                for c in range(0, get_num_classes(task_name[a])):
+                    running_acc[a][-1]["list"].append(0)
 
         cnt = 0
         idx = 0
@@ -404,6 +416,9 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                     running_acc.append([])
                     for b in range(0, get_num_classes(task_name[a])):
                         running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
+                        running_acc[a][-1]["list"] = []
+                        for c in range(0, get_num_classes(task_name[a])):
+                            running_acc[a][-1]["list"].append(0)
 
         test_file(net, test_dataset, usegpu, config)
         if not(os.path.exists(model_path)):
