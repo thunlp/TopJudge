@@ -26,9 +26,14 @@ class CNN(nn.Module):
                 features, get_num_classes(x)
             ))
 
+        self.midfc = []
+        for x in task_name:
+            self.midfc.append(nn.Linear(features, features))
+
         self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.convs = nn.ModuleList(self.convs)
         self.outfc = nn.ModuleList(self.outfc)
+        self.midfc = nn.ModuleList(self.midfc)
 
     def init_hidden(self, config, usegpu):
         return None
@@ -44,8 +49,13 @@ class CNN(nn.Module):
         fc_input = torch.cat(fc_input, dim=1).view(-1, features)
 
         outputs = []
+        now_cnt = 0
         for fc in self.outfc:
-            outputs.append(fc(fc_input))
+            if config.getboolean("net", "more_fc"):
+                outputs.append(fc(self.midfc[now_cnt](fc_input)))
+            else:
+                outputs.append(fc(fc_input))
+            now_cnt += 1
 
         return outputs
 
@@ -66,61 +76,14 @@ class LSTM(nn.Module):
                 self.hidden_dim, get_num_classes(x)
             ))
 
-        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
-        self.outfc = nn.ModuleList(self.outfc)
-        self.hidden = self.init_hidden(config, usegpu)
-
-    def init_hidden(self, config, usegpu):
-        if torch.cuda.is_available() and usegpu:
-            return (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
-        else:
-            return (torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
-                    torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
-
-    def forward(self, x, doc_len, config):
-
-        x = x.view(config.getint("data", "batch_size"), config.getint("data", "pad_length"),
-                   config.getint("data", "vec_size"))
-
-        lstm_out, self.hidden = self.lstm(x, self.hidden)
-        lstm_out = self.dropout(lstm_out)
-
-        outv = []
-        for a in range(0, len(doc_len)):
-            outv.append(lstm_out[a][doc_len[a] - 1])
-        lstm_out = torch.cat(outv)
-
-        outputs = []
-        for fc in self.outfc:
-            outputs.append(fc(lstm_out))
-
-        return outputs
-
-
-class ATTENTION(nn.Module):
-    def __init__(self, config, usegpu):
-        super(LSTM, self).__init__()
-
-        self.data_size = config.getint("data", "vec_size")
-        self.hidden_dim = config.getint("net", "hidden_size")
-
-        self.lstm = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
-
-        self.attention = nn.Linear(self.hidden_dim * 2, config.getint("data", "pad_length"))
-        self.attention_combine = nn.Linear(self.hidden_dim * 2, self.hidden_dim)
-
-        self.outfc = []
-        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        self.midfc = []
         for x in task_name:
-            self.outfc.append(nn.Linear(
-                self.hidden_dim, get_num_classes(x)
-            ))
+            self.midfc.append(nn.Linear(self.hidden_dim, self.hidden_dim))
 
         self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.outfc = nn.ModuleList(self.outfc)
         self.hidden = self.init_hidden(config, usegpu)
+        self.midfc = nn.ModuleList(self.midfc)
 
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
@@ -145,8 +108,13 @@ class ATTENTION(nn.Module):
         lstm_out = torch.cat(outv)
 
         outputs = []
+        now_cnt = 0
         for fc in self.outfc:
-            outputs.append(fc(lstm_out))
+            if config.getboolean("net", "more_fc"):
+                outputs.append(fc(self.midfc[now_cnt](lstm_out)))
+            else:
+                outputs.append(fc(lstm_out))
+            now_cnt += 1
 
         return outputs
 
@@ -188,7 +156,7 @@ def test(net, test_dataset, usegpu, config, epoch):
     for a in range(0, len(task_name)):
         print("%s result:" % task_name[a])
         try:
-            gen_result(running_acc[a], True, file_path=test_result_path+"-"+task_name[a])
+            gen_result(running_acc[a], True, file_path=test_result_path + "-" + task_name[a])
         except Exception as e:
             pass
     print("")
@@ -278,10 +246,10 @@ def train(net, train_dataset, test_dataset, usegpu, config):
                         for c in range(0, get_num_classes(task_name[a])):
                             running_acc[a][-1]["list"].append(0)
 
-        test(net, test_dataset, usegpu, config, epoch_num+1)
+        test(net, test_dataset, usegpu, config, epoch_num + 1)
         if not (os.path.exists(model_path)):
             os.makedirs(model_path)
-        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % (epoch_num+1)))
+        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
 
     print("Training done")
 
@@ -331,7 +299,7 @@ def test_file(net, test_dataset, usegpu, config, epoch):
     for a in range(0, len(task_name)):
         print("%s result:" % task_name[a])
         try:
-            gen_result(running_acc[a], True, file_path=test_result_path+"-"+task_name[a])
+            gen_result(running_acc[a], True, file_path=test_result_path + "-" + task_name[a])
         except Exception as e:
             pass
     print("")
@@ -427,10 +395,10 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                         for c in range(0, get_num_classes(task_name[a])):
                             running_acc[a][-1]["list"].append(0)
 
-        test_file(net, test_dataset, usegpu, config, epoch_num+1)
+        test_file(net, test_dataset, usegpu, config, epoch_num + 1)
         if not (os.path.exists(model_path)):
             os.makedirs(model_path)
-        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % (epoch_num+1)))
+        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
 
     print("Training done")
 
