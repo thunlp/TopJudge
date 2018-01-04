@@ -16,7 +16,6 @@ print(accusation_list)
 print(accusation_dict)
 
 
-
 def get_data_list(d):
     return d.replace(" ", "").split(",")
 
@@ -111,7 +110,49 @@ def get_word_vec(x, config):
     # return word_dict[x], True
 
 
+def parse_sentence(data, config):
+    data = data.split("\t")
+    result = []
+    lastp = 0
+    for a in range(0, len(data)):
+        if data[a] == u"。":
+            result.append(data[lastp:a])
+            lastp = a + 1
+
+    if len(result) > config.getint("data", "sentence_num"):
+        return None
+    for a in range(0, len(result)):
+        if len(result[a]) > config.getint("data", "sentence_len"):
+            return None
+
+    return result
+
+
 def generate_vector(data, config):
+    data = parse_sentence(data, config)
+    vec = []
+    len_vec = [0,0]
+    for x in data:
+        temp_vec = []
+        len_vec.append(len(x))
+        len_vec[1] += 1
+        for y in x:
+            len_vec[0] += 1
+            z = get_word_vec(y, config)
+            temp_vec.append(torch.from_numpy(z))
+        while len(temp_vec) < config.getint("data","sentence_len"):
+            temp_vec.append(torch.from_numpy(transformer.load("BLANK")))
+        vec.append(torch.stack(temp_vec))
+
+    temp_vec = []
+    while len(temp_vec) < config.getint("data", "sentence_len"):
+        temp_vec.append(torch.from_numpy(transformer.load("BLANK")))
+
+    while len(vec) < config.getint("data","sentence_num"):
+        vec.append(torch.stack(temp_vec))
+
+    return torch.stack(vec), torch.stack(len_vec)
+
     data = data.split("\t")
     vec = []
     for x in data:
@@ -146,7 +187,9 @@ def check(data, config):
         return False
     if not (int(data["meta"]["crit"][0]) in accusation_dict):
         return False
-    if len(data["content"].split("\t")) > config.getint("data", "pad_length"):
+    # if len(data["content"].split("\t")) > config.getint("data", "pad_length"):
+    #    return False
+    if parse_sentence(data["content"].split("\t"), config) is None:
         return False
 
     return True

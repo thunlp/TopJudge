@@ -36,9 +36,10 @@ class CNN(nn.Module):
         self.midfc = nn.ModuleList(self.midfc)
 
     def init_hidden(self, config, usegpu):
-        return None
+        pass
 
     def forward(self, x, doc_len, config):
+        x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
         fc_input = []
         for conv in self.convs:
             fc_input.append(self.dropout(torch.max(conv(x), dim=2, keepdim=True)[0]))
@@ -82,19 +83,21 @@ class LSTM(nn.Module):
 
         self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.outfc = nn.ModuleList(self.outfc)
-        self.hidden = self.init_hidden(config, usegpu)
+        self.init_hidden(config, usegpu)
         self.midfc = nn.ModuleList(self.midfc)
 
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
-            return (
+            self.hidden = (
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
         else:
-            return (torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
-                    torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
+            self.hidden = (
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
 
     def forward(self, x, doc_len, config):
+        x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
 
         x = x.view(config.getint("data", "batch_size"), config.getint("data", "pad_length"),
                    config.getint("data", "vec_size"))
@@ -104,7 +107,85 @@ class LSTM(nn.Module):
 
         outv = []
         for a in range(0, len(doc_len)):
-            outv.append(lstm_out[a][doc_len[a] - 1])
+            outv.append(lstm_out[a][doc_len[a][0] - 1])
+        lstm_out = torch.cat(outv)
+
+        outputs = []
+        now_cnt = 0
+        for fc in self.outfc:
+            if config.getboolean("net", "more_fc"):
+                outputs.append(fc(self.midfc[now_cnt](lstm_out)))
+            else:
+                outputs.append(fc(lstm_out))
+            now_cnt += 1
+
+        return outputs
+
+
+class MULTI_LSTM(nn.Module):
+    def __init__(self, config, usegpu):
+        super(MULTI_LSTM, self).__init__()
+
+        self.data_size = config.getint("data", "vec_size")
+        self.hidden_dim = config.getint("net", "hidden_size")
+
+        self.lstm_sentence = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
+        self.lstm_document = nn.LSTM(self.hidden_dim, self.hidden_dim, batch_first=True)
+
+        self.outfc = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for x in task_name:
+            self.outfc.append(nn.Linear(
+                self.hidden_dim, get_num_classes(x)
+            ))
+
+        self.midfc = []
+        for x in task_name:
+            self.midfc.append(nn.Linear(self.hidden_dim, self.hidden_dim))
+
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
+        self.outfc = nn.ModuleList(self.outfc)
+        self.init_hidden(config, usegpu)
+        self.midfc = nn.ModuleList(self.midfc)
+
+    def init_hidden(self, config, usegpu):
+        if torch.cuda.is_available() and usegpu:
+            self.sentence_hidden = (
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+            self.document_hidden = (
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+        else:
+            self.sentence_hidden = (
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
+            self.document_hidden = (
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
+
+    def forward(self, x, doc_len, config):
+
+        x = x.view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                   config.getint("data", "sentence_len"),
+                   config.getint("data", "vec_size"))
+
+        sentence_out, self.sentence_hidden = self.lstm_sentence(x, self.sentence_hidden)
+        temp_out = []
+        for a in range(0, len(sentence_out)):
+            idx = a // config.getint("data", "sentence_len")
+            idy = a / config.getint("data", "sentence_len")
+            temp_out.append(sentence_out[a][doc_len[idx][idy + 2] - 1])
+        sentence_out = torch.stack(temp_out)
+        sentence_out = sentence_out.view(config.getint("data", "batch_size").config.getint("sentence_num"),
+                                         self.hidden_dim)
+
+        lstm_out, self.document_hidden = self.lstm(sentence_out, self.document_hidden)
+        lstm_out = lstm_out
+
+        outv = []
+        for a in range(0, len(doc_len)):
+            outv.append(lstm_out[a][doc_len[a][1] - 1])
         lstm_out = torch.cat(outv)
 
         outputs = []
@@ -139,8 +220,7 @@ def test(net, test_dataset, usegpu, config, epoch):
     for idx, data in enumerate(test_data_loader):
         inputs, doc_len, labels = data
 
-        if isinstance(net, LSTM):
-            net.hidden = net.init_hidden(config, usegpu)
+        net.init_hidden(config, usegpu)
 
         if torch.cuda.is_available() and usegpu:
             inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
@@ -212,7 +292,7 @@ def train(net, train_dataset, test_dataset, usegpu, config):
             else:
                 inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
-            net.hidden = net.init_hidden(config, usegpu)
+            net.init_hidden(config, usegpu)
             optimizer.zero_grad()
 
             outputs = net.forward(inputs, doc_len, config)
@@ -281,8 +361,7 @@ def test_file(net, test_dataset, usegpu, config, epoch):
 
         inputs, doc_len, labels = data
 
-        if isinstance(net, LSTM):
-            net.hidden = net.init_hidden(config, usegpu)
+        net.init_hidden(config, usegpu)
 
         if torch.cuda.is_available() and usegpu:
             inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
@@ -357,7 +436,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             else:
                 inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
-            net.hidden = net.init_hidden(config, usegpu)
+            net.init_hidden(config, usegpu)
             optimizer.zero_grad()
 
             outputs = net.forward(inputs, doc_len, config)
