@@ -178,7 +178,7 @@ def train(net, train_dataset, test_dataset, usegpu, config):
 
     criterion = nn.CrossEntropyLoss()
     if optimizer_type == "adam":
-        optimizer = optim.Adam(net.parameters(), lr=learning_rate, weight_decay=1e-3)
+        optimizer = optim.Adam(net.parameters(), lr=learning_rate, weight_decay=1e-8)
     elif optimizer_type == "sgd":
         optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
     else:
