@@ -119,6 +119,58 @@ class LSTM(nn.Module):
         return outputs
 
 
+class CNN_FINAL(nn.Module):
+    def __init__(self, config):
+        super(CNN, self).__init__()
+
+        self.convs = []
+
+        for a in range(config.getint("net", "min_gram"), config.getint("net", "max_gram") + 1):
+            self.convs.append(nn.Conv2d(1, config.getint("net", "filters"), (a, config.getint("data", "vec_size"))))
+
+        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
+                                                                                                             "filters")
+        self.outfc = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for x in task_name:
+            self.outfc.append(nn.Linear(
+                features, get_num_classes(x)
+            ))
+
+        self.midfc = []
+        for x in task_name:
+            self.midfc.append(nn.Linear(features, features))
+
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
+        self.convs = nn.ModuleList(self.convs)
+        self.outfc = nn.ModuleList(self.outfc)
+        self.midfc = nn.ModuleList(self.midfc)
+
+    def init_hidden(self, config, usegpu):
+        return None
+
+    def forward(self, x, doc_len, config):
+        fc_input = []
+        for conv in self.convs:
+            fc_input.append(self.dropout(torch.max(conv(x), dim=2, keepdim=True)[0]))
+
+        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
+                                                                                                             "filters")
+
+        fc_input = torch.cat(fc_input, dim=1).view(-1, features)
+
+        outputs = []
+        now_cnt = 0
+        for fc in self.outfc:
+            if config.getboolean("net", "more_fc"):
+                outputs.append(fc(self.midfc[now_cnt](fc_input)))
+            else:
+                outputs.append(fc(fc_input))
+            now_cnt += 1
+
+        return outputs
+
+
 def test(net, test_dataset, usegpu, config, epoch):
     net.eval()
     running_acc = []
