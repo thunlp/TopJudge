@@ -114,13 +114,10 @@ cnt2 = 0
 def parse_sentence(data, config):
     global cnt1,cnt2
     #data = data.split("\t")
-    result = []
+    result = data
+    if result is None:
+        return False
     lastp = 0
-    for a in range(0, len(data)):
-        if data[a] == u"。":
-            if len(data[lastp:a]) > 0:
-                result.append(data[lastp:a])
-            lastp = a + 1
 
     if len(result) > config.getint("data", "sentence_num"):
         cnt1 += 1

@@ -298,13 +298,13 @@ class CNN_FINAL(nn.Module):
             if torch.cuda.is_available() and usegpu:
                 self.hidden_list.append((
                     torch.autograd.Variable(
-                        torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda()),
                     torch.autograd.Variable(
-                        torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda())))
+                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda())))
             else:
                 self.hidden_list.append((
-                    torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
-                    torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim))))
+                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim)),
+                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim))))
 
     def forward(self, x, doc_len, config):
         x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
@@ -319,14 +319,13 @@ class CNN_FINAL(nn.Module):
 
         outputs = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-        print(fc_input)
         for a in range(1, len(task_name) + 1):
-            now_value, self.hidden_list[a] = self.cell_list[a](fc_input, self.hidden_list[a - 1])
+            h,c = self.cell_list[a](fc_input, self.hidden_list[a - 1])
+            self.hidden_list[a] = h,c
             if config.getboolean("net", "more_fc"):
-                outputs.append(self.outfc[a-1](self.midfc[a-1](now_value)).view(config.getint("data","batch_size",-1)))
+                outputs.append(self.outfc[a-1](self.midfc[a-1](h)).view(config.getint("data","batch_size",-1)))
             else:
-                outputs.append(self.outfc[a-1](now_value).view(config.getint("data","batch_size"),-1))
-        print(outputs[0])
+                outputs.append(self.outfc[a-1](h).view(config.getint("data","batch_size"),-1))
 
         return outputs
 

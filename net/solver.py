@@ -6,14 +6,14 @@ import configparser
 import torch
 import numpy as np
 
-configFilePath = "../config/multi_lstm_crti_baseline_small.config"
+configFilePath = "../config/multi_lstm_crit_baseline_small.config"
 config = configparser.RawConfigParser()
 config.read(configFilePath)
 
-in_path = "/data/disk1/private/zhonghaoxi/law/small_data"
+in_path = "/data/disk1/private/zhonghaoxi/law/data"
 out_path = "/data/disk1/private/zhonghaoxi/law/format_data"
 
-num_process = 4
+num_process = 1
 num_file = 20
 
 from data_formatter import parse, check
@@ -27,20 +27,27 @@ def draw_out(in_path, out_path):
     cx = 0
     res = []
     for line in inf:
-        try:
+        #try:
             data = json.loads(line)
-            if check(data):
-                res.append(parse(data))
+            if check(data,config):
+                a,b,c = parse(data,config)
+                #res[0].append(a)
+                #res[1].append(b)
+                #res[2].append(c)
+                res.append((a.numpy(),b.numpy(),c.numpy()))
                 cnt += 1
-                if cnt % 50000 == 0:
+                if cnt % 5000 == 0:
                     print(in_path, cnt, cx)
                     # break
 
-        except Exception as e:
+        #except Exception as e:
             # pass  # print(e)
-            gg
+            #gg
 
-    np.save(out_path, torch.stack(res).numpy())
+    np.save(out_path,np.array(res))
+    #np.save(out_path + "-inputs", torch.stack(res[0]).numpy())
+    #np.save(out_path + "-doc_len", torch.stack(res[1]).numpy())
+    #np.save(out_path + "-labels", torch.stack(res[2]).numpy())
 
 
 def work(from_id, to_id):
