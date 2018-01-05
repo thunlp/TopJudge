@@ -118,7 +118,8 @@ def parse_sentence(data, config):
     lastp = 0
     for a in range(0, len(data)):
         if data[a] == u"。":
-            result.append(data[lastp:a])
+            if len(data[lastp:a]) > 0:
+                result.append(data[lastp:a])
             lastp = a + 1
 
     if len(result) > config.getint("data", "sentence_num"):
@@ -156,7 +157,7 @@ def generate_vector(data, config):
 
     while len(vec) < config.getint("data","sentence_num"):
         vec.append(torch.stack(temp_vec))
-        len_vec.append(0)
+        len_vec.append(1)
 
     return torch.stack(vec), torch.LongTensor(len_vec)
 

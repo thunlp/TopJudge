@@ -207,15 +207,15 @@ class MULTI_LSTM(nn.Module):
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
             self.sentence_hidden = (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"), self.hidden_dim).cuda()),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size") * config.getint("data","sentence_num"), self.hidden_dim).cuda()))
             self.document_hidden = (
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
         else:
             self.sentence_hidden = (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size") * config.getint("data","sentence_num"), self.hidden_dim)),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size") * config.getint("data","sentence_num"), self.hidden_dim)))
             self.document_hidden = (
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
@@ -228,15 +228,17 @@ class MULTI_LSTM(nn.Module):
 
         sentence_out, self.sentence_hidden = self.lstm_sentence(x, self.sentence_hidden)
         temp_out = []
+        #print(doc_len)
         for a in range(0, len(sentence_out)):
-            idx = a // config.getint("data", "sentence_len")
-            idy = a / config.getint("data", "sentence_len")
+            idx = a // config.getint("data", "sentence_num")
+            idy = a % config.getint("data", "sentence_num")
+            #print(idx,idy)
             temp_out.append(sentence_out[a][doc_len[idx][idy + 2] - 1])
         sentence_out = torch.stack(temp_out)
-        sentence_out = sentence_out.view(config.getint("data", "batch_size").config.getint("sentence_num"),
+        sentence_out = sentence_out.view(config.getint("data", "batch_size"),config.getint("data","sentence_num"),
                                          self.hidden_dim)
 
-        lstm_out, self.document_hidden = self.lstm(sentence_out, self.document_hidden)
+        lstm_out, self.document_hidden = self.lstm_document(sentence_out, self.document_hidden)
         lstm_out = lstm_out
 
         outv = []
@@ -413,6 +415,9 @@ def train(net, train_dataset, test_dataset, usegpu, config):
         for idx, data in enumerate(train_data_loader):
             cnt += 1
             inputs, doc_len, labels = data
+            #print("inputs",inputs)
+            #print("doc_len",doc_len)
+            #print("labels",labels)
             if torch.cuda.is_available() and usegpu:
                 inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
             else:

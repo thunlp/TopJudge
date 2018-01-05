@@ -12,6 +12,8 @@ def get_num_classes(s):
 
 
 def calc_accuracy(outputs, labels, res):
+    #print("outputs",outputs)
+    #print("labels",labels)
     for a in range(0, len(labels)):
         it_is = int(outputs[a].max(dim=0)[1].data.cpu().numpy())
         should_be = int(labels[a].data.cpu().numpy())
@@ -58,7 +60,10 @@ def gen_result(res, test=False, file_path=None):
     macro_precision = 0
     micro_recall = total["TP"] / (total["TP"] + total["FN"])
     macro_recall = 0
-    micro_f1 = 2 * micro_precision * micro_recall / (micro_precision + micro_recall)
+    if micro_precision+micro_recall == 0:
+        micro_f1 = 0
+    else:
+        micro_f1 = 2 * micro_precision * micro_recall / (micro_precision + micro_recall)
     macro_f1 = 0
     for a in range(0, len(res)):
         macro_precision += precision[a]
