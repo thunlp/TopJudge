@@ -61,6 +61,63 @@ class CNN(nn.Module):
         return outputs
 
 
+class CNN_1(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+
+        self.convs = []
+
+        for a in range(config.getint("net", "min_gram"), config.getint("net", "max_gram") + 1):
+            self.convs.append(nn.Conv2d(1, config.getint("net", "filters"), (a, config.getint("data", "vec_size"))))
+
+        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
+                                                                                                             "filters")
+        self.outfc = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for x in task_name:
+            self.outfc.append(nn.Linear(
+                features, get_num_classes(x)
+            ))
+
+        self.midfc = []
+        for x in task_name:
+            self.midfc.append(nn.Linear(features, features))
+
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
+        self.convs = nn.ModuleList(self.convs)
+        self.outfc = nn.ModuleList(self.outfc)
+        self.midfc = nn.ModuleList(self.midfc)
+
+    def init_hidden(self, config, usegpu):
+        pass
+
+    def forward(self, x):
+        # x = self.embed(x)
+        # print(x)
+        x = x.unsqueeze(1)
+        x = [F.relu(conv(x)).squeeze(3) for conv in self.convs] #[(N,Co,W), ...]*len(Ks)
+
+
+        x = [F.max_pool1d(i, i.size(2)).squeeze(2) for i in x] #[(N,Co), ...]*len(Ks)
+
+        x = torch.cat(x, 1)
+        x = self.dropout(x) # (N,len(Ks)*Co)
+        outputs = []
+        # logits = []
+        # for fc in self.outfc:
+            # logits.append(self.fc(x)) # (N,C)
+        logits = self.outfc(x)
+        now_cnt = 0
+        for fc in self.outfc:
+            if config.getboolean("net", "more_fc"):
+                outputs.append(fc(self.midfc[now_cnt](x)))
+            else:
+                outputs.append(fc(x))
+            now_cnt += 1
+
+        return outputs
+
+
 class LSTM(nn.Module):
     def __init__(self, config, usegpu):
         super(LSTM, self).__init__()
