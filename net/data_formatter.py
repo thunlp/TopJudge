@@ -122,12 +122,12 @@ def parse_sentence(data, config):
                 result.append(data[lastp:a])
             lastp = a + 1
 
-    if len(result) > config.getint("data", "sentence_num"):
+    if len(result) > 32:#config.getint("data", "sentence_num"):
         cnt1 += 1
         #print("cnt1 %d" % cnt1)
         return None
     for a in range(0, len(result)):
-        if len(result[a]) > config.getint("data", "sentence_len"):
+        if len(result[a]) > 128:#config.getint("data", "sentence_len"):
             cnt2 += 1
             #print("cnt2 %d" % cnt2)
             return None
