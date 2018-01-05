@@ -32,8 +32,8 @@ def draw_out(in_path, out_path):
                     # break
 
         except Exception as e:
-            pass  # print(e)
-            # gg
+            #pass  # print(e)
+            gg
 
 
 def work(from_id, to_id):

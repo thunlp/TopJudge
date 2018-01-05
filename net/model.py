@@ -263,6 +263,7 @@ class CNN_FINAL(nn.Module):
         super(CNN_FINAL, self).__init__()
 
         self.convs = []
+        self.hidden_dim = config.getint("net", "hidden_size")
 
         for a in range(config.getint("net", "min_gram"), config.getint("net", "max_gram") + 1):
             self.convs.append(nn.Conv2d(1, config.getint("net", "filters"), (a, config.getint("data", "vec_size"))))
@@ -280,7 +281,7 @@ class CNN_FINAL(nn.Module):
         for x in task_name:
             self.midfc.append(nn.Linear(features, features))
 
-        self.cell_list = []
+        self.cell_list = [None]
         for x in task_name:
             self.cell_list.append(nn.LSTMCell(config.getint("net", "hidden_size"), config.getint("net", "hidden_size")))
 
@@ -318,12 +319,14 @@ class CNN_FINAL(nn.Module):
 
         outputs = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        print(fc_input)
         for a in range(1, len(task_name) + 1):
             now_value, self.hidden_list[a] = self.cell_list[a](fc_input, self.hidden_list[a - 1])
             if config.getboolean("net", "more_fc"):
-                outputs.append(self.outfc[a](self.midfc[a](now_value)))
+                outputs.append(self.outfc[a-1](self.midfc[a-1](now_value)).view(config.getint("data","batch_size",-1)))
             else:
-                outputs.append(self.outfc[a](now_value))
+                outputs.append(self.outfc[a-1](now_value).view(config.getint("data","batch_size"),-1))
+        print(outputs[0])
 
         return outputs
 
