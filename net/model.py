@@ -95,17 +95,16 @@ class CNN_1(nn.Module):
         # x = self.embed(x)
         # print(x)
         x = x.unsqueeze(1)
-        x = [F.relu(conv(x)).squeeze(3) for conv in self.convs] #[(N,Co,W), ...]*len(Ks)
+        x = [F.relu(conv(x)).squeeze(3) for conv in self.convs]  # [(N,Co,W), ...]*len(Ks)
 
-
-        x = [F.max_pool1d(i, i.size(2)).squeeze(2) for i in x] #[(N,Co), ...]*len(Ks)
+        x = [F.max_pool1d(i, i.size(2)).squeeze(2) for i in x]  # [(N,Co), ...]*len(Ks)
 
         x = torch.cat(x, 1)
-        x = self.dropout(x) # (N,len(Ks)*Co)
+        x = self.dropout(x)  # (N,len(Ks)*Co)
         outputs = []
         # logits = []
         # for fc in self.outfc:
-            # logits.append(self.fc(x)) # (N,C)
+        # logits.append(self.fc(x)) # (N,C)
         logits = self.outfc(x)
         now_cnt = 0
         for fc in self.outfc:
