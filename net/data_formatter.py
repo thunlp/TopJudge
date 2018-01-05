@@ -113,7 +113,7 @@ cnt1 = 0
 cnt2 = 0
 def parse_sentence(data, config):
     global cnt1,cnt2
-    data = data.split("\t")
+    #data = data.split("\t")
     result = []
     lastp = 0
     for a in range(0, len(data)):
@@ -122,21 +122,21 @@ def parse_sentence(data, config):
                 result.append(data[lastp:a])
             lastp = a + 1
 
-    if len(result) > 32:#config.getint("data", "sentence_num"):
+    if len(result) > config.getint("data", "sentence_num"):
         cnt1 += 1
         #print("cnt1 %d" % cnt1)
-        return None
+        return False
     for a in range(0, len(result)):
-        if len(result[a]) > 128:#config.getint("data", "sentence_len"):
+        if len(result[a]) > config.getint("data", "sentence_len"):
             cnt2 += 1
             #print("cnt2 %d" % cnt2)
-            return None
+            return False
 
-    return result
+    return True
 
 
 def generate_vector(data, config):
-    data = parse_sentence(data, config)
+    #data = parse_sentence(data, config)
     vec = []
     len_vec = [0,0]
     for x in data:
@@ -198,7 +198,7 @@ def check(data, config):
         return False
     # if len(data["content"].split("\t")) > config.getint("data", "pad_length"):
     #    return False
-    if parse_sentence(data["content"], config) is None:
+    if not(parse_sentence(data["content"], config)):
         return False
 
     return True
