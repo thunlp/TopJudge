@@ -154,15 +154,13 @@ class LSTM(nn.Module):
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
 
     def forward(self, x, doc_len, config):
-        x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
+        #x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
 
-        x = x.view(config.getint("data", "batch_size"), config.getint("data", "pad_length"),
+        x = x.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num")*config.getint("data","sentence_len"),
                    config.getint("data", "vec_size"))
 
         lstm_out, self.hidden = self.lstm(x, self.hidden)
         #lstm_out = self.dropout(lstm_out)
-        print(lstm_out)
-        ff
 
         outv = []
         for a in range(0, len(doc_len)):

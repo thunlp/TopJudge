@@ -109,9 +109,10 @@ def get_word_vec(x, config):
 
     # return word_dict[x], True
 
-
+cnt1 = 0
+cnt2 = 0
 def parse_sentence(data, config):
-    print(data)
+    global cnt1,cnt2
     data = data.split("\t")
     result = []
     lastp = 0
@@ -121,9 +122,13 @@ def parse_sentence(data, config):
             lastp = a + 1
 
     if len(result) > config.getint("data", "sentence_num"):
+        cnt1 += 1
+        #print("cnt1 %d" % cnt1)
         return None
     for a in range(0, len(result)):
         if len(result[a]) > config.getint("data", "sentence_len"):
+            cnt2 += 1
+            #print("cnt2 %d" % cnt2)
             return None
 
     return result
@@ -151,8 +156,9 @@ def generate_vector(data, config):
 
     while len(vec) < config.getint("data","sentence_num"):
         vec.append(torch.stack(temp_vec))
+        len_vec.append(0)
 
-    return torch.stack(vec), torch.stack(len_vec)
+    return torch.stack(vec), torch.LongTensor(len_vec)
 
     data = data.split("\t")
     vec = []
@@ -179,7 +185,7 @@ def parse(data, config):
             label.append(analyze_law(data["meta"]["law"], config))
         if x == "time":
             label.append(analyze_time(data["meta"]["time"], config))
-    print(data)
+    #print(data)
     vector, len_vec = generate_vector(data["content"], config)
     return vector, len_vec, torch.LongTensor(label)
 
