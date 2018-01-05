@@ -103,7 +103,9 @@ class LSTM(nn.Module):
                    config.getint("data", "vec_size"))
 
         lstm_out, self.hidden = self.lstm(x, self.hidden)
-        lstm_out = self.dropout(lstm_out)
+        #lstm_out = self.dropout(lstm_out)
+        print(lstm_out)
+        ff
 
         outv = []
         for a in range(0, len(doc_len)):

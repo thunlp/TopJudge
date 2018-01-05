@@ -111,6 +111,7 @@ def get_word_vec(x, config):
 
 
 def parse_sentence(data, config):
+    print(data)
     data = data.split("\t")
     result = []
     lastp = 0
@@ -178,6 +179,7 @@ def parse(data, config):
             label.append(analyze_law(data["meta"]["law"], config))
         if x == "time":
             label.append(analyze_time(data["meta"]["time"], config))
+    print(data)
     vector, len_vec = generate_vector(data["content"], config)
     return vector, len_vec, torch.LongTensor(label)
 
@@ -189,7 +191,7 @@ def check(data, config):
         return False
     # if len(data["content"].split("\t")) > config.getint("data", "pad_length"):
     #    return False
-    if parse_sentence(data["content"].split("\t"), config) is None:
+    if parse_sentence(data["content"], config) is None:
         return False
 
     return True
