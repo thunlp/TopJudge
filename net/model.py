@@ -200,6 +200,76 @@ class MULTI_LSTM(nn.Module):
         return outputs
 
 
+class CNN_FINAL(nn.Module):
+    def __init__(self, config):
+        super(CNN_FINAL, self).__init__()
+
+        self.convs = []
+
+        for a in range(config.getint("net", "min_gram"), config.getint("net", "max_gram") + 1):
+            self.convs.append(nn.Conv2d(1, config.getint("net", "filters"), (a, config.getint("data", "vec_size"))))
+
+        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
+                                                                                                             "filters")
+        self.outfc = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for x in task_name:
+            self.outfc.append(nn.Linear(
+                features, get_num_classes(x)
+            ))
+
+        self.midfc = []
+        for x in task_name:
+            self.midfc.append(nn.Linear(features, features))
+
+        self.cell_list = []
+        for x in task_name:
+            self.cell_list.append(nn.LSTMCell(config.getint("net", "hidden_size"), config.getint("net", "hidden_size")))
+
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
+        self.convs = nn.ModuleList(self.convs)
+        self.outfc = nn.ModuleList(self.outfc)
+        self.midfc = nn.ModuleList(self.midfc)
+        self.cell_list = nn.ModuleList(self.cell_list)
+
+    def init_hidden(self, config, usegpu):
+        self.hidden_list = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for a in range(0, len(task_name) + 1):
+            if torch.cuda.is_available() and usegpu:
+                self.hidden_list.append((
+                    torch.autograd.Variable(
+                        torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                    torch.autograd.Variable(
+                        torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda())))
+            else:
+                self.hidden_list.append((
+                    torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
+                    torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim))))
+
+    def forward(self, x, doc_len, config):
+        x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
+        fc_input = []
+        for conv in self.convs:
+            fc_input.append(torch.max(conv(x), dim=2, keepdim=True)[0])
+
+        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
+                                                                                                             "filters")
+
+        fc_input = torch.cat(fc_input, dim=1).view(-1, features)
+
+        outputs = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for a in range(1, len(task_name) + 1):
+            now_value, self.hidden_list[a] = self.cell_list[a](fc_input, self.hidden_list[a - 1])
+            if config.getboolean("net", "more_fc"):
+                outputs.append(self.outfc[a](self.midfc[a](now_value)))
+            else:
+                outputs.append(self.outfc[a](now_value))
+
+        return outputs
+
+
 def test(net, test_dataset, usegpu, config, epoch):
     net.eval()
     running_acc = []
