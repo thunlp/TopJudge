@@ -41,7 +41,7 @@ class reader():
                         break
                     self.gen_new_file(config)
                     continue
-                y = json.load(x)
+                y = json.loads(x)
                 if check(y, config):
                     self.data_list.append(parse(y, config))
 
