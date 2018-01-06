@@ -31,19 +31,19 @@ class reader():
         batch_size = config.getint("data", "batch_size")
 
         if batch_size > len(self.data_list):
-            if self.rest != 0:
+            if self.temp_file is None:
                 self.gen_new_file(config)
-                data = self.temp_file.read().split("\n")
-                cnt = 0
-                for x in data:
-                    if x == "":
-                        continue
-                    y = json.loads(x)
-                    if check(y, config):
-                        self.data_list.append(parse(y, config))
-                        cnt += 1
 
-                print("Loda %d data" % cnt)
+            while len(self.data_list) < batch_size:
+                x = self.temp_file.readline()
+                if x == "":
+                    if self.rest == 0:
+                        break
+                    self.gen_new_file(config)
+                    continue
+                y = json.load(x)
+                if check(y, config):
+                    self.data_list.append(parse(y, config))
 
             if len(self.data_list) < batch_size:
                 for a in range(0, len(self.file_list)):
@@ -55,7 +55,7 @@ class reader():
 
         dataloader = DataLoader(self.data_list[0:batch_size], batch_size=batch_size,
                                 shuffle=config.getboolean("data", "shuffle"), drop_last=True)
-        self.data_list = self.data_list[batch_size:len(self.data_list) - 1]
+        self.data_list = []
         for idx, data in enumerate(dataloader):
             return data
 
