@@ -153,13 +153,14 @@ class LSTM(nn.Module):
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
 
     def forward(self, x, doc_len, config):
-        #x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
+        # x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
 
-        x = x.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num")*config.getint("data","sentence_len"),
+        x = x.view(config.getint("data", "batch_size"),
+                   config.getint("data", "sentence_num") * config.getint("data", "sentence_len"),
                    config.getint("data", "vec_size"))
 
         lstm_out, self.hidden = self.lstm(x, self.hidden)
-        #lstm_out = self.dropout(lstm_out)
+        # lstm_out = self.dropout(lstm_out)
 
         outv = []
         for a in range(0, len(doc_len)):
@@ -207,15 +208,23 @@ class MULTI_LSTM(nn.Module):
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
             self.sentence_hidden = (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"), self.hidden_dim).cuda()),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size") * config.getint("data","sentence_num"), self.hidden_dim).cuda()))
+                torch.autograd.Variable(
+                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                                self.hidden_dim).cuda()),
+                torch.autograd.Variable(
+                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                                self.hidden_dim).cuda()))
             self.document_hidden = (
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
         else:
             self.sentence_hidden = (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size") * config.getint("data","sentence_num"), self.hidden_dim)),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size") * config.getint("data","sentence_num"), self.hidden_dim)))
+                torch.autograd.Variable(
+                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                                self.hidden_dim)),
+                torch.autograd.Variable(
+                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                                self.hidden_dim)))
             self.document_hidden = (
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
@@ -228,14 +237,14 @@ class MULTI_LSTM(nn.Module):
 
         sentence_out, self.sentence_hidden = self.lstm_sentence(x, self.sentence_hidden)
         temp_out = []
-        #print(doc_len)
+        # print(doc_len)
         for a in range(0, len(sentence_out)):
             idx = a // config.getint("data", "sentence_num")
             idy = a % config.getint("data", "sentence_num")
-            #print(idx,idy)
+            # print(idx,idy)
             temp_out.append(sentence_out[a][doc_len[idx][idy + 2] - 1])
         sentence_out = torch.stack(temp_out)
-        sentence_out = sentence_out.view(config.getint("data", "batch_size"),config.getint("data","sentence_num"),
+        sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
                                          self.hidden_dim)
 
         lstm_out, self.document_hidden = self.lstm_document(sentence_out, self.document_hidden)
@@ -320,12 +329,12 @@ class CNN_FINAL(nn.Module):
         outputs = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
         for a in range(1, len(task_name) + 1):
-            h,c = self.cell_list[a](fc_input, self.hidden_list[a - 1])
-            self.hidden_list[a] = h,c
+            h, c = self.cell_list[a](fc_input, self.hidden_list[a - 1])
+            self.hidden_list[a] = h, c
             if config.getboolean("net", "more_fc"):
-                outputs.append(self.outfc[a-1](self.midfc[a-1](h)).view(config.getint("data","batch_size",-1)))
+                outputs.append(self.outfc[a - 1](self.midfc[a - 1](h)).view(config.getint("data", "batch_size", -1)))
             else:
-                outputs.append(self.outfc[a-1](h).view(config.getint("data","batch_size"),-1))
+                outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
 
         return outputs
 
@@ -417,9 +426,9 @@ def train(net, train_dataset, test_dataset, usegpu, config):
         for idx, data in enumerate(train_data_loader):
             cnt += 1
             inputs, doc_len, labels = data
-            #print("inputs",inputs)
-            #print("doc_len",doc_len)
-            #print("labels",labels)
+            # print("inputs",inputs)
+            # print("doc_len",doc_len)
+            # print("labels",labels)
             if torch.cuda.is_available() and usegpu:
                 inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
             else:

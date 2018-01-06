@@ -109,11 +109,14 @@ def get_word_vec(x, config):
 
     # return word_dict[x], True
 
+
 cnt1 = 0
 cnt2 = 0
+
+
 def parse_sentence(data, config):
-    global cnt1,cnt2
-    #data = data.split("\t")
+    global cnt1, cnt2
+    # data = data.split("\t")
     result = data
     if result is None:
         return False
@@ -121,21 +124,21 @@ def parse_sentence(data, config):
 
     if len(result) > config.getint("data", "sentence_num"):
         cnt1 += 1
-        #print("cnt1 %d" % cnt1)
+        # print("cnt1 %d" % cnt1)
         return False
     for a in range(0, len(result)):
         if len(result[a]) > config.getint("data", "sentence_len"):
             cnt2 += 1
-            #print("cnt2 %d" % cnt2)
+            # print("cnt2 %d" % cnt2)
             return False
 
     return True
 
 
 def generate_vector(data, config):
-    #data = parse_sentence(data, config)
+    # data = parse_sentence(data, config)
     vec = []
-    len_vec = [0,0]
+    len_vec = [0, 0]
     for x in data:
         temp_vec = []
         len_vec.append(len(x))
@@ -144,7 +147,7 @@ def generate_vector(data, config):
             len_vec[0] += 1
             z = get_word_vec(y, config)
             temp_vec.append(torch.from_numpy(z))
-        while len(temp_vec) < config.getint("data","sentence_len"):
+        while len(temp_vec) < config.getint("data", "sentence_len"):
             temp_vec.append(torch.from_numpy(transformer.load("BLANK")))
         vec.append(torch.stack(temp_vec))
 
@@ -152,7 +155,7 @@ def generate_vector(data, config):
     while len(temp_vec) < config.getint("data", "sentence_len"):
         temp_vec.append(torch.from_numpy(transformer.load("BLANK")))
 
-    while len(vec) < config.getint("data","sentence_num"):
+    while len(vec) < config.getint("data", "sentence_num"):
         vec.append(torch.stack(temp_vec))
         len_vec.append(1)
 
@@ -183,7 +186,7 @@ def parse(data, config):
             label.append(analyze_law(data["meta"]["law"], config))
         if x == "time":
             label.append(analyze_time(data["meta"]["time"], config))
-    #print(data)
+    # print(data)
     vector, len_vec = generate_vector(data["content"], config)
     return vector, len_vec, torch.LongTensor(label)
 
@@ -195,7 +198,7 @@ def check(data, config):
         return False
     # if len(data["content"].split("\t")) > config.getint("data", "pad_length"):
     #    return False
-    if not(parse_sentence(data["content"], config)):
+    if not (parse_sentence(data["content"], config)):
         return False
 
     return True

@@ -8,7 +8,7 @@ def create_dataset(file_list, config):
     dataset = []
     for file_name in file_list:
         file_path = os.path.join(config.get("data", "data_path"), str(file_name))
-        if not(os.path.isfile(file_path)):
+        if not (os.path.isfile(file_path)):
             continue
         print("Loading data from " + file_name + ".")
         cnt = 0
@@ -23,8 +23,8 @@ def create_dataset(file_list, config):
         f.close()
         print("Loading " + str(cnt) + " data from " + file_name + " end.")
 
-    return dataset#DataLoader(dataset, batch_size=config.getint("data", "batch_size"),
-             #         shuffle=config.getboolean("data", "shuffle"), drop_last=True, num_workers=4)
+    return dataset  # DataLoader(dataset, batch_size=config.getint("data", "batch_size"),
+    #         shuffle=config.getboolean("data", "shuffle"), drop_last=True, num_workers=4)
 
 
 def init_train_dataset(config):

@@ -27,27 +27,27 @@ def draw_out(in_path, out_path):
     cx = 0
     res = []
     for line in inf:
-        #try:
-            data = json.loads(line)
-            if check(data,config):
-                a,b,c = parse(data,config)
-                #res[0].append(a)
-                #res[1].append(b)
-                #res[2].append(c)
-                res.append((a.numpy(),b.numpy(),c.numpy()))
-                cnt += 1
-                if cnt % 5000 == 0:
-                    print(in_path, cnt, cx)
-                    # break
+        # try:
+        data = json.loads(line)
+        if check(data, config):
+            a, b, c = parse(data, config)
+            # res[0].append(a)
+            # res[1].append(b)
+            # res[2].append(c)
+            res.append((a.numpy(), b.numpy(), c.numpy()))
+            cnt += 1
+            if cnt % 5000 == 0:
+                print(in_path, cnt, cx)
+                # break
 
-        #except Exception as e:
-            # pass  # print(e)
-            #gg
+                # except Exception as e:
+                # pass  # print(e)
+                # gg
 
-    np.save(out_path,np.array(res))
-    #np.save(out_path + "-inputs", torch.stack(res[0]).numpy())
-    #np.save(out_path + "-doc_len", torch.stack(res[1]).numpy())
-    #np.save(out_path + "-labels", torch.stack(res[2]).numpy())
+    np.save(out_path, np.array(res))
+    # np.save(out_path + "-inputs", torch.stack(res[0]).numpy())
+    # np.save(out_path + "-doc_len", torch.stack(res[1]).numpy())
+    # np.save(out_path + "-labels", torch.stack(res[2]).numpy())
 
 
 def work(from_id, to_id):
