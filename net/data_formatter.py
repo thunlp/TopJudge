@@ -121,6 +121,8 @@ def parse_sentence(data, config):
     if result is None:
         return False
     lastp = 0
+    if len(result) == 0:
+        return False
 
     if len(result) > config.getint("data", "sentence_num"):
         cnt1 += 1
@@ -158,6 +160,13 @@ def generate_vector(data, config):
     while len(vec) < config.getint("data", "sentence_num"):
         vec.append(torch.stack(temp_vec))
         len_vec.append(1)
+    if len_vec[1] > 32:
+        gg
+    for a in range(2,len(len_vec)):
+        if len_vec[a] > 128:
+            gg
+    if len(len_vec) != 34:
+        gg
 
     return torch.stack(vec), torch.LongTensor(len_vec)
 
@@ -188,6 +197,10 @@ def parse(data, config):
             label.append(analyze_time(data["meta"]["time"], config))
     # print(data)
     vector, len_vec = generate_vector(data["content"], config)
+    #print(data)
+    #print(vector)
+    #print(len_vec)
+    #print(label)
     return vector, len_vec, torch.LongTensor(label)
 
 

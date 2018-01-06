@@ -24,8 +24,14 @@ class reader():
             p = random.randint(0, len(self.file_list) - 1)
 
         self.use_list[p] = True
+        print("Loading file from " + str(self.file_list[p]))
 
         self.temp_file = open(os.path.join(config.get("data", "data_path"), str(self.file_list[p])), "r")
+        cnt = 0
+        #while cnt < 8192 + 1152 + 62:
+        #    x = self.temp_file.readline()
+        #    if check(json.loads(x),config):
+        #        cnt += 1
 
     def fetch_data(self, config):
         batch_size = config.getint("data", "batch_size")
