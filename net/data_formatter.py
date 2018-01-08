@@ -43,7 +43,6 @@ def analyze_crit(data, config):
 def check_law(data):
     arr1 = []
     arr2 = []
-    global cnt1, cnt2
     for x, y, z in data:
         if x < 102:
             continue
@@ -58,17 +57,28 @@ def check_law(data):
         return False
     if not((arr1[0][0],arr2[0][2]) in law_dict1):
         return False
-    if not((arr2[0][0],arr2[0][2],arr2[0][1]) in law_dict2):
+    if not((arr2[0][0],arr2[0][1],arr2[0][2]) in law_dict2):
         return False
     return True
 
 
 def analyze_law1(data, config):
-    return law_dict1[(data[0][0], data[0][2])]
+    arr1 = []
+    for x, y, z in data:
+        if x < 102:
+            continue
+        arr1.append((x, z))
+
+    return law_dict1[(arr1[0][0], arr1[0][1])]
 
 
 def analyze_law2(data, config):
-    return law_dict2[(data[0][0], data[0][2], data[0][1])]
+    arr2 = []
+    for x, y, z in data:
+        if x < 102:
+            continue
+        arr2.append((x, z, y))
+    return law_dict2[(arr2[0][0], arr2[0][1], arr2[0][2])]
 
 
 def analyze_time(data, config):
