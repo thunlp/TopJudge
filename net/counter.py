@@ -70,6 +70,8 @@ def analyze_law(data):
 
     arr1 = list(set(arr1))
     arr1.sort()
+    if len(arr1) != 1 or len(arr2) != 1:
+        return
     if len(arr1) == 1:
         cnt1 += 1
         if not (arr1[0] in law_list[0]):
@@ -80,9 +82,9 @@ def analyze_law(data):
     arr2.sort()
     if len(arr2) == 1:
         cnt2 += 1
-        if not (arr2[0] in law_list[0]):
-            law_list[0][arr1[0]] = 0
-        law_list[0][arr2[0]] += 1
+        if not (arr2[0] in law_list[1]):
+            law_list[1][arr2[0]] = 0
+        law_list[1][arr2[0]] += 1
 
 
 def count(data):
@@ -147,7 +149,8 @@ if __name__ == "__main__":
         arr.append((x, law_list[0][x]))
     arr.sort()
     for x in arr:
-        print(x, file=ouf)
+        if x[1] > 1000:
+            print(x[0][0],x[0][1],x[1], file=ouf)
 
     ouf = open("result/law_result2.txt", "w")
     arr = []
@@ -155,4 +158,5 @@ if __name__ == "__main__":
         arr.append((x, law_list[1][x]))
     arr.sort()
     for x in arr:
-        print(x, file=ouf)
+        if x[1]>1000:
+            print(x[0][0],x[0][1],x[0][2],x[1], file=ouf)
