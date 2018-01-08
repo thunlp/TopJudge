@@ -52,7 +52,13 @@ def check_law(data):
 
     arr1 = list(set(arr1))
     arr1.sort()
+    arr2 = list(set(arr2))
+    arr2.sort()
     if len(arr1) != 1 or len(arr2) != 1:
+        return False
+    if not((arr1[0][0],arr2[0][2]) in law_dict1):
+        return False
+    if not((arr2[0][0],arr2[0][2],arr2[0][1]) in law_dict2):
         return False
     return True
 
@@ -253,7 +259,7 @@ def check(data, config):
     if not (parse_sentence(data["content"], config)):
         return False
 
-    if not (check_law(data["law"])):
+    if not (check_law(data["meta"]["law"])):
         return False
 
     return True

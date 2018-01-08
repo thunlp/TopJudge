@@ -14,10 +14,13 @@ class reader():
         self.data_list = []
         self.temp_file = None
         self.rest = len(self.file_list)
+        self.read_cnt = 0
 
     def gen_new_file(self, config):
         if self.rest == 0:
             return
+        print("Already loaded %d data" % self.read_cnt)
+        self.read_cnt = 0
         self.rest -= 1
         p = random.randint(0, len(self.file_list) - 1)
         while self.use_list[p]:
@@ -50,6 +53,7 @@ class reader():
                 y = json.loads(x)
                 if check(y, config):
                     self.data_list.append(parse(y, config))
+                    self.read_cnt += 1
 
             if len(self.data_list) < batch_size:
                 for a in range(0, len(self.file_list)):

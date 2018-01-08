@@ -70,6 +70,8 @@ def analyze_law(data):
 
     arr1 = list(set(arr1))
     arr1.sort()
+    arr2 = list(set(arr2))
+    arr2.sort()
     if len(arr1) != 1 or len(arr2) != 1:
         return
     if len(arr1) == 1:
@@ -78,8 +80,6 @@ def analyze_law(data):
             law_list[0][arr1[0]] = 0
         law_list[0][arr1[0]] += 1
 
-    arr2 = list(set(arr2))
-    arr2.sort()
     if len(arr2) == 1:
         cnt2 += 1
         if not (arr2[0] in law_list[1]):
@@ -112,10 +112,11 @@ def draw_out(in_path, out_path):
 
 
 def work(from_id, to_id):
+    global cnt1,cnt2
     for a in range(int(from_id), int(to_id)):
-        print(str(a) + " begin to work")
+        print(str(a) + " begin to work",cnt1,cnt2)
         draw_out(os.path.join(in_path, str(a)), os.path.join(out_path, str(a)))
-        print(str(a) + " work done")
+        print(str(a) + " work done",cnt1,cnt2)
 
 
 if __name__ == "__main__":
