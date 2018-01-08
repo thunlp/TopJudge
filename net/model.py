@@ -281,7 +281,7 @@ class CNN_FINAL(nn.Module):
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
         for a in range(1, len(task_name) + 1):
             h, c = self.cell_list[a](fc_input, self.hidden_list[a - 1])
-            h = h + self.combine_fc_list[a](features)
+            h = h + self.combine_fc_list[a](fc_input)
             self.hidden_list[a] = h, c
             if config.getboolean("net", "more_fc"):
                 outputs.append(

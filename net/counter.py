@@ -4,6 +4,11 @@ import os
 import json
 import re
 from data_formatter import check, analyze_time
+import configparser
+
+configFilePath = "../config/multi_lstm_crit_baseline_small.config"
+config = configparser.RawConfigParser()
+config.read(configFilePath)
 
 # in_path = r"D:\work\law_pre\test\in"
 # out_path = r"D:\work\law_pre\test\out"
@@ -51,9 +56,10 @@ law_list = {}
 
 
 def analyze_law(data):
-    for x in data:
-        print(x)
-        gg
+    for x,y,z in data:
+        if not((x,y,z)) in law_list:
+            law_list[(x,y,z)] = 0
+        law_list[(x,y,z)] += 1
 
 
 def count(data):
@@ -72,7 +78,7 @@ def draw_out(in_path, out_path):
     cnt = 0
     for line in inf:
         data = json.loads(line)
-        if not (check(data, None)):
+        if not (check(data, config)):
             continue
         count(data["meta"])
         cnt += 1
@@ -108,6 +114,9 @@ if __name__ == "__main__":
     # for x in time_dict.keys():
     #    print(x, time_dict[x])
     # print(json.dumps(data), file=ouf)
-
-    for x in law_list.keys():
-        print(x, file=ouf)
+    arr = []
+    for x,y,z in law_list.keys():
+        arr.append((x,z,y,law_list[(x,y,z)]))
+    arr.sort()
+    for a,b,c,d in arr:
+        print(a,b,c,d,file=ouf)
