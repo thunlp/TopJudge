@@ -292,6 +292,121 @@ class CNN_FINAL(nn.Module):
         return outputs
 
 
+class MULTI_LSTM_FINAL(nn.Module):
+    def __init__(self, config, usegpu):
+        super(MULTI_LSTM_FINAL, self).__init__()
+
+        self.data_size = config.getint("data", "vec_size")
+        self.hidden_dim = config.getint("net", "hidden_size")
+
+        self.lstm_sentence = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
+        self.lstm_document = nn.LSTM(self.hidden_dim, self.hidden_dim, batch_first=True)
+
+        self.outfc = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for x in task_name:
+            self.outfc.append(nn.Linear(
+                self.hidden_dim, get_num_classes(x)
+            ))
+
+        self.midfc = []
+        for x in task_name:
+            self.midfc.append(nn.Linear(self.hidden_dim, self.hidden_dim))
+
+        self.cell_list = [None]
+        for x in task_name:
+            self.cell_list.append(nn.LSTMCell(config.getint("net", "hidden_size"), config.getint("net", "hidden_size")))
+
+        self.combine_fc_list = [None]
+        for a in range(0, len(task_name)):
+            self.combine_fc_list.append(nn.Linear(self.hidden_dim, self.hidden_dim))
+
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
+        self.outfc = nn.ModuleList(self.outfc)
+        self.init_hidden(config, usegpu)
+        self.midfc = nn.ModuleList(self.midfc)
+        self.cell_list = nn.ModuleList(self.cell_list)
+        self.combine_fc_list = nn.ModuleList(self.combine_fc_list)
+
+    def init_hidden(self, config, usegpu):
+        if torch.cuda.is_available() and usegpu:
+            self.sentence_hidden = (
+                torch.autograd.Variable(
+                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                                self.hidden_dim).cuda()),
+                torch.autograd.Variable(
+                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                                self.hidden_dim).cuda()))
+            self.document_hidden = (
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+        else:
+            self.sentence_hidden = (
+                torch.autograd.Variable(
+                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                                self.hidden_dim)),
+                torch.autograd.Variable(
+                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                                self.hidden_dim)))
+            self.document_hidden = (
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
+
+        self.hidden_list = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for a in range(0, len(task_name) + 1):
+            if torch.cuda.is_available() and usegpu:
+                self.hidden_list.append((
+                    torch.autograd.Variable(
+                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                    torch.autograd.Variable(
+                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda())))
+            else:
+                self.hidden_list.append((
+                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim)),
+                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim))))
+
+    def forward(self, x, doc_len, config):
+
+        x = x.view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                   config.getint("data", "sentence_len"),
+                   config.getint("data", "vec_size"))
+
+        sentence_out, self.sentence_hidden = self.lstm_sentence(x, self.sentence_hidden)
+        temp_out = []
+        # print(doc_len)
+        for a in range(0, len(sentence_out)):
+            idx = a // config.getint("data", "sentence_num")
+            idy = a % config.getint("data", "sentence_num")
+            # print(idx,idy)
+            temp_out.append(sentence_out[a][doc_len[idx][idy + 2] - 1])
+        sentence_out = torch.stack(temp_out)
+        sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+                                         self.hidden_dim)
+
+        lstm_out, self.document_hidden = self.lstm_document(sentence_out, self.document_hidden)
+        lstm_out = lstm_out
+
+        outv = []
+        for a in range(0, len(doc_len)):
+            outv.append(lstm_out[a][doc_len[a][1] - 1])
+        lstm_out = torch.cat(outv)
+
+        outputs = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for a in range(1, len(task_name) + 1):
+            h, c = self.cell_list[a](lstm_out, self.hidden_list[a - 1])
+            h = h + self.combine_fc_list[a](lstm_out)
+            self.hidden_list[a] = h, c
+            if config.getboolean("net", "more_fc"):
+                outputs.append(
+                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size", -1)))
+            else:
+                outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
+
+        return outputs
+
+
 def test(net, test_dataset, usegpu, config, epoch):
     net.eval()
     running_acc = []
