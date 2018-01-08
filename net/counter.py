@@ -52,14 +52,37 @@ def analyze_crit(data):
         crit_list[x] += 1
 
 
-law_list = {}
+law_list = [{}, {}]
+
+cnt1 = 0
+cnt2 = 0
 
 
 def analyze_law(data):
-    for x,y,z in data:
-        if not((x,y,z)) in law_list:
-            law_list[(x,y,z)] = 0
-        law_list[(x,y,z)] += 1
+    arr1 = []
+    arr2 = []
+    global cnt1, cnt2
+    for x, y, z in data:
+        if x < 102:
+            continue
+        arr1.append((x, z))
+        arr2.append((x, z, y))
+
+    arr1 = list(set(arr1))
+    arr1.sort()
+    if len(arr1) == 1:
+        cnt1 += 1
+        if not (arr1[0] in law_list[0]):
+            law_list[0][arr1[0]] = 0
+        law_list[0][arr1[0]] += 1
+
+    arr2 = list(set(arr2))
+    arr2.sort()
+    if len(arr2) == 1:
+        cnt2 += 1
+        if not (arr2[0] in law_list[0]):
+            law_list[0][arr1[0]] = 0
+        law_list[0][arr2[0]] += 1
 
 
 def count(data):
@@ -114,9 +137,22 @@ if __name__ == "__main__":
     # for x in time_dict.keys():
     #    print(x, time_dict[x])
     # print(json.dumps(data), file=ouf)
+
+    print(cnt1)
+    print(cnt2)
+
+    ouf = open("result/law_result1.txt", "w")
     arr = []
-    for x,y,z in law_list.keys():
-        arr.append((x,z,y,law_list[(x,y,z)]))
+    for x in law_list[0].keys():
+        arr.append((x, law_list[0][x]))
     arr.sort()
-    for a,b,c,d in arr:
-        print(a,b,c,d,file=ouf)
+    for x in arr:
+        print(x, file=ouf)
+
+    ouf = open("result/law_result2.txt", "w")
+    arr = []
+    for x in law_list[1].keys():
+        arr.append((x, law_list[1][x]))
+    arr.sort()
+    for x in arr:
+        print(x, file=ouf)
