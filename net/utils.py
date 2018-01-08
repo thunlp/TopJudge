@@ -4,8 +4,10 @@ import torch
 def get_num_classes(s):
     if s == "crit":
         return 50
-    if s == "law":
-        return gg
+    if s == "law1":
+        return 39
+    if s == "law2":
+        return 48
     if s == "time":
         return 12
     gg

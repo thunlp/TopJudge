@@ -12,8 +12,24 @@ for line in f:
     data = int(line[:-1].replace("\n", "").split(" ")[1])
     accusation_list.append(data)
     accusation_dict[data] = len(accusation_list) - 1
-print(accusation_list)
-print(accusation_dict)
+
+law_list1 = []
+law_dict1 = {}
+f = open("result/law_result1.txt", "r")
+for line in f:
+    arr = line[:-1].replace("\n", "").split(" ")
+    data = int(arr[0]), int(arr[1])
+    law_list1.append(data)
+    law_dict1[data] = len(law_list1) - 1
+
+law_list2 = []
+law_dict2 = {}
+f = open("result/law_result2.txt", "r")
+for line in f:
+    arr = line[:-1].replace("\n", "").split(" ")
+    data = int(arr[0]), int(arr[1]), int(arr[2])
+    law_list2.append(data)
+    law_dict2[data] = len(law_list2) - 1
 
 
 def get_data_list(d):
@@ -24,8 +40,29 @@ def analyze_crit(data, config):
     return accusation_dict[data[0]]
 
 
-def analyze_law(data, config):
-    pass
+def check_law(data):
+    arr1 = []
+    arr2 = []
+    global cnt1, cnt2
+    for x, y, z in data:
+        if x < 102:
+            continue
+        arr1.append((x, z))
+        arr2.append((x, z, y))
+
+    arr1 = list(set(arr1))
+    arr1.sort()
+    if len(arr1) != 1 or len(arr2) != 1:
+        return False
+    return True
+
+
+def analyze_law1(data, config):
+    return law_dict1[(data[0][0], data[0][2])]
+
+
+def analyze_law2(data, config):
+    return law_dict2[(data[0][0], data[0][2], data[0][1])]
 
 
 def analyze_time(data, config):
@@ -162,7 +199,7 @@ def generate_vector(data, config):
         len_vec.append(1)
     if len_vec[1] > 32:
         gg
-    for a in range(2,len(len_vec)):
+    for a in range(2, len(len_vec)):
         if len_vec[a] > 128:
             gg
     if len(len_vec) != 34:
@@ -191,16 +228,18 @@ def parse(data, config):
     for x in label_list:
         if x == "crit":
             label.append(analyze_crit(data["meta"]["crit"], config))
-        if x == "law":
-            label.append(analyze_law(data["meta"]["law"], config))
+        if x == "law1":
+            label.append(analyze_law1(data["meta"]["law"], config))
+        if x == "law2":
+            label.append(analyze_law2(data["meta"]["law"], config))
         if x == "time":
             label.append(analyze_time(data["meta"]["time"], config))
     # print(data)
     vector, len_vec = generate_vector(data["content"], config)
-    #print(data)
-    #print(vector)
-    #print(len_vec)
-    #print(label)
+    # print(data)
+    # print(vector)
+    # print(len_vec)
+    # print(label)
     return vector, len_vec, torch.LongTensor(label)
 
 
@@ -212,6 +251,9 @@ def check(data, config):
     # if len(data["content"].split("\t")) > config.getint("data", "pad_length"):
     #    return False
     if not (parse_sentence(data["content"], config)):
+        return False
+
+    if not (check_law(data["law"])):
         return False
 
     return True
