@@ -7,7 +7,7 @@ import random
 transformer = word2vec()
 accusation_list = []
 accusation_dict = {}
-f = open("result/result_bac.txt", "r")
+f = open("result/crit_result.txt", "r")
 for line in f:
     data = int(line[:-1].replace("\n", "").split(" ")[1])
     accusation_list.append(data)
@@ -22,14 +22,14 @@ for line in f:
     law_list1.append(data)
     law_dict1[data] = len(law_list1) - 1
 
-law_list2 = []
+"""law_list2 = []
 law_dict2 = {}
 f = open("result/law_result2.txt", "r")
 for line in f:
     arr = line[:-1].replace("\n", "").split(" ")
     data = int(arr[0]), int(arr[1]), int(arr[2])
     law_list2.append(data)
-    law_dict2[data] = len(law_list2) - 1
+    law_dict2[data] = len(law_list2) - 1"""
 
 
 def get_data_list(d):
@@ -53,12 +53,12 @@ def check_law(data):
     arr1.sort()
     arr2 = list(set(arr2))
     arr2.sort()
-    if len(arr1) != 1 or len(arr2) != 1:
+    if len(arr1) != 1:# or len(arr2) != 1:
         return False
-    if not((arr1[0][0],arr2[0][2]) in law_dict1):
+    if not((arr1[0][0],arr1[0][1]) in law_dict1):
         return False
-    if not((arr2[0][0],arr2[0][1],arr2[0][2]) in law_dict2):
-        return False
+    #if not((arr2[0][0],arr2[0][1],arr2[0][2]) in law_dict2):
+    #    return False
     return True
 
 
@@ -70,7 +70,7 @@ def analyze_law1(data, config):
         arr1.append((x, z))
 
     return law_dict1[(arr1[0][0], arr1[0][1])]
-
+    return arr1[0][0] * 10 + arr1[0][1]
 
 def analyze_law2(data, config):
     arr2 = []
@@ -85,7 +85,7 @@ def analyze_time(data, config):
     if data["sixing"]:
         return 0
     if data["wuqi"]:
-        return 1
+        return 0
     v = 0
     for x in data["youqi"]:
         v = max(x, v)
@@ -94,24 +94,24 @@ def analyze_time(data, config):
     for x in data["guanzhi"]:
         v = max(x, v)
     if v > 10 * 12:
-        return 2
+        return 1
     if v > 7 * 12:
-        return 3
+        return 2
     if v > 5 * 12:
-        return 4
+        return 3
     if v > 3 * 12:
-        return 5
+        return 4
     if v > 2 * 12:
-        return 6
+        return 5
     if v > 1 * 12:
-        return 7
+        return 6
     if v > 9:
-        return 8
+        return 7
     if v > 6:
-        return 9
+        return 8
     if v > 0:
-        return 10
-    return 11
+        return 9
+    return 10
     # print(data)
     # gg
     if data["sixing"]:
@@ -260,6 +260,7 @@ def parse(data, config):
 
 
 def check(data, config):
+    data["meta"]["crit"] = list(set(data["meta"]["crit"]))
     if len(data["meta"]["crit"]) > 1 or len(data["meta"]["crit"]) == 0:
         return False
     if not (int(data["meta"]["crit"][0]) in accusation_dict):

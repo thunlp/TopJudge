@@ -5,9 +5,9 @@ import json
 import re
 from data_formatter import check, analyze_time, analyze_law1, analyze_law2, analyze_crit
 import configparser
-from utils import get_num_class
+from utils import get_num_classes
 
-configFilePath = "../config/multi_lstm_crit_baseline_small.config"
+configFilePath = "../config/multi_lstm/crit/small.config"
 config = configparser.RawConfigParser()
 config.read(configFilePath)
 
@@ -32,11 +32,13 @@ law = []
 def print_res(law, crit, time, ouf):
     print("law", file=ouf)
     for a in range(0, len(law)):
-        print(a, law[a], file=ouf)
+        if law[a]>1000:
+            print(a, law[a], file=ouf)
 
     print("\ncrit", file=ouf)
     for a in range(0, len(crit)):
-        print(a, crit[a], file=ouf)
+        if crit[a] > 1000:
+            print(a, crit[a], file=ouf)
 
     print("\ntime", file=ouf)
     for a in range(0, len(time)):
@@ -59,16 +61,17 @@ def count(data, config):
 
 
 def draw_out(in_path, out_path):
+    global crit,time,law
     print(in_path)
     inf = open(in_path, "r")
     crit = []
     time = []
     law = []
-    for a in range(0, get_num_class("crit")):
+    for a in range(0, get_num_classes("crit")):
         crit.append(0)
-    for a in range(0, get_num_class("time")):
+    for a in range(0, get_num_classes("time")):
         time.append(0)
-    for a in range(0, get_num_class("law1")):
+    for a in range(0, get_num_classes("law1")):
         law.append(0)
 
     cnt = 0
@@ -86,11 +89,12 @@ def draw_out(in_path, out_path):
 
 
 def work(from_id, to_id):
-    for a in range(0, get_num_class("crit")):
+    global global_crit,global_time,global_law
+    for a in range(0, get_num_classes("crit")):
         global_crit.append(0)
-    for a in range(0, get_num_class("time")):
+    for a in range(0, get_num_classes("time")):
         global_time.append(0)
-    for a in range(0, get_num_class("law1")):
+    for a in range(0, get_num_classes("law1")):
         global_law.append(0)
     for a in range(int(from_id), int(to_id)):
         print(str(a) + " begin to work")
