@@ -1,5 +1,6 @@
 .idea*
 *.swp
+*.swo
 *.un~
 *~
 data_processor/make_data
