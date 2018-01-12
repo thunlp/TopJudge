@@ -14,8 +14,8 @@ def get_num_classes(s):
 
 
 def calc_accuracy(outputs, labels, res):
-    #print("outputs",outputs)
-    #print("labels",labels)
+    # print("outputs",outputs)
+    # print("labels",labels)
     for a in range(0, len(labels)):
         it_is = int(outputs[a].max(dim=0)[1].data.cpu().numpy())
         should_be = int(labels[a].data.cpu().numpy())
@@ -62,7 +62,7 @@ def gen_result(res, test=False, file_path=None):
     macro_precision = 0
     micro_recall = total["TP"] / (total["TP"] + total["FN"])
     macro_recall = 0
-    if micro_precision+micro_recall == 0:
+    if micro_precision + micro_recall == 0:
         micro_f1 = 0
     else:
         micro_f1 = 2 * micro_precision * micro_recall / (micro_precision + micro_recall)
@@ -103,3 +103,26 @@ def gen_result(res, test=False, file_path=None):
         f.close()
 
     print("")
+
+
+def generate_graph(config):
+    s = config.get("data", "graph")
+    arr = s.replace("[", "").replace("]", "")
+    graph = []
+    n = 0
+    for a in range(0, len(arr)):
+        arr[a] = arr[a].replace("(", "").replace(")", "").split(" ")
+        arr[a][0] = int(arr[a][0])
+        arr[a][1] = int(arr[a][1])
+        n = max(n,max(arr[a][0],arr[a][1]))
+
+    n += 1
+    for a in range(0,n):
+        graph.append([])
+        for b in range(0,n):
+            graph[a].append(False)
+
+    for a in range(0,len(arr)):
+        graph[arr[a][0]][graph[arr[a][1]]] = True
+
+    return graph

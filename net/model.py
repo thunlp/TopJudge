@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import os
 
-from utils import calc_accuracy, gen_result, get_num_classes
+from utils import calc_accuracy, gen_result, get_num_classes, generate_graph
 
 
 class Attention(nn.Module):
@@ -252,16 +252,29 @@ class CNN_FINAL(nn.Module):
         for x in task_name:
             self.cell_list.append(nn.LSTMCell(config.getint("net", "hidden_size"), config.getint("net", "hidden_size")))
 
-        self.combine_fc_list = [None]
-        for a in range(0, len(task_name)):
-            self.combine_fc_list.append(nn.Linear(features, features))
+        self.hidden_state_fc_list = []
+        for a in range(0, len(task_name) + 1):
+            arr = []
+            for b in range(0, len(task_name) + 1):
+                arr.append(nn.Linear(features, features))
+            arr = nn.ModuleList(arr)
+            self.hidden_state_fc_list.append(arr)
+
+        self.cell_state_fc_list = []
+        for a in range(0, len(task_name) + 1):
+            arr = []
+            for b in range(0, len(task_name) + 1):
+                arr.append(nn.Linear(features, features))
+            arr = nn.ModuleList(arr)
+            self.cell_state_fc_list.append(arr)
 
         self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.convs = nn.ModuleList(self.convs)
         self.outfc = nn.ModuleList(self.outfc)
         self.midfc = nn.ModuleList(self.midfc)
         self.cell_list = nn.ModuleList(self.cell_list)
-        self.combine_fc_list = nn.ModuleList(self.combine_fc_list)
+        self.hidden_state_fc_list = nn.ModuleList(self.hidden_state_fc_list)
+        self.cell_state_fc_list = nn.ModuleList(self.cell_state_fc_list)
 
     def init_hidden(self, config, usegpu):
         self.hidden_list = []
@@ -292,10 +305,22 @@ class CNN_FINAL(nn.Module):
 
         outputs = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        graph = generate_graph(config)
         for a in range(1, len(task_name) + 1):
-            h, c = self.cell_list[a](fc_input, self.hidden_list[a - 1])
-            h = h + self.combine_fc_list[a](fc_input)
-            self.hidden_list[a] = h, c
+            if graph[0][a]:
+                h, c = self.hidden_list[a]
+                h = h + self.hidden_state_fc_list[0][a](fc_input)
+                self.hidden_list[a] = (h, c)
+
+        for a in range(1, len(task_name) + 1):
+            h, c = self.cell_list[a](fc_input, self.hidden_list[a])
+            for b in range(1, len(task_name) + 1):
+                if graph[a][b]:
+                    hp, cp = self.hidden_list[b]
+                    hp = hp + self.hidden_state_fc_list(h)
+                    cp = cp + self.cell_state_fc_list(c)
+                    self.hidden_list[b] = (hp, cp)
+            # self.hidden_list[a] = h, c
             if config.getboolean("net", "more_fc"):
                 outputs.append(
                     self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size", -1)))
@@ -330,16 +355,29 @@ class MULTI_LSTM_FINAL(nn.Module):
         for x in task_name:
             self.cell_list.append(nn.LSTMCell(config.getint("net", "hidden_size"), config.getint("net", "hidden_size")))
 
-        self.combine_fc_list = [None]
-        for a in range(0, len(task_name)):
-            self.combine_fc_list.append(nn.Linear(self.hidden_dim, self.hidden_dim))
+        self.hidden_state_fc_list = []
+        for a in range(0, len(task_name) + 1):
+            arr = []
+            for b in range(0, len(task_name) + 1):
+                arr.append(nn.Linear(self.hidden_dim, self.hidden_dim))
+            arr = nn.ModuleList(arr)
+            self.hidden_state_fc_list.append(arr)
+
+        self.cell_state_fc_list = []
+        for a in range(0, len(task_name) + 1):
+            arr = []
+            for b in range(0, len(task_name) + 1):
+                arr.append(nn.Linear(self.hidden_dim, self.hidden_dim))
+            arr = nn.ModuleList(arr)
+            self.cell_state_fc_list.append(arr)
 
         self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.outfc = nn.ModuleList(self.outfc)
         self.init_hidden(config, usegpu)
         self.midfc = nn.ModuleList(self.midfc)
         self.cell_list = nn.ModuleList(self.cell_list)
-        self.combine_fc_list = nn.ModuleList(self.combine_fc_list)
+        self.hidden_state_fc_list = nn.ModuleList(self.hidden_state_fc_list)
+        self.cell_state_fc_list = nn.ModuleList(self.cell_state_fc_list)
 
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
@@ -407,10 +445,21 @@ class MULTI_LSTM_FINAL(nn.Module):
 
         outputs = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        graph = generate_graph(config)
         for a in range(1, len(task_name) + 1):
-            h, c = self.cell_list[a](lstm_out, self.hidden_list[a - 1])
-            h = h + self.combine_fc_list[a](lstm_out)
-            self.hidden_list[a] = h, c
+            if graph[0][a]:
+                h, c = self.hidden_list[a]
+                h = h + self.hidden_state_fc_list[0][a](lstm_out)
+                self.hidden_list[a] = (h, c)
+
+        for a in range(1, len(task_name) + 1):
+            h, c = self.cell_list[a](lstm_out, self.hidden_list[a])
+            for b in range(1, len(task_name) + 1):
+                if graph[a][b]:
+                    hp, cp = self.hidden_list[b]
+                    hp = hp + self.hidden_state_fc_list(h)
+                    cp = cp + self.cell_state_fc_list(c)
+                    self.hidden_list[b] = (hp, cp)
             if config.getboolean("net", "more_fc"):
                 outputs.append(
                     self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size", -1)))
