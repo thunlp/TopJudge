@@ -32,13 +32,11 @@ law = []
 def print_res(law, crit, time, ouf):
     print("law", file=ouf)
     for a in range(0, len(law)):
-        if law[a]>1000:
-            print(a, law[a], file=ouf)
+        print(a, law[a], file=ouf)
 
     print("\ncrit", file=ouf)
     for a in range(0, len(crit)):
-        if crit[a] > 1000:
-            print(a, crit[a], file=ouf)
+        print(a, crit[a], file=ouf)
 
     print("\ntime", file=ouf)
     for a in range(0, len(time)):
