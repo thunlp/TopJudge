@@ -9,6 +9,19 @@ import os
 from utils import calc_accuracy, gen_result, get_num_classes
 
 
+class Attention(nn.Module):
+    def __init__(self, config):
+        self.fc = nn.Linear(config.getint("net", "hidden_size") * 2, config.getint("net", "hidden_size"))
+
+    def forward(self, feature, hidden):
+        feature = feature.view(feature.size(0), -1, 1)
+        ratio = F.softmax(torch.bmm(hidden, feature))
+        result = torch.bmm(hidden.transpose(1, 2), ratio)
+        result = result.view(result.size(0), -1)
+
+        return result
+
+
 class CNN(nn.Module):
     def __init__(self, config):
         super(CNN, self).__init__()
