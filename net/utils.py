@@ -107,7 +107,7 @@ def gen_result(res, test=False, file_path=None):
 
 def generate_graph(config):
     s = config.get("data", "graph")
-    arr = s.replace("[", "").replace("]", "")
+    arr = s.replace("[", "").replace("]", "").split(",")
     graph = []
     n = 0
     for a in range(0, len(arr)):
@@ -123,6 +123,6 @@ def generate_graph(config):
             graph[a].append(False)
 
     for a in range(0,len(arr)):
-        graph[arr[a][0]][graph[arr[a][1]]] = True
+        graph[arr[a][0]][arr[a][1]] = True
 
     return graph
