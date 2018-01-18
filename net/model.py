@@ -206,7 +206,7 @@ class MULTI_LSTM(nn.Module):
             sentence_out = torch.stack(temp_out)
         elif config.get("net", "method") == "MAX":
             sentence_out = sentence_out.contiguous().view(
-                config.getint("data", "batch_size") , config.getint("data", "sentence_num"),
+                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
                 config.getint("data", "sentence_len"),
                 config.getint("net", "hidden_size"))
             sentence_out = torch.max(sentence_out, dim=2)[0]
@@ -219,12 +219,18 @@ class MULTI_LSTM(nn.Module):
                                          self.hidden_dim)
 
         lstm_out, self.document_hidden = self.lstm_document(sentence_out, self.document_hidden)
-        lstm_out = lstm_out
 
-        outv = []
-        for a in range(0, len(doc_len)):
-            outv.append(lstm_out[a][doc_len[a][1] - 1])
-        lstm_out = torch.cat(outv)
+        if config.get("net", "method") == "LAST":
+            outv = []
+            for a in range(0, len(doc_len)):
+                outv.append(lstm_out[a][doc_len[a][1] - 1])
+            lstm_out = torch.cat(outv)
+        elif config.get("net", "method") == "MAX":
+            lstm_out = torch.max(lstm_out, dim=1)[0]
+            print(lstm_out)
+            gg
+        else:
+            gg
 
         outputs = []
         now_cnt = 0
