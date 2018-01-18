@@ -203,9 +203,16 @@ class MULTI_LSTM(nn.Module):
                 idy = a % config.getint("data", "sentence_num")
                 # print(idx,idy)
                 temp_out.append(sentence_out[a][doc_len[idx][idy + 2] - 1])
-                sentence_out = torch.stack(temp_out)
-        elif config.get("net","method") == "MAX":
-            sentence_out = torch.max(sentence_out, dim=1)[0]
+            sentence_out = torch.stack(temp_out)
+        elif config.get("net", "method") == "MAX":
+            sentence_out = sentence_out.view(
+                config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                config.getint("data", "sentence_len"),
+                config.getint("data", "vec_size"))
+            sentence_out = torch.max(sentence_out, dim=2)[0]
+            sentence_out = sentence_out.view(
+                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+                config.getint("data", "vec_size"))
             print(sentence_out)
             gg
         else:
