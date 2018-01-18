@@ -443,22 +443,38 @@ class MULTI_LSTM_FINAL(nn.Module):
         sentence_out, self.sentence_hidden = self.lstm_sentence(x, self.sentence_hidden)
         temp_out = []
         # print(doc_len)
-        for a in range(0, len(sentence_out)):
-            idx = a // config.getint("data", "sentence_num")
-            idy = a % config.getint("data", "sentence_num")
-            # print(idx,idy)
-            temp_out.append(sentence_out[a][doc_len[idx][idy + 2] - 1])
-        sentence_out = torch.stack(temp_out)
+        if config.get("net", "method") == "LAST":
+            for a in range(0, len(sentence_out)):
+                idx = a // config.getint("data", "sentence_num")
+                idy = a % config.getint("data", "sentence_num")
+                # print(idx,idy)
+                temp_out.append(sentence_out[a][doc_len[idx][idy + 2] - 1])
+            sentence_out = torch.stack(temp_out)
+        elif config.get("net", "method") == "MAX":
+            sentence_out = sentence_out.contiguous().view(
+                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+                config.getint("data", "sentence_len"),
+                config.getint("net", "hidden_size"))
+            sentence_out = torch.max(sentence_out, dim=2)[0]
+            sentence_out = sentence_out.view(
+                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+                config.getint("net", "hidden_size"))
+        else:
+            gg
         sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
                                          self.hidden_dim)
 
         lstm_out, self.document_hidden = self.lstm_document(sentence_out, self.document_hidden)
-        lstm_out = lstm_out
 
-        outv = []
-        for a in range(0, len(doc_len)):
-            outv.append(lstm_out[a][doc_len[a][1] - 1])
-        lstm_out = torch.cat(outv)
+        if config.get("net", "method") == "LAST":
+            outv = []
+            for a in range(0, len(doc_len)):
+                outv.append(lstm_out[a][doc_len[a][1] - 1])
+            lstm_out = torch.cat(outv)
+        elif config.get("net", "method") == "MAX":
+            lstm_out = torch.max(lstm_out, dim=1)[0]
+        else:
+            gg
 
         outputs = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
