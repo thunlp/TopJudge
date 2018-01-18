@@ -11,7 +11,8 @@ from utils import calc_accuracy, gen_result, get_num_classes, generate_graph
 
 class Attention(nn.Module):
     def __init__(self, config):
-        self.fc = nn.Linear(config.getint("net", "hidden_size") * 2, config.getint("net", "hidden_size"))
+        pass
+        # self.fc = nn.Linear(config.getint("net", "hidden_size"), config.getint("net", "hidden_size"))
 
     def forward(self, feature, hidden):
         feature = feature.view(feature.size(0), -1, 1)
@@ -56,7 +57,7 @@ class CNN(nn.Module):
         x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
         fc_input = []
         for conv in self.convs:
-            fc_input.append(self.dropout(torch.max(conv(x), dim=2, keepdim=True)[0]))
+            fc_input.append(torch.max(conv(x), dim=2, keepdim=True)[0])
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
@@ -196,12 +197,19 @@ class MULTI_LSTM(nn.Module):
         sentence_out, self.sentence_hidden = self.lstm_sentence(x, self.sentence_hidden)
         temp_out = []
         # print(doc_len)
-        for a in range(0, len(sentence_out)):
-            idx = a // config.getint("data", "sentence_num")
-            idy = a % config.getint("data", "sentence_num")
-            # print(idx,idy)
-            temp_out.append(sentence_out[a][doc_len[idx][idy + 2] - 1])
-        sentence_out = torch.stack(temp_out)
+        if config.get("net", "method") == "LAST":
+            for a in range(0, len(sentence_out)):
+                idx = a // config.getint("data", "sentence_num")
+                idy = a % config.getint("data", "sentence_num")
+                # print(idx,idy)
+                temp_out.append(sentence_out[a][doc_len[idx][idy + 2] - 1])
+                sentence_out = torch.stack(temp_out)
+        elif config.get("net","method") == "MAX":
+            sentence_out = torch.max(sentence_out, dim=1)[0]
+            print(sentence_out)
+            gg
+        else:
+            gg
         sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
                                          self.hidden_dim)
 

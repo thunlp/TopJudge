@@ -114,15 +114,15 @@ def generate_graph(config):
         arr[a] = arr[a].replace("(", "").replace(")", "").split(" ")
         arr[a][0] = int(arr[a][0])
         arr[a][1] = int(arr[a][1])
-        n = max(n,max(arr[a][0],arr[a][1]))
+        n = max(n, max(arr[a][0], arr[a][1]))
 
     n += 1
-    for a in range(0,n):
+    for a in range(0, n):
         graph.append([])
-        for b in range(0,n):
+        for b in range(0, n):
             graph[a].append(False)
 
-    for a in range(0,len(arr)):
+    for a in range(0, len(arr)):
         graph[arr[a][0]][arr[a][1]] = True
 
     return graph
