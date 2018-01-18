@@ -227,8 +227,6 @@ class MULTI_LSTM(nn.Module):
             lstm_out = torch.cat(outv)
         elif config.get("net", "method") == "MAX":
             lstm_out = torch.max(lstm_out, dim=1)[0]
-            print(lstm_out)
-            gg
         else:
             gg
 
