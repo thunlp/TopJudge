@@ -323,11 +323,11 @@ class CNN_FINAL(nn.Module):
         outputs = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
         graph = generate_graph(config)
-        for a in range(1, len(task_name) + 1):
+        """for a in range(1, len(task_name) + 1):
             if graph[0][a]:
                 h, c = self.hidden_list[a]
                 h = h + self.hidden_state_fc_list[0][a](fc_input)
-                self.hidden_list[a] = (h, c)
+                self.hidden_list[a] = (h, c)"""
 
         for a in range(1, len(task_name) + 1):
             h, c = self.cell_list[a](fc_input, self.hidden_list[a])
@@ -479,11 +479,11 @@ class MULTI_LSTM_FINAL(nn.Module):
         outputs = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
         graph = generate_graph(config)
-        for a in range(1, len(task_name) + 1):
+        """for a in range(1, len(task_name) + 1):
             if graph[0][a]:
                 h, c = self.hidden_list[a]
                 h = h + self.hidden_state_fc_list[0][a](lstm_out)
-                self.hidden_list[a] = (h, c)
+                self.hidden_list[a] = (h, c)"""
 
         for a in range(1, len(task_name) + 1):
             h, c = self.cell_list[a](lstm_out, self.hidden_list[a])
