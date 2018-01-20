@@ -485,13 +485,20 @@ class MULTI_LSTM_FINAL(nn.Module):
                 h = h + self.hidden_state_fc_list[0][a](lstm_out)
                 self.hidden_list[a] = (h, c)"""
 
+        first = []
+        for a in range(0, len(task_name) + 1):
+            first.append(True)
         for a in range(1, len(task_name) + 1):
             h, c = self.cell_list[a](lstm_out, self.hidden_list[a])
             for b in range(1, len(task_name) + 1):
                 if graph[a][b]:
                     hp, cp = self.hidden_list[b]
-                    hp = hp + self.hidden_state_fc_list[a][b](h)
-                    cp = cp + self.cell_state_fc_list[a][b](c)
+                    if first[b]:
+                        first[b] = False
+                        hp,cp = h, c
+                    else:
+                        hp = hp + self.hidden_state_fc_list[a][b](h)
+                        cp = cp + self.cell_state_fc_list[a][b](c)
                     self.hidden_list[b] = (hp, cp)
             if config.getboolean("net", "more_fc"):
                 outputs.append(
