@@ -7,7 +7,7 @@ import torch.optim as optim
 import os
 
 from utils import calc_accuracy, gen_result, get_num_classes, generate_graph
-
+import pdb
 
 class Attention(nn.Module):
     def __init__(self, config):
@@ -342,7 +342,7 @@ class CNN_FINAL(nn.Module):
             # self.hidden_list[a] = h, c
             if config.getboolean("net", "more_fc"):
                 outputs.append(
-                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size", -1)))
+                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"),-1))
             else:
                 outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
 
@@ -443,9 +443,9 @@ class MULTI_LSTM_FINAL(nn.Module):
                    config.getint("data", "vec_size"))
 
         sentence_out, self.sentence_hidden = self.lstm_sentence(x, self.sentence_hidden)
-        temp_out = []
         # print(doc_len)
         if config.get("net", "method") == "LAST":
+            temp_out = []
             for a in range(0, len(sentence_out)):
                 idx = a // config.getint("data", "sentence_num")
                 idy = a % config.getint("data", "sentence_num")
@@ -461,6 +461,18 @@ class MULTI_LSTM_FINAL(nn.Module):
             sentence_out = sentence_out.view(
                 config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
                 config.getint("net", "hidden_size"))
+            """lx = len(sentence_out)
+            sentence_out = sentence_out.contiguous().view(
+                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+                config.getint("data", "sentence_len"),
+                config.getint("net", "hidden_size"))
+            temp_out = []
+            for a in range(0, lx):
+                idx = a // config.getint("data", "sentence_num")
+                idy = a % config.getint("data", "sentence_num")
+                ly = doc_len[idx][idy+2].data[0]
+                temp_out.append(torch.max(sentence_out[idx,idy,0:ly+1,:],dim=0)[0])
+            sentence_out = torch.stack(temp_out)"""
         else:
             gg
         sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
@@ -474,7 +486,11 @@ class MULTI_LSTM_FINAL(nn.Module):
                 outv.append(lstm_out[a][doc_len[a][1] - 1])
             lstm_out = torch.cat(outv)
         elif config.get("net", "method") == "MAX":
-            lstm_out = torch.max(lstm_out, dim=1)[0]
+            outv = []
+            for a in range(0, len(doc_len)):
+                outv.append(torch.max(lstm_out[a,0:doc_len[a][1].data[0]],dim=0)[0])
+            lstm_out = torch.stack(outv)
+            #lstm_out = torch.max(lstm_out, dim=1)[0]
         else:
             gg
 
@@ -499,7 +515,7 @@ class MULTI_LSTM_FINAL(nn.Module):
                     self.hidden_list[b] = (hp, cp)
             if config.getboolean("net", "more_fc"):
                 outputs.append(
-                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size", -1)))
+                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"),-1))
             else:
                 outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
 
@@ -754,11 +770,12 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                 loss = loss + criterion(outputs[a], labels.transpose(0, 1)[a])
                 running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
 
-            if first:
+            if False:
                 loss.backward(retain_graph=True)
                 first = False
             else:
                 loss.backward()
+            #pdb.set_trace()
 
             optimizer.step()
 
