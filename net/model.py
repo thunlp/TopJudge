@@ -12,6 +12,7 @@ import pdb
 
 class Attention(nn.Module):
     def __init__(self, config):
+        super(Attention, self).__init__()
         pass
         # self.fc = nn.Linear(config.getint("net", "hidden_size"), config.getint("net", "hidden_size"))
 
