@@ -9,6 +9,7 @@ import os
 from utils import calc_accuracy, gen_result, get_num_classes, generate_graph
 import pdb
 
+
 class Attention(nn.Module):
     def __init__(self, config):
         pass
@@ -342,7 +343,7 @@ class CNN_FINAL(nn.Module):
             # self.hidden_list[a] = h, c
             if config.getboolean("net", "more_fc"):
                 outputs.append(
-                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"),-1))
+                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"), -1))
             else:
                 outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
 
@@ -389,6 +390,8 @@ class MULTI_LSTM_FINAL(nn.Module):
                 arr.append(nn.Linear(self.hidden_dim, self.hidden_dim))
             arr = nn.ModuleList(arr)
             self.cell_state_fc_list.append(arr)
+
+        self.attetion = Attention(config)
 
         self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.outfc = nn.ModuleList(self.outfc)
@@ -479,6 +482,7 @@ class MULTI_LSTM_FINAL(nn.Module):
                                          self.hidden_dim)
 
         lstm_out, self.document_hidden = self.lstm_document(sentence_out, self.document_hidden)
+        attention_value = lstm_out
 
         if config.get("net", "method") == "LAST":
             outv = []
@@ -488,9 +492,9 @@ class MULTI_LSTM_FINAL(nn.Module):
         elif config.get("net", "method") == "MAX":
             outv = []
             for a in range(0, len(doc_len)):
-                outv.append(torch.max(lstm_out[a,0:doc_len[a][1].data[0]],dim=0)[0])
+                outv.append(torch.max(lstm_out[a, 0:doc_len[a][1].data[0]], dim=0)[0])
             lstm_out = torch.stack(outv)
-            #lstm_out = torch.max(lstm_out, dim=1)[0]
+            # lstm_out = torch.max(lstm_out, dim=1)[0]
         else:
             gg
 
@@ -513,9 +517,11 @@ class MULTI_LSTM_FINAL(nn.Module):
                         hp = hp + self.hidden_state_fc_list[a][b](h)
                         cp = cp + self.cell_state_fc_list[a][b](c)
                     self.hidden_list[b] = (hp, cp)
+            if config.getboolean("net", "attention"):
+                h = self.attetion(h, attention_value)
             if config.getboolean("net", "more_fc"):
                 outputs.append(
-                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"),-1))
+                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"), -1))
             else:
                 outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
 
@@ -787,7 +793,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                 first = False
             else:
                 loss.backward()
-            #pdb.set_trace()
+            # pdb.set_trace()
 
             optimizer.step()
 
