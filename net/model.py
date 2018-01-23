@@ -20,7 +20,7 @@ class Attention(nn.Module):
         feature = feature.view(feature.size(0), -1, 1)
         ratio = torch.bmm(hidden,feature)
         ratio = ratio.view(ratio.size(0),ratio.size(1))
-        ratio = F.softmax(ratio,dim=1)
+        ratio = F.softmax(ratio,dim=1).view(ratio.size(0),-1,1)
         result = torch.bmm(hidden.transpose(1, 2), ratio)
         result = result.view(result.size(0), -1)
 
