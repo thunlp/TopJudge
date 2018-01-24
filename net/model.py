@@ -18,9 +18,9 @@ class Attention(nn.Module):
 
     def forward(self, feature, hidden):
         feature = feature.view(feature.size(0), -1, 1)
-        ratio = torch.bmm(hidden,feature)
-        ratio = ratio.view(ratio.size(0),ratio.size(1))
-        ratio = F.softmax(ratio,dim=1).view(ratio.size(0),-1,1)
+        ratio = torch.bmm(hidden, feature)
+        ratio = ratio.view(ratio.size(0), ratio.size(1))
+        ratio = F.softmax(ratio, dim=1).view(ratio.size(0), -1, 1)
         result = torch.bmm(hidden.transpose(1, 2), ratio)
         result = result.view(result.size(0), -1)
 
@@ -31,14 +31,14 @@ class Attention_tanh(nn.Module):
     def __init__(self, config):
         super(Attention, self).__init__()
         # pass
-        self.fc = nn.Linear(config.getint("net", "hidden_size"), config.getint("net", "hidden_size"), bias = False)
+        self.fc = nn.Linear(config.getint("net", "hidden_size"), config.getint("net", "hidden_size"), bias=False)
 
     def forward(self, feature, hidden):
         feature = feature.view(feature.size(0), -1, 1)
         hidden = torch.tanh(self.fc(hidden))
-        ratio = torch.bmm(hidden,feature)
-        ratio = ratio.view(ratio.size(0),ratio.size(1))
-        ratio = F.softmax(ratio,dim=1).view(ratio.size(0),-1,1)
+        ratio = torch.bmm(hidden, feature)
+        ratio = ratio.view(ratio.size(0), ratio.size(1))
+        ratio = F.softmax(ratio, dim=1).view(ratio.size(0), -1, 1)
         result = torch.bmm(hidden.transpose(1, 2), ratio)
         result = result.view(result.size(0), -1)
 
@@ -293,7 +293,7 @@ class NN_fact_art(nn.Module):
             self.attentions_a = Attention_tanh(config)
             self.attentionw_a = Attention_tanh(config)
         self.attention_a = Attention_tanh(config)
-        
+
         self.outfc = nn.Linear(self.hidden_dim, get_num_classes(x))
 
         self.midfc1 = nn.Linear(self.hidden_dim * 2, 200)
@@ -303,38 +303,39 @@ class NN_fact_art(nn.Module):
         self.attfc_aw = nn.Linear(self.hidden_dim, self.hidden_dim)
         self.attfc_ad = nn.Linear(self.hidden_dim, self.hidden_dim)
 
-        self.birnn = nn.RNN(self.hidden_dim, self.hidden_dim, batch_first = True, bidirectional = True)
+        self.birnn = nn.RNN(self.hidden_dim, self.hidden_dim, batch_first=True, bidirectional=True)
 
         self.init_hidden(config, usegpu)
 
-
         # self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.outfc = nn.ModuleList(self.outfc)
-        
+
         self.midfc = nn.ModuleList(self.midfc)
 
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
-            self.sentence_hidden_f = 
-                torch.autograd.Variable(
-                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
-                                self.hidden_dim).cuda())
-            self.document_hidden_f = torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda())
+            self.sentence_hidden_f = torch.autograd.Variable(
+                torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                            self.hidden_dim).cuda())
+            self.document_hidden_f = torch.autograd.Variable(
+                torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda())
             self.sentence_hidden_a = []
             self.document_hidden_a = []
             for i in range(self.top_k):
-                self.sentence_hidden_a.append( 
+                self.sentence_hidden_a.append(
                     torch.autograd.Variable(
                         torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
-                                self.hidden_dim).cuda()))
-                self.document_hidden_a.append(torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
-            self.birnn_hidden = torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda())
+                                    self.hidden_dim).cuda()))
+                self.document_hidden_a.append(torch.autograd.Variable(
+                    torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+            self.birnn_hidden = torch.autograd.Variable(
+                torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda())
         else:
-            self.sentence_hidden_f = 
-                torch.autograd.Variable(
-                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
-                                self.hidden_dim))
-            self.document_hidden_f = torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim))
+            self.sentence_hidden_f = torch.autograd.Variable(
+                torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                            self.hidden_dim))
+            self.document_hidden_f = torch.autograd.Variable(
+                torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim))
             self.sentence_hidden_a = []
             self.document_hidden_a = []
             for i in range(self.top_k):
@@ -342,8 +343,10 @@ class NN_fact_art(nn.Module):
                     torch.autograd.Variable(
                         torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
                                     self.hidden_dim)))
-                self.document_hidden_a.append(torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
-            self.birnn_hidden = torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim))
+                self.document_hidden_a.append(
+                    torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
+            self.birnn_hidden = torch.autograd.Variable(
+                torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim))
 
     def forward(self, x, x_a, doc_len, config):
 
@@ -369,15 +372,15 @@ class NN_fact_art(nn.Module):
         x_a = torch.chunk(x_a, x_a.size(1), dim=1)
         for i in range(self.top_k):
             x = x_a[i].view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
-                   config.getint("data", "sentence_len"),
-                   config.getint("data", "vec_size"))
+                            config.getint("data", "sentence_len"),
+                            config.getint("data", "vec_size"))
 
             sentence_out, self.sentence_hidden_a[i] = self.gru_sentence_a[i](x, self.sentence_hidden_a[i])
-            
+
             # print(doc_len)
             sentence_out = self.attentionw_a[i](uaw, sentence_out)
             sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
-                                         self.hidden_dim)
+                                             self.hidden_dim)
 
             doc_out, self.document_hidden_a[i] = self.gru_document_a[i](sentence_out, self.document_hidden_a[i])
 
@@ -388,7 +391,7 @@ class NN_fact_art(nn.Module):
         out_art, self.birnn_hidden = self.birnn(out_art, self.birnn_hidden)
         da = self.attention_a(out_art, uad)
 
-        final_out = torch.cat((df,da), dim = 1)
+        final_out = torch.cat((df, da), dim=1)
 
         outputs = self.outfc(F.relu(self.midfc2(F.relu(self.midfc1(final_out)))))
 
