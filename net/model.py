@@ -466,15 +466,23 @@ class CNN_FINAL(nn.Module):
 
     def forward(self, x, doc_len, config):
         x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
-        fc_input = []
+        conv_out = []
+
         for conv in self.convs:
-            fc_input.append(torch.max(conv(x), dim=2, keepdim=True)[0])
+            y = conv(x).view(config.getint("data", "batch_size"), config.getint("net", "filteres"), -1)
+            y = F.pad(y,
+                      (0, config.getint("data", "sentence_num") * config.getint("data", "sentence_len") - len(y[0][0])))
+            conv_out.append(y)
+
+        conv_out = torch.cat(conv_out, dim=1)
+        fc_input = torch.max(conv_out, dim=1)[0]
+        print(fc_input)
+        gg
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
-
                                                                                                              "filters")
 
-        fc_input = torch.cat(fc_input, dim=1).view(-1, features)
+        fc_input = fc_input.view(-1, features)
 
         outputs = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
