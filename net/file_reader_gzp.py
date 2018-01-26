@@ -1,9 +1,8 @@
 import random
 import os
 import json
-from data_formatter_gzp import parse, check, get_data_list, get_num_classes, get_word_num
+from data_formatter_gzp import parse, check, get_data_list
 from torch.utils.data import DataLoader
-from torch import LongTensor
 
 
 class reader():
@@ -15,36 +14,48 @@ class reader():
         self.data_list = []
         self.temp_file = None
         self.rest = len(self.file_list)
+        self.read_cnt = 0
 
     def gen_new_file(self, config):
         if self.rest == 0:
             return
+        print("Already loaded %d data" % self.read_cnt)
+        self.read_cnt = 0
         self.rest -= 1
         p = random.randint(0, len(self.file_list) - 1)
         while self.use_list[p]:
             p = random.randint(0, len(self.file_list) - 1)
 
         self.use_list[p] = True
+        print("Loading file from " + str(self.file_list[p]))
 
         self.temp_file = open(os.path.join(config.get("data", "data_path"), str(self.file_list[p])), "r")
+        cnt = 0
+        #while cnt < 8192 + 1152 + 62:
+        #    x = self.temp_file.readline()
+        #    if check(json.loads(x),config):
+        #        cnt += 1
 
     def fetch_data(self, config):
         batch_size = config.getint("data", "batch_size")
 
         if batch_size > len(self.data_list):
-            if self.rest != 0:
+            if self.temp_file is None:
                 self.gen_new_file(config)
-                data = self.temp_file.read().split("\n")
-                cnt = 0
-                for x in data:
-                    if x == "":
-                        continue
-                    y = json.loads(x)
-                    if check(y, config):
-                        self.data_list.append(parse(y, config))
-                        cnt += 1
 
-                # print("Loda %d data" % cnt)
+            while len(self.data_list) < batch_size:
+                x = self.temp_file.readline()
+                if x == "":
+                    if self.rest == 0:
+                        break
+                    self.gen_new_file(config)
+                    continue
+                y = json.loads(x)
+                if check(y, config):
+                    self.data_list.append(parse(y, config))
+                    self.read_cnt += 1
+
+                # gg
 
             if len(self.data_list) < batch_size:
                 for a in range(0, len(self.file_list)):
@@ -53,14 +64,11 @@ class reader():
                 self.rest = len(self.file_list)
                 self.temp_file = None
                 return None
-        # print(len(self.data_list))
+
         dataloader = DataLoader(self.data_list[0:batch_size], batch_size=batch_size,
-                                shuffle=config.getboolean("data", "shuffle"))
-        self.data_list = self.data_list[batch_size:]
+                                shuffle=config.getboolean("data", "shuffle"), drop_last=True)
+        self.data_list = []
         for idx, data in enumerate(dataloader):
-            # a,b = data
-            # print(a)
-            # print(b)
             return data
 
         return None

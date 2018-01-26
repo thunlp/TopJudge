@@ -29,13 +29,15 @@ class Attention(nn.Module):
 
 class Attention_tanh(nn.Module):
     def __init__(self, config):
-        super(Attention, self).__init__()
+        super(Attention_tanh, self).__init__()
         # pass
         self.fc = nn.Linear(config.getint("net", "hidden_size"), config.getint("net", "hidden_size"), bias=False)
 
     def forward(self, feature, hidden):
         feature = feature.view(feature.size(0), -1, 1)
         hidden = torch.tanh(self.fc(hidden))
+        # print(feature.size())
+        # print(hidden.size())
         ratio = torch.bmm(hidden, feature)
         ratio = ratio.view(ratio.size(0), ratio.size(1))
         ratio = F.softmax(ratio, dim=1).view(ratio.size(0), -1, 1)
@@ -272,17 +274,21 @@ class NN_fact_art(nn.Module):
         self.hidden_dim = config.getint("net", "hidden_size")
         self.top_k = config.getint("data", "top_k")
 
-        self.ufs = torch.autograd.Variable(torch.randn(config.getint("data", "batch_size"), self.hidden_dim))
-        self.ufw = torch.autograd.Variable(torch.randn(config.getint("data", "batch_size"), self.hidden_dim))
+        if(usegpu):
+            self.ufs = torch.autograd.Variable(torch.randn(config.getint("data", "batch_size"), self.hidden_dim)).cuda()
+            self.ufw = torch.autograd.Variable(torch.randn(config.getint("data", "batch_size")  * config.getint("data", "sentence_num"), self.hidden_dim)).cuda()
+        else:
+            self.ufs = torch.autograd.Variable(torch.randn(config.getint("data", "batch_size"), self.hidden_dim))
+            self.ufw = torch.autograd.Variable(torch.randn(config.getint("data", "batch_size")  * config.getint("data", "sentence_num"), self.hidden_dim))
 
-        self.gru_sentence_f = nn.GRU(self.data_size, self.hidden_dim, batch_first=True, bidirectional=True)
-        self.gru_document_f = nn.GRU(self.hidden_dim, self.hidden_dim, batch_first=True, bidirectional=True)
+        self.gru_sentence_f = nn.GRU(self.data_size, self.hidden_dim, batch_first=True)
+        self.gru_document_f = nn.GRU(self.hidden_dim, self.hidden_dim, batch_first=True)
 
         self.gru_sentence_a = []
         self.gru_document_a = []
         for i in range(self.top_k):
-            self.gru_sentence_a.append(nn.GRU(self.data_size, self.hidden_dim, batch_first=True, bidirectional=True))
-            self.gru_document_a.append(nn.GRU(self.data_size, self.hidden_dim, batch_first=True, bidirectional=True))
+            self.gru_sentence_a.append(nn.GRU(self.data_size, self.hidden_dim, batch_first=True))
+            self.gru_document_a.append(nn.GRU(self.hidden_dim, self.hidden_dim, batch_first=True))
 
         self.attentions_f = Attention_tanh(config)
         self.attentionw_f = Attention_tanh(config)
@@ -290,11 +296,11 @@ class NN_fact_art(nn.Module):
         self.attentions_a = []
         self.attentionw_a = []
         for i in range(self.top_k):
-            self.attentions_a = Attention_tanh(config)
-            self.attentionw_a = Attention_tanh(config)
+            self.attentions_a.append(Attention_tanh(config))
+            self.attentionw_a.append(Attention_tanh(config))
         self.attention_a = Attention_tanh(config)
-
-        self.outfc = nn.Linear(self.hidden_dim, get_num_classes(x))
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")[0]
+        self.outfc = nn.Linear(150, get_num_classes(task_name))
 
         self.midfc1 = nn.Linear(self.hidden_dim * 2, 200)
         self.midfc2 = nn.Linear(200, 150)
@@ -303,14 +309,19 @@ class NN_fact_art(nn.Module):
         self.attfc_aw = nn.Linear(self.hidden_dim, self.hidden_dim)
         self.attfc_ad = nn.Linear(self.hidden_dim, self.hidden_dim)
 
-        self.birnn = nn.RNN(self.hidden_dim, self.hidden_dim, batch_first=True, bidirectional=True)
+        self.birnn = nn.RNN(self.hidden_dim, self.hidden_dim, batch_first=True)
 
         self.init_hidden(config, usegpu)
 
-        # self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
-        self.outfc = nn.ModuleList(self.outfc)
 
-        self.midfc = nn.ModuleList(self.midfc)
+        self.gru_sentence_a = nn.ModuleList(self.gru_sentence_a)
+        self.gru_document_a = nn.ModuleList(self.gru_document_a)
+        self.attentions_a = nn.ModuleList(self.attentions_a)
+        self.attentionw_a = nn.ModuleList(self.attentionw_a)
+        # self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
+        # self.outfc = nn.ModuleList(self.outfc)
+
+        # self.midfc = nn.ModuleList(self.midfc)
 
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
@@ -355,7 +366,7 @@ class NN_fact_art(nn.Module):
                    config.getint("data", "vec_size"))
 
         sentence_out, self.sentence_hidden_f = self.gru_sentence_f(x, self.sentence_hidden_f)
-
+        # print(sentence_out.size())
         sentence_out = self.attentionw_f(self.ufw, sentence_out)
         sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
                                          self.hidden_dim)
@@ -366,22 +377,22 @@ class NN_fact_art(nn.Module):
 
         uas = self.attfc_as(df)
         uaw = self.attfc_aw(df)
+        uaw = torch.cat([uaw for i in range(config.getint("data", "sentence_num"))])
         uad = self.attfc_ad(df)
 
         out_art = []
-        x_a = torch.chunk(x_a, x_a.size(1), dim=1)
+        x_a = torch.unbind(x_a, dim=1)
         for i in range(self.top_k):
-            x = x_a[i].view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
-                            config.getint("data", "sentence_len"),
-                            config.getint("data", "vec_size"))
-
+            x = x_a[i]
+            x = x.contiguous().view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"), config.getint("data", "sentence_len"), config.getint("data", "vec_size"))
+            # print(x.size()) 
             sentence_out, self.sentence_hidden_a[i] = self.gru_sentence_a[i](x, self.sentence_hidden_a[i])
 
             # print(doc_len)
             sentence_out = self.attentionw_a[i](uaw, sentence_out)
             sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
                                              self.hidden_dim)
-
+            # print(sentence.size())
             doc_out, self.document_hidden_a[i] = self.gru_document_a[i](sentence_out, self.document_hidden_a[i])
 
             out_art.append(self.attentions_f(uas, doc_out))
@@ -389,11 +400,13 @@ class NN_fact_art(nn.Module):
         out_art = torch.cat(out_art).view(config.getint("data", "batch_size"), self.top_k, -1)
 
         out_art, self.birnn_hidden = self.birnn(out_art, self.birnn_hidden)
-        da = self.attention_a(out_art, uad)
-
+        # print(out_art.size())
+        da = self.attention_a(uad, out_art)
+        # print(df.size())
+        # print(da.size())
         final_out = torch.cat((df, da), dim=1)
-
-        outputs = self.outfc(F.relu(self.midfc2(F.relu(self.midfc1(final_out)))))
+        # print(final_out.size())
+        outputs = [self.outfc(F.relu(self.midfc2(F.relu(self.midfc1(final_out)))))]
 
         return outputs
 
