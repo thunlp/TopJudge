@@ -273,13 +273,18 @@ class NN_fact_art(nn.Module):
         self.data_size = config.getint("data", "vec_size")
         self.hidden_dim = config.getint("net", "hidden_size")
         self.top_k = config.getint("data", "top_k")
-
+        self.ufs = torch.ones(1, self.hidden_dim)
+        # self.ufs = torch.randn(1, self.hidden_dim)
+        self.ufs = torch.cat([self.ufs for i in range(config.getint("data", "batch_size"))], dim = 0)
+        self.ufw = torch.ones(1, self.hidden_dim)
+        # self.ufw = torch.randn(1, self.hidden_dim)
+        self.ufw = torch.cat([self.ufw for i in range(config.getint("data", "batch_size")  * config.getint("data", "sentence_num"))], dim = 0)
         if(usegpu):
-            self.ufs = torch.autograd.Variable(torch.randn(config.getint("data", "batch_size"), self.hidden_dim)).cuda()
-            self.ufw = torch.autograd.Variable(torch.randn(config.getint("data", "batch_size")  * config.getint("data", "sentence_num"), self.hidden_dim)).cuda()
+            self.ufs = torch.autograd.Variable(self.ufs).cuda()
+            self.ufw = torch.autograd.Variable(self.ufw).cuda()
         else:
-            self.ufs = torch.autograd.Variable(torch.randn(config.getint("data", "batch_size"), self.hidden_dim))
-            self.ufw = torch.autograd.Variable(torch.randn(config.getint("data", "batch_size")  * config.getint("data", "sentence_num"), self.hidden_dim))
+            self.ufs = torch.autograd.Variable(self.ufs)
+            self.ufw = torch.autograd.Variable(self.ufw)
 
         self.gru_sentence_f = nn.GRU(self.data_size, self.hidden_dim, batch_first=True)
         self.gru_document_f = nn.GRU(self.hidden_dim, self.hidden_dim, batch_first=True)
@@ -367,17 +372,38 @@ class NN_fact_art(nn.Module):
 
         sentence_out, self.sentence_hidden_f = self.gru_sentence_f(x, self.sentence_hidden_f)
         # print(sentence_out.size())
-        sentence_out = self.attentionw_f(self.ufw, sentence_out)
+        # sentence_out = self.attentionw_f(self.ufw, sentence_out)
+
+        sentence_out = sentence_out.contiguous().view(
+                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+                config.getint("data", "sentence_len"),
+                config.getint("net", "hidden_size"))
+        sentence_out = torch.max(sentence_out, dim=2)[0]
+        sentence_out = sentence_out.view(
+                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+                config.getint("net", "hidden_size"))
+
         sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
                                          self.hidden_dim)
 
         doc_out, self.document_hidden_f = self.gru_document_f(sentence_out, self.document_hidden_f)
 
-        df = self.attentions_f(self.ufs, doc_out)
+        # df = self.attentions_f(self.ufs, doc_out)
+        doc_out = doc_out.contiguous().view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"), config.getint("net", "hidden_size"))
+        df = torch.max(doc_out, dim = 1)[0]
+
 
         uas = self.attfc_as(df)
         uaw = self.attfc_aw(df)
-        uaw = torch.cat([uaw for i in range(config.getint("data", "sentence_num"))])
+        # print(uaw.size())
+        uaw = torch.split(uaw, 1, dim = 0)
+        # print(uaw)
+        tmp_uaw = []
+        for i in range(config.getint("data", "batch_size")):
+            for j in range(config.getint("data", "sentence_num")):
+                tmp_uaw.append(uaw[i])
+        # print(tmp_uaw)
+        uaw = torch.cat(tmp_uaw, dim = 0)
         uad = self.attfc_ad(df)
 
         out_art = []
