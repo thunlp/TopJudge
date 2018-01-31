@@ -53,11 +53,11 @@ def check_law(data):
     arr1.sort()
     arr2 = list(set(arr2))
     arr2.sort()
-    if len(arr1) != 1:# or len(arr2) != 1:
+    if len(arr1) != 1:  # or len(arr2) != 1:
         return False
-    if not((arr1[0][0],arr1[0][1]) in law_dict1):
+    if not ((arr1[0][0], arr1[0][1]) in law_dict1):
         return False
-    #if not((arr2[0][0],arr2[0][1],arr2[0][2]) in law_dict2):
+    # if not((arr2[0][0],arr2[0][1],arr2[0][2]) in law_dict2):
     #    return False
     return True
 
@@ -71,6 +71,7 @@ def analyze_law1(data, config):
 
     return law_dict1[(arr1[0][0], arr1[0][1])]
     return arr1[0][0] * 10 + arr1[0][1]
+
 
 def analyze_law2(data, config):
     arr2 = []
