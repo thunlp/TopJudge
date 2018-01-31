@@ -28,6 +28,7 @@ def calc_accuracy(outputs, labels, res):
         o_la.append((it_is, should_be))
         res[should_be]["list"][it_is] += 1
     return res
+    return res, o_la
 
 
 def gen_result(res, test=False, file_path=None):
