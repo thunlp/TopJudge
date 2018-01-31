@@ -441,6 +441,7 @@ class CNN_FINAL(nn.Module):
             arr = nn.ModuleList(arr)
             self.cell_state_fc_list.append(arr)
 
+        self.attention = Attention(config)
         self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.convs = nn.ModuleList(self.convs)
         self.outfc = nn.ModuleList(self.outfc)
@@ -469,15 +470,14 @@ class CNN_FINAL(nn.Module):
         conv_out = []
 
         for conv in self.convs:
-            y = conv(x).view(config.getint("data", "batch_size"), config.getint("net", "filteres"), -1)
+            y = conv(x).view(config.getint("data", "batch_size"), config.getint("net", "filters"), -1)
             y = F.pad(y,
                       (0, config.getint("data", "sentence_num") * config.getint("data", "sentence_len") - len(y[0][0])))
             conv_out.append(y)
 
         conv_out = torch.cat(conv_out, dim=1)
+        conv_out = conv_out.view(config.getint("data","batch_size"), config.getint("data", "sentence_num") * config.getint("data", "sentence_len"),-1) 
         fc_input = torch.max(conv_out, dim=1)[0]
-        print(fc_input)
-        gg
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
@@ -504,6 +504,8 @@ class CNN_FINAL(nn.Module):
                         cp = cp + self.cell_state_fc_list[a][b](c)
                     self.hidden_list[b] = (hp, cp)
             # self.hidden_list[a] = h, c
+            if config.getboolean("net", "attention"):
+                h = self.attention(h, conv_out)
             if config.getboolean("net", "more_fc"):
                 outputs.append(
                     self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"), -1))
@@ -554,7 +556,7 @@ class MULTI_LSTM_FINAL(nn.Module):
             arr = nn.ModuleList(arr)
             self.cell_state_fc_list.append(arr)
 
-        self.attetion = Attention(config)
+        self.attention = Attention(config)
 
         self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.outfc = nn.ModuleList(self.outfc)
@@ -681,7 +683,7 @@ class MULTI_LSTM_FINAL(nn.Module):
                         cp = cp + self.cell_state_fc_list[a][b](c)
                     self.hidden_list[b] = (hp, cp)
             if config.getboolean("net", "attention"):
-                h = self.attetion(h, attention_value)
+                h = self.attention(h, attention_value)
             if config.getboolean("net", "more_fc"):
                 outputs.append(
                     self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"), -1))
