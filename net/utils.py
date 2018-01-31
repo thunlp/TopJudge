@@ -16,6 +16,7 @@ def get_num_classes(s):
 def calc_accuracy(outputs, labels, res):
     # print("outputs",outputs)
     # print("labels",labels)
+    o_la = []
     for a in range(0, len(labels)):
         it_is = int(outputs[a].max(dim=0)[1].data.cpu().numpy())
         should_be = int(labels[a].data.cpu().numpy())
@@ -24,9 +25,9 @@ def calc_accuracy(outputs, labels, res):
         else:
             res[it_is]["FP"] += 1
             res[should_be]["FN"] += 1
-
+        o_la.append((it_is, should_be))
         res[should_be]["list"][it_is] += 1
-    return res
+    return res, o_la
 
 
 def gen_result(res, test=False, file_path=None):
