@@ -72,7 +72,7 @@ class reader():
 
             while len(data_list) < batch_size:
                 x = self.temp_file.readline()
-                if x == "":
+                if x == "" or x is None:
                     self.gen_new_file(config, file_queue)
                     if self.temp_file is None:
                         return None
