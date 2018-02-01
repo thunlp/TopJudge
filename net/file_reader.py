@@ -82,7 +82,13 @@ class reader():
                     if self.temp_file is None:
                         return None
 
-                y = json.loads(x)
+                try:
+                    y = json.loads(x)
+                except Exception as e:
+                    print("==========================")
+                    print(x)
+                    print("==========================")
+                    gg
                 if check(y, config):
                     data_list.append(parse(y, config, transformer))
                     self.read_cnt += 1
