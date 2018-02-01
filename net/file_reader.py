@@ -5,94 +5,102 @@ import time
 from utils import get_data_list
 from torch.utils.data import DataLoader
 import multiprocessing
+from word2vec import word2vec
+
+from data_formatter import check, parse
+
+transformer = word2vec()
+
+num_process = 4
 
 
 class reader():
     def __init__(self, file_list, config):
-        from data_formatter import check, parse
-
         self.file_list = file_list
-        self.use_list = []
-        for a in range(0, len(file_list)):
-            self.use_list.append(False)
-        self.data_list = []
+
         self.temp_file = None
-        self.rest = len(self.file_list)
         self.read_cnt = 0
 
-        self.check = check
-        self.parse = parse
-        self.get_data_list = get_data_list
-
-        self.queue = multiprocessing.Queue()
-        for a in range(0,4):
-            self.read_process = multiprocessing.Process(target=self.always_read_data, args=(self.queue, config))
+        self.file_queue = multiprocessing.Queue()
+        self.data_queue = multiprocessing.Queue()
+        for a in range(0, num_process):
+            self.read_process = multiprocessing.Process(target=self.always_read_data,
+                                                        args=(config, self.data_queue, self.file_queue, transformer, a))
             self.read_process.start()
 
-    def always_read_data(self, queue, config):
+    def init_file_list(self):
+        for a in range(0, len(self.file_list)):
+            self.file_queue.put(self.file_list[a])
+
+    def always_read_data(self, config, data_queue, file_queue, transformer, idx):
         cnt = 10
+        put_needed = False
         while True:
-            if queue.qsize() < cnt:
-                queue.put(self.fetch_data_process(config))
+            if data_queue.qsize() < cnt:
+                data = self.fetch_data_process(self, config, file_queue, transformer)
+                if data is None:
+                    if put_needed:
+                        data_queue.put(data)
+                    put_needed = False
+                else:
+                    data_queue.put(data)
+                    put_needed = True
 
-    def fetch_data(self, config):
-        print("=================== %d ==================" % self.queue.qsize())
-        return self.queue.get()
-
-    def gen_new_file(self, config):
+    def gen_new_file(self, config, file_queue):
         if self.rest == 0:
             return
-        print("Already loaded %d data" % self.read_cnt)
-        self.read_cnt = 0
-        self.rest -= 1
-        p = random.randint(0, len(self.file_list) - 1)
-        while self.use_list[p]:
-            p = random.randint(0, len(self.file_list) - 1)
+        try:
+            p = file_queue.get(timeout=1)
+            self.temp_file = open(os.path.join(config.get("data", "data_path"), str(self.file_list[p])), "r")
+            print("Loading file from " + str(self.file_list[p]))
+        except Exception as e:
+            self.temp_file = None
 
-        self.use_list[p] = True
-        print("Loading file from " + str(self.file_list[p]))
-
-        self.temp_file = open(os.path.join(config.get("data", "data_path"), str(self.file_list[p])), "r")
-        cnt = 0
-
-    def fetch_data_process(self, config):
+    def fetch_data_process(self, config, file_queue, transformer):
         batch_size = config.getint("data", "batch_size")
 
-        if batch_size > len(self.data_list):
+        data_list = []
+
+        if batch_size > len(data_list):
             if self.temp_file is None:
                 self.gen_new_file(config)
+                if self.temp_file is None:
+                    return None
 
-            while len(self.data_list) < batch_size:
+            while len(data_list) < batch_size:
                 x = self.temp_file.readline()
                 if x == "":
-                    if self.rest == 0:
-                        break
-                    self.gen_new_file(config)
-                    continue
+                    self.gen_new_file(config, file_queue)
+                    if self.temp_file is None:
+                        return None
+
                 y = json.loads(x)
-                if self.check(y, config):
-                    self.data_list.append(self.parse(y, config))
+                if check(y, config):
+                    data_list.append(parse(y, config, transformer))
                     self.read_cnt += 1
 
-            if len(self.data_list) < batch_size:
-                for a in range(0, len(self.file_list)):
-                    self.use_list[a] = False
-                self.data_list = []
-                self.rest = len(self.file_list)
-                self.temp_file = None
+            if len(data_list) < batch_size:
                 return None
 
         dataloader = DataLoader(self.data_list[0:batch_size], batch_size=batch_size,
                                 shuffle=config.getboolean("data", "shuffle"), drop_last=True)
-        self.data_list = []
+
         for idx, data in enumerate(dataloader):
             return data
 
         return None
 
+    def fetch_data(self, config):
+        print("=================== %d ==================" % self.queue.qsize())
+        data = self.queue.get()
+        if data is None:
+            self.init_file_list()
+
+        return data
+
 
 def create_dataset(file_list, config):
-    return reader(file_list,config)
+    return reader(file_list, config)
 
 
 def init_train_dataset(config):

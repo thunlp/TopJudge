@@ -1,10 +1,8 @@
 import os
 import json
 import torch
-from word2vec import word2vec
 import random
 
-transformer = word2vec()
 accusation_list = []
 accusation_dict = {}
 f = open("result/crit_result.txt", "r")
@@ -150,7 +148,7 @@ def analyze_time(data, config):
 word_dict = {}
 
 
-def get_word_vec(x, config):
+def get_word_vec(x, config, transformer):
     # if not (x in word_dict):
     #    word_dict[x] = torch.rand(config.getint("data", "vec_size"))
     vec = transformer.load(x)
@@ -187,7 +185,7 @@ def parse_sentence(data, config):
     return True
 
 
-def generate_vector(data, config):
+def generate_vector(data, config, transformer):
     # data = parse_sentence(data, config)
     vec = []
     len_vec = [0, 0]
@@ -197,15 +195,15 @@ def generate_vector(data, config):
         len_vec[1] += 1
         for y in x:
             len_vec[0] += 1
-            z = get_word_vec(y, config)
+            z = get_word_vec(y, config, transformer)
             temp_vec.append(torch.from_numpy(z))
         while len(temp_vec) < config.getint("data", "sentence_len"):
-            temp_vec.append(torch.from_numpy(transformer.load("BLANK")))
+            temp_vec.append(torch.from_numpy(get_word_vec("BLANK", config, transformer)))
         vec.append(torch.stack(temp_vec))
 
     temp_vec = []
     while len(temp_vec) < config.getint("data", "sentence_len"):
-        temp_vec.append(torch.from_numpy(transformer.load("BLANK")))
+        temp_vec.append(torch.from_numpy(get_word_vec("BLANK", config, transformer)))
 
     while len(vec) < config.getint("data", "sentence_num"):
         vec.append(torch.stack(temp_vec))
@@ -220,22 +218,8 @@ def generate_vector(data, config):
 
     return torch.stack(vec), torch.LongTensor(len_vec)
 
-    data = data.split("\t")
-    vec = []
-    for x in data:
-        y = get_word_vec(x, config)
-        vec.append(torch.from_numpy(y))
-        if len(vec) == config.getint("data", "pad_length"):
-            break
-    len_vec = len(vec)
-    while len(vec) < config.getint("data", "pad_length"):
-        vec.append(torch.from_numpy(transformer.load("BLANK")))
 
-    # print(torch.stack(vec))
-    return torch.stack([torch.stack(vec)]), len_vec
-
-
-def parse(data, config):
+def parse(data, config, transformer):
     label_list = config.get("data", "type_of_label").replace(" ", "").split(",")
     label = []
     for x in label_list:
@@ -248,7 +232,7 @@ def parse(data, config):
         if x == "time":
             label.append(analyze_time(data["meta"]["time"], config))
     # print(data)
-    vector, len_vec = generate_vector(data["content"], config)
+    vector, len_vec = generate_vector(data["content"], config, transformer)
     # print(data)
     # print(vector)
     # print(len_vec)
