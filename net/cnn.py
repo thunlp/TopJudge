@@ -32,7 +32,7 @@ train_dataset, test_dataset = init_dataset(config)
 
 print("Building net...")
 
-net = CNN(config)
+net = CNN(config,usegpu)
 if torch.cuda.is_available() and usegpu:
     net = net.cuda()
 

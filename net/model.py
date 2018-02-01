@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import torch.optim as optim
 import os
+import configparser
 
 from utils import calc_accuracy, gen_result, get_num_classes, generate_graph
 import pdb
@@ -55,6 +56,7 @@ class CNN_ENCODER(nn.Module):
             self.convs.append(nn.Conv2d(1, config.getint("net", "filters"), (a, config.getint("data", "vec_size"))))
 
         self.convs = nn.ModuleList(self.convs)
+        self.feature_len = (-config.getint("net", "min_gram")+config.getint("net", "max_gram") + 1)*config.getint("net","filters")
 
     def forward(self, x, doc_len, config):
         x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
@@ -90,6 +92,7 @@ class LSTM_ENCODER(nn.Module):
 
         self.lstm_sentence = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
         self.lstm_document = nn.LSTM(self.hidden_dim, self.hidden_dim, batch_first=True)
+        self.feature_len = self.hidden_dim
 
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
@@ -162,8 +165,11 @@ class LSTM_ENCODER(nn.Module):
 class FC_DECODER(nn.Module):
     def __init__(self, config, usegpu):
         super(FC_DECODER, self).__init__()
-        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
+        try:
+            features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
+        except configparser.NoOptionError:
+            features = config.getint("net","hidden_size")
 
         self.outfc = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
@@ -196,9 +202,10 @@ class FC_DECODER(nn.Module):
 class LSTM_DECODER(nn.Module):
     def __init__(self, config, usegpu):
         super(LSTM_DECODER, self).__init__()
+        self.feature_len = config.getint("net","hidden_size")
 
-        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
-                                                                                                             "filters")
+        features = config.getint("net","hidden_size")
+        self.hidden_dim = features
         self.outfc = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
         for x in task_name:
@@ -325,13 +332,17 @@ class CNN_FINAL(nn.Module):
 
         self.encoder = CNN_ENCODER(config, usegpu)
         self.decoder = LSTM_DECODER(config, usegpu)
+        self.trans_linear = nn.Linear(self.encoder.feature_len,self.decoder.feature_len)
 
     def init_hidden(self, config, usegpu):
         self.decoder.init_hidden(config, usegpu)
 
     def forward(self, x, doc_len, config):
         x = self.encoder(x, doc_len, config)
-        x = self.decoder(x, doc_len, config, self.encoder.attetion)
+        if self.encoder.feature_len != self.decoder.feature_len:
+            #print(self.encoder.feature_len,self.decoder.feature_len)
+            x = self.trans_linear(x)
+        x = self.decoder(x, doc_len, config, self.encoder.attention)
 
         return x
 
@@ -342,6 +353,7 @@ class MULTI_LSTM_FINAL(nn.Module):
 
         self.encoder = LSTM_ENCODER(config, usegpu)
         self.decoder = LSTM_DECODER(config, usegpu)
+        self.trans_linear = nn.Linear(self.encoder.feature_len,self.decoder.feature_len)
 
     def init_hidden(self, config, usegpu):
         self.encoder.init_hidden(config, usegpu)
@@ -349,6 +361,8 @@ class MULTI_LSTM_FINAL(nn.Module):
 
     def forward(self, x, doc_len, config):
         x = self.encoder(x, doc_len, config)
+        if self.encoder.feature_len != self.decoder.feature_len:
+            x = self.trans_linear(x)
         x = self.decoder(x, doc_len, config, self.encoder.attention)
 
         return x
