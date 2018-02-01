@@ -2,6 +2,7 @@ import os
 import json
 import torch
 import random
+import numpy
 
 accusation_list = []
 accusation_dict = {}
@@ -146,6 +147,13 @@ def analyze_time(data, config):
 
 
 word_dict = {}
+
+
+def load(x, transformer):
+    try:
+        return transformer[x].astype(dtype=np.float32)
+    except:
+        return transformer['UNK'].astype(dtype=np.float32)
 
 
 def get_word_vec(x, config, transformer):

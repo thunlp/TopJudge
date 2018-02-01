@@ -10,6 +10,11 @@ from word2vec import word2vec
 from data_formatter import check, parse
 
 transformer = word2vec()
+manager = multiprocessing.Manager()
+dic = manager.dict()
+for x in transformer.word2id.keys():
+    dic[x] = transformer.vec[transformer.word2id[x]]
+transformer = dic
 
 train_num_process = 4
 test_num_process = 4
@@ -85,7 +90,6 @@ class reader():
             if len(data_list) < batch_size:
                 return None
 
-
         dataloader = DataLoader(data_list[0:batch_size], batch_size=batch_size,
                                 shuffle=config.getboolean("data", "shuffle"), drop_last=True)
 
@@ -95,7 +99,7 @@ class reader():
         return None
 
     def fetch_data(self, config):
-        #print("=================== %d ==================" % self.data_queue.qsize())
+        # print("=================== %d ==================" % self.data_queue.qsize())
         data = self.data_queue.get()
         if data is None:
             self.init_file_list()
