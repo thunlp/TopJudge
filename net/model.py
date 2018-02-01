@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import torch.optim as optim
 import os
+import configparser
 
 from utils import calc_accuracy, gen_result, get_num_classes, generate_graph
 import pdb
@@ -14,7 +15,6 @@ class Attention(nn.Module):
     def __init__(self, config):
         super(Attention, self).__init__()
         pass
-        # self.fc = nn.Linear(config.getint("net", "hidden_size"), config.getint("net", "hidden_size"))
 
     def forward(self, feature, hidden):
         feature = feature.view(feature.size(0), -1, 1)
@@ -47,146 +47,52 @@ class Attention_tanh(nn.Module):
         return result
 
 
-class CNN(nn.Module):
-    def __init__(self, config):
-        super(CNN, self).__init__()
+class CNN_ENCODER(nn.Module):
+    def __init__(self, config, usegpu):
+        super(CNN_ENCODER, self).__init__()
 
         self.convs = []
-
         for a in range(config.getint("net", "min_gram"), config.getint("net", "max_gram") + 1):
             self.convs.append(nn.Conv2d(1, config.getint("net", "filters"), (a, config.getint("data", "vec_size"))))
 
-        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
-                                                                                                             "filters")
-        self.outfc = []
-        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-        for x in task_name:
-            self.outfc.append(nn.Linear(
-                features, get_num_classes(x)
-            ))
-
-        self.midfc = []
-        for x in task_name:
-            self.midfc.append(nn.Linear(features, features))
-
-        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.convs = nn.ModuleList(self.convs)
-        self.outfc = nn.ModuleList(self.outfc)
-        self.midfc = nn.ModuleList(self.midfc)
-
-    def init_hidden(self, config, usegpu):
-        pass
+        self.feature_len = (-config.getint("net", "min_gram")+config.getint("net", "max_gram") + 1)*config.getint("net","filters")
 
     def forward(self, x, doc_len, config):
         x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
-        fc_input = []
+        conv_out = []
+
         for conv in self.convs:
-            fc_input.append(torch.max(conv(x), dim=2, keepdim=True)[0])
+            y = conv(x).view(config.getint("data", "batch_size"), config.getint("net", "filters"), -1)
+            y = F.pad(y,
+                      (0, config.getint("data", "sentence_num") * config.getint("data", "sentence_len") - len(y[0][0])))
+            conv_out.append(y)
+
+        conv_out = torch.cat(conv_out, dim=1)
+        conv_out = conv_out.view(config.getint("data", "batch_size"),
+                                 config.getint("data", "sentence_num") * config.getint("data", "sentence_len"), -1)
+
+        self.attention = conv_out
+        fc_input = torch.max(conv_out, dim=1)[0]
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
 
-        fc_input = torch.cat(fc_input, dim=1).view(-1, features)
+        fc_input = fc_input.view(-1, features)
 
-        outputs = []
-        now_cnt = 0
-        for fc in self.outfc:
-            if config.getboolean("net", "more_fc"):
-                outputs.append(fc(F.relu(self.midfc[now_cnt](fc_input))))
-            else:
-                outputs.append(fc(fc_input))
-            now_cnt += 1
-
-        return outputs
+        return fc_input
 
 
-class LSTM(nn.Module):
+class LSTM_ENCODER(nn.Module):
     def __init__(self, config, usegpu):
-        super(LSTM, self).__init__()
-
-        self.data_size = config.getint("data", "vec_size")
-        self.hidden_dim = config.getint("net", "hidden_size")
-
-        self.lstm = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
-
-        self.outfc = []
-        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-        for x in task_name:
-            self.outfc.append(nn.Linear(
-                self.hidden_dim, get_num_classes(x)
-            ))
-
-        self.midfc = []
-        for x in task_name:
-            self.midfc.append(nn.Linear(self.hidden_dim, self.hidden_dim))
-
-        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
-        self.outfc = nn.ModuleList(self.outfc)
-        self.init_hidden(config, usegpu)
-        self.midfc = nn.ModuleList(self.midfc)
-
-    def init_hidden(self, config, usegpu):
-        if torch.cuda.is_available() and usegpu:
-            self.hidden = (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
-        else:
-            self.hidden = (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
-
-    def forward(self, x, doc_len, config):
-        # x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
-
-        x = x.view(config.getint("data", "batch_size"),
-                   config.getint("data", "sentence_num") * config.getint("data", "sentence_len"),
-                   config.getint("data", "vec_size"))
-
-        lstm_out, self.hidden = self.lstm(x, self.hidden)
-        # lstm_out = self.dropout(lstm_out)
-
-        outv = []
-        for a in range(0, len(doc_len)):
-            outv.append(lstm_out[a][doc_len[a][0] - 1])
-        lstm_out = torch.cat(outv)
-
-        outputs = []
-        now_cnt = 0
-        for fc in self.outfc:
-            if config.getboolean("net", "more_fc"):
-                outputs.append(fc(F.relu(self.midfc[now_cnt](lstm_out))))
-            else:
-                outputs.append(fc(lstm_out))
-            now_cnt += 1
-
-        return outputs
-
-
-class MULTI_LSTM(nn.Module):
-    def __init__(self, config, usegpu):
-        super(MULTI_LSTM, self).__init__()
+        super(LSTM_ENCODER, self).__init__()
 
         self.data_size = config.getint("data", "vec_size")
         self.hidden_dim = config.getint("net", "hidden_size")
 
         self.lstm_sentence = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
         self.lstm_document = nn.LSTM(self.hidden_dim, self.hidden_dim, batch_first=True)
-
-        self.outfc = []
-        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-        for x in task_name:
-            self.outfc.append(nn.Linear(
-                self.hidden_dim, get_num_classes(x)
-            ))
-
-        self.midfc = []
-        for x in task_name:
-            self.midfc.append(nn.Linear(self.hidden_dim, self.hidden_dim))
-
-        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
-        self.outfc = nn.ModuleList(self.outfc)
-        self.init_hidden(config, usegpu)
-        self.midfc = nn.ModuleList(self.midfc)
+        self.feature_len = self.hidden_dim
 
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
@@ -213,19 +119,16 @@ class MULTI_LSTM(nn.Module):
                 torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
 
     def forward(self, x, doc_len, config):
-
         x = x.view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
                    config.getint("data", "sentence_len"),
                    config.getint("data", "vec_size"))
 
         sentence_out, self.sentence_hidden = self.lstm_sentence(x, self.sentence_hidden)
         temp_out = []
-        # print(doc_len)
         if config.get("net", "method") == "LAST":
             for a in range(0, len(sentence_out)):
                 idx = a // config.getint("data", "sentence_num")
                 idy = a % config.getint("data", "sentence_num")
-                # print(idx,idy)
                 temp_out.append(sentence_out[a][doc_len[idx][idy + 2] - 1])
             sentence_out = torch.stack(temp_out)
         elif config.get("net", "method") == "MAX":
@@ -244,6 +147,8 @@ class MULTI_LSTM(nn.Module):
 
         lstm_out, self.document_hidden = self.lstm_document(sentence_out, self.document_hidden)
 
+        self.attention = lstm_out
+
         if config.get("net", "method") == "LAST":
             outv = []
             for a in range(0, len(doc_len)):
@@ -254,16 +159,213 @@ class MULTI_LSTM(nn.Module):
         else:
             gg
 
+        return lstm_out
+
+
+class FC_DECODER(nn.Module):
+    def __init__(self, config, usegpu):
+        super(FC_DECODER, self).__init__()
+        try:
+            features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
+                                                                                                             "filters")
+        except configparser.NoOptionError:
+            features = config.getint("net","hidden_size")
+
+        self.outfc = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for x in task_name:
+            self.outfc.append(nn.Linear(
+                features, get_num_classes(x)
+            ))
+
+        self.midfc = []
+        for x in task_name:
+            self.midfc.append(nn.Linear(features, features))
+
+        self.outfc = nn.ModuleList(self.outfc)
+        self.midfc = nn.ModuleList(self.midfc)
+
+    def forward(self, x, doc_len, config):
+        fc_input = x
         outputs = []
         now_cnt = 0
         for fc in self.outfc:
             if config.getboolean("net", "more_fc"):
-                outputs.append(fc(F.relu(self.midfc[now_cnt](lstm_out))))
+                outputs.append(fc(F.relu(self.midfc[now_cnt](fc_input))))
             else:
-                outputs.append(fc(lstm_out))
+                outputs.append(fc(fc_input))
             now_cnt += 1
 
         return outputs
+
+
+class LSTM_DECODER(nn.Module):
+    def __init__(self, config, usegpu):
+        super(LSTM_DECODER, self).__init__()
+        self.feature_len = config.getint("net","hidden_size")
+
+        features = config.getint("net","hidden_size")
+        self.hidden_dim = features
+        self.outfc = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for x in task_name:
+            self.outfc.append(nn.Linear(
+                features, get_num_classes(x)
+            ))
+
+        self.midfc = []
+        for x in task_name:
+            self.midfc.append(nn.Linear(features, features))
+
+        self.cell_list = [None]
+        for x in task_name:
+            self.cell_list.append(nn.LSTMCell(config.getint("net", "hidden_size"), config.getint("net", "hidden_size")))
+
+        self.hidden_state_fc_list = []
+        for a in range(0, len(task_name) + 1):
+            arr = []
+            for b in range(0, len(task_name) + 1):
+                arr.append(nn.Linear(features, features))
+            arr = nn.ModuleList(arr)
+            self.hidden_state_fc_list.append(arr)
+
+        self.cell_state_fc_list = []
+        for a in range(0, len(task_name) + 1):
+            arr = []
+            for b in range(0, len(task_name) + 1):
+                arr.append(nn.Linear(features, features))
+            arr = nn.ModuleList(arr)
+            self.cell_state_fc_list.append(arr)
+
+        self.attention = Attention(config)
+        self.outfc = nn.ModuleList(self.outfc)
+        self.midfc = nn.ModuleList(self.midfc)
+        self.cell_list = nn.ModuleList(self.cell_list)
+        self.hidden_state_fc_list = nn.ModuleList(self.hidden_state_fc_list)
+        self.cell_state_fc_list = nn.ModuleList(self.cell_state_fc_list)
+
+    def init_hidden(self, config, usegpu):
+        self.hidden_list = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for a in range(0, len(task_name) + 1):
+            if torch.cuda.is_available() and usegpu:
+                self.hidden_list.append((
+                    torch.autograd.Variable(
+                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                    torch.autograd.Variable(
+                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda())))
+            else:
+                self.hidden_list.append((
+                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim)),
+                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim))))
+
+    def forward(self, x, doc_len, config, attention):
+        fc_input = x
+        outputs = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        graph = generate_graph(config)
+
+        first = []
+        for a in range(0, len(task_name) + 1):
+            first.append(True)
+        for a in range(1, len(task_name) + 1):
+            h, c = self.cell_list[a](fc_input, self.hidden_list[a])
+            for b in range(1, len(task_name) + 1):
+                if graph[a][b]:
+                    hp, cp = self.hidden_list[b]
+                    if first[b]:
+                        first[b] = False
+                        hp, cp = h, c
+                    else:
+                        hp = hp + self.hidden_state_fc_list[a][b](h)
+                        cp = cp + self.cell_state_fc_list[a][b](c)
+                    self.hidden_list[b] = (hp, cp)
+            # self.hidden_list[a] = h, c
+            if config.getboolean("net", "attention"):
+                h = self.attention(h, attention)
+            if config.getboolean("net", "more_fc"):
+                outputs.append(
+                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"), -1))
+            else:
+                outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
+
+        return outputs
+
+
+class CNN(nn.Module):
+    def __init__(self, config, usegpu):
+        super(CNN, self).__init__()
+
+        self.encoder = CNN_ENCODER(config, usegpu)
+        self.decoder = FC_DECODER(config, usegpu)
+
+    def init_hidden(self, config, usegpu):
+        pass
+
+    def forward(self, x, doc_len, config):
+        x = self.encoder(x, doc_len, config)
+        x = self.decoder(x, doc_len, config)
+
+        return x
+
+
+class MULTI_LSTM(nn.Module):
+    def __init__(self, config, usegpu):
+        super(MULTI_LSTM, self).__init__()
+
+        self.encoder = LSTM_ENCODER(config, usegpu)
+        self.decoder = FC_DECODER(config, usegpu)
+
+    def init_hidden(self, config, usegpu):
+        self.encoder.init_hidden(config, usegpu)
+
+    def forward(self, x, doc_len, config):
+        x = self.encoder(x, doc_len, config)
+        x = self.decoder(x, doc_len, config)
+
+        return x
+
+
+class CNN_FINAL(nn.Module):
+    def __init__(self, config, usegpu):
+        super(CNN_FINAL, self).__init__()
+
+        self.encoder = CNN_ENCODER(config, usegpu)
+        self.decoder = LSTM_DECODER(config, usegpu)
+        self.trans_linear = nn.Linear(self.encoder.feature_len,self.decoder.feature_len)
+
+    def init_hidden(self, config, usegpu):
+        self.decoder.init_hidden(config, usegpu)
+
+    def forward(self, x, doc_len, config):
+        x = self.encoder(x, doc_len, config)
+        if self.encoder.feature_len != self.decoder.feature_len:
+            #print(self.encoder.feature_len,self.decoder.feature_len)
+            x = self.trans_linear(x)
+        x = self.decoder(x, doc_len, config, self.encoder.attention)
+
+        return x
+
+
+class MULTI_LSTM_FINAL(nn.Module):
+    def __init__(self, config, usegpu):
+        super(MULTI_LSTM_FINAL, self).__init__()
+
+        self.encoder = LSTM_ENCODER(config, usegpu)
+        self.decoder = LSTM_DECODER(config, usegpu)
+        self.trans_linear = nn.Linear(self.encoder.feature_len,self.decoder.feature_len)
+
+    def init_hidden(self, config, usegpu):
+        self.encoder.init_hidden(config, usegpu)
+        self.decoder.init_hidden(config, usegpu)
+
+    def forward(self, x, doc_len, config):
+        x = self.encoder(x, doc_len, config)
+        if self.encoder.feature_len != self.decoder.feature_len:
+            x = self.trans_linear(x)
+        x = self.decoder(x, doc_len, config, self.encoder.attention)
+
+        return x
 
 
 class NN_fact_art(nn.Module):
@@ -275,11 +377,13 @@ class NN_fact_art(nn.Module):
         self.top_k = config.getint("data", "top_k")
         self.ufs = torch.ones(1, self.hidden_dim)
         # self.ufs = torch.randn(1, self.hidden_dim)
-        self.ufs = torch.cat([self.ufs for i in range(config.getint("data", "batch_size"))], dim = 0)
+        self.ufs = torch.cat([self.ufs for i in range(config.getint("data", "batch_size"))], dim=0)
         self.ufw = torch.ones(1, self.hidden_dim)
         # self.ufw = torch.randn(1, self.hidden_dim)
-        self.ufw = torch.cat([self.ufw for i in range(config.getint("data", "batch_size")  * config.getint("data", "sentence_num"))], dim = 0)
-        if(usegpu):
+        self.ufw = torch.cat(
+            [self.ufw for i in range(config.getint("data", "batch_size") * config.getint("data", "sentence_num"))],
+            dim=0)
+        if (usegpu):
             self.ufs = torch.autograd.Variable(self.ufs).cuda()
             self.ufw = torch.autograd.Variable(self.ufw).cuda()
         else:
@@ -317,7 +421,6 @@ class NN_fact_art(nn.Module):
         self.birnn = nn.RNN(self.hidden_dim, self.hidden_dim, batch_first=True)
 
         self.init_hidden(config, usegpu)
-
 
         self.gru_sentence_a = nn.ModuleList(self.gru_sentence_a)
         self.gru_document_a = nn.ModuleList(self.gru_document_a)
@@ -375,13 +478,13 @@ class NN_fact_art(nn.Module):
         # sentence_out = self.attentionw_f(self.ufw, sentence_out)
 
         sentence_out = sentence_out.contiguous().view(
-                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
-                config.getint("data", "sentence_len"),
-                config.getint("net", "hidden_size"))
+            config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+            config.getint("data", "sentence_len"),
+            config.getint("net", "hidden_size"))
         sentence_out = torch.max(sentence_out, dim=2)[0]
         sentence_out = sentence_out.view(
-                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
-                config.getint("net", "hidden_size"))
+            config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+            config.getint("net", "hidden_size"))
 
         sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
                                          self.hidden_dim)
@@ -389,28 +492,29 @@ class NN_fact_art(nn.Module):
         doc_out, self.document_hidden_f = self.gru_document_f(sentence_out, self.document_hidden_f)
 
         # df = self.attentions_f(self.ufs, doc_out)
-        doc_out = doc_out.contiguous().view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"), config.getint("net", "hidden_size"))
-        df = torch.max(doc_out, dim = 1)[0]
-
+        doc_out = doc_out.contiguous().view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+                                            config.getint("net", "hidden_size"))
+        df = torch.max(doc_out, dim=1)[0]
 
         uas = self.attfc_as(df)
         uaw = self.attfc_aw(df)
         # print(uaw.size())
-        uaw = torch.split(uaw, 1, dim = 0)
+        uaw = torch.split(uaw, 1, dim=0)
         # print(uaw)
         tmp_uaw = []
         for i in range(config.getint("data", "batch_size")):
             for j in range(config.getint("data", "sentence_num")):
                 tmp_uaw.append(uaw[i])
         # print(tmp_uaw)
-        uaw = torch.cat(tmp_uaw, dim = 0)
+        uaw = torch.cat(tmp_uaw, dim=0)
         uad = self.attfc_ad(df)
 
         out_art = []
         x_a = torch.unbind(x_a, dim=1)
         for i in range(self.top_k):
             x = x_a[i]
-            x = x.contiguous().view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"), config.getint("data", "sentence_len"), config.getint("data", "vec_size"))
+            x = x.contiguous().view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                                    config.getint("data", "sentence_len"), config.getint("data", "vec_size"))
             # print(x.size()) 
             sentence_out, self.sentence_hidden_a[i] = self.gru_sentence_a[i](x, self.sentence_hidden_a[i])
 
@@ -433,313 +537,6 @@ class NN_fact_art(nn.Module):
         final_out = torch.cat((df, da), dim=1)
         # print(final_out.size())
         outputs = [self.outfc(F.relu(self.midfc2(F.relu(self.midfc1(final_out)))))]
-
-        return outputs
-
-
-class CNN_FINAL(nn.Module):
-    def __init__(self, config):
-        super(CNN_FINAL, self).__init__()
-
-        self.convs = []
-        self.hidden_dim = config.getint("net", "hidden_size")
-
-        for a in range(config.getint("net", "min_gram"), config.getint("net", "max_gram") + 1):
-            self.convs.append(nn.Conv2d(1, config.getint("net", "filters"), (a, config.getint("data", "vec_size"))))
-
-        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
-                                                                                                             "filters")
-        self.outfc = []
-        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-        for x in task_name:
-            self.outfc.append(nn.Linear(
-                features, get_num_classes(x)
-            ))
-
-        self.midfc = []
-        for x in task_name:
-            self.midfc.append(nn.Linear(features, features))
-
-        self.cell_list = [None]
-        for x in task_name:
-            self.cell_list.append(nn.LSTMCell(config.getint("net", "hidden_size"), config.getint("net", "hidden_size")))
-
-        self.hidden_state_fc_list = []
-        for a in range(0, len(task_name) + 1):
-            arr = []
-            for b in range(0, len(task_name) + 1):
-                arr.append(nn.Linear(features, features))
-            arr = nn.ModuleList(arr)
-            self.hidden_state_fc_list.append(arr)
-
-        self.cell_state_fc_list = []
-        for a in range(0, len(task_name) + 1):
-            arr = []
-            for b in range(0, len(task_name) + 1):
-                arr.append(nn.Linear(features, features))
-            arr = nn.ModuleList(arr)
-            self.cell_state_fc_list.append(arr)
-
-        self.attention = Attention(config)
-        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
-        self.convs = nn.ModuleList(self.convs)
-        self.outfc = nn.ModuleList(self.outfc)
-        self.midfc = nn.ModuleList(self.midfc)
-        self.cell_list = nn.ModuleList(self.cell_list)
-        self.hidden_state_fc_list = nn.ModuleList(self.hidden_state_fc_list)
-        self.cell_state_fc_list = nn.ModuleList(self.cell_state_fc_list)
-
-    def init_hidden(self, config, usegpu):
-        self.hidden_list = []
-        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-        for a in range(0, len(task_name) + 1):
-            if torch.cuda.is_available() and usegpu:
-                self.hidden_list.append((
-                    torch.autograd.Variable(
-                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda()),
-                    torch.autograd.Variable(
-                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda())))
-            else:
-                self.hidden_list.append((
-                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim)),
-                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim))))
-
-    def forward(self, x, doc_len, config):
-        x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
-        conv_out = []
-
-        for conv in self.convs:
-            y = conv(x).view(config.getint("data", "batch_size"), config.getint("net", "filters"), -1)
-            y = F.pad(y,
-                      (0, config.getint("data", "sentence_num") * config.getint("data", "sentence_len") - len(y[0][0])))
-            conv_out.append(y)
-
-        conv_out = torch.cat(conv_out, dim=1)
-        conv_out = conv_out.view(config.getint("data","batch_size"), config.getint("data", "sentence_num") * config.getint("data", "sentence_len"),-1) 
-        fc_input = torch.max(conv_out, dim=1)[0]
-
-        features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
-                                                                                                             "filters")
-
-        fc_input = fc_input.view(-1, features)
-
-        outputs = []
-        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-        graph = generate_graph(config)
-
-        first = []
-        for a in range(0, len(task_name) + 1):
-            first.append(True)
-        for a in range(1, len(task_name) + 1):
-            h, c = self.cell_list[a](fc_input, self.hidden_list[a])
-            for b in range(1, len(task_name) + 1):
-                if graph[a][b]:
-                    hp, cp = self.hidden_list[b]
-                    if first[b]:
-                        first[b] = False
-                        hp, cp = h, c
-                    else:
-                        hp = hp + self.hidden_state_fc_list[a][b](h)
-                        cp = cp + self.cell_state_fc_list[a][b](c)
-                    self.hidden_list[b] = (hp, cp)
-            # self.hidden_list[a] = h, c
-            if config.getboolean("net", "attention"):
-                h = self.attention(h, conv_out)
-            if config.getboolean("net", "more_fc"):
-                outputs.append(
-                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"), -1))
-            else:
-                outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
-
-        return outputs
-
-
-class MULTI_LSTM_FINAL(nn.Module):
-    def __init__(self, config, usegpu):
-        super(MULTI_LSTM_FINAL, self).__init__()
-
-        self.data_size = config.getint("data", "vec_size")
-        self.hidden_dim = config.getint("net", "hidden_size")
-
-        self.lstm_sentence = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
-        self.lstm_document = nn.LSTM(self.hidden_dim, self.hidden_dim, batch_first=True)
-
-        self.outfc = []
-        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-        for x in task_name:
-            self.outfc.append(nn.Linear(
-                self.hidden_dim, get_num_classes(x)
-            ))
-
-        self.midfc = []
-        for x in task_name:
-            self.midfc.append(nn.Linear(self.hidden_dim, self.hidden_dim))
-
-        self.cell_list = [None]
-        for x in task_name:
-            self.cell_list.append(nn.LSTMCell(config.getint("net", "hidden_size"), config.getint("net", "hidden_size")))
-
-        self.hidden_state_fc_list = []
-        for a in range(0, len(task_name) + 1):
-            arr = []
-            for b in range(0, len(task_name) + 1):
-                arr.append(nn.Linear(self.hidden_dim, self.hidden_dim))
-            arr = nn.ModuleList(arr)
-            self.hidden_state_fc_list.append(arr)
-
-        self.cell_state_fc_list = []
-        for a in range(0, len(task_name) + 1):
-            arr = []
-            for b in range(0, len(task_name) + 1):
-                arr.append(nn.Linear(self.hidden_dim, self.hidden_dim))
-            arr = nn.ModuleList(arr)
-            self.cell_state_fc_list.append(arr)
-
-        self.attention = Attention(config)
-
-        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
-        self.outfc = nn.ModuleList(self.outfc)
-        self.init_hidden(config, usegpu)
-        self.midfc = nn.ModuleList(self.midfc)
-        self.cell_list = nn.ModuleList(self.cell_list)
-        self.hidden_state_fc_list = nn.ModuleList(self.hidden_state_fc_list)
-        self.cell_state_fc_list = nn.ModuleList(self.cell_state_fc_list)
-
-    def init_hidden(self, config, usegpu):
-        if torch.cuda.is_available() and usegpu:
-            self.sentence_hidden = (
-                torch.autograd.Variable(
-                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
-                                self.hidden_dim).cuda()),
-                torch.autograd.Variable(
-                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
-                                self.hidden_dim).cuda()))
-            self.document_hidden = (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
-        else:
-            self.sentence_hidden = (
-                torch.autograd.Variable(
-                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
-                                self.hidden_dim)),
-                torch.autograd.Variable(
-                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
-                                self.hidden_dim)))
-            self.document_hidden = (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
-
-        self.hidden_list = []
-        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-        for a in range(0, len(task_name) + 1):
-            if torch.cuda.is_available() and usegpu:
-                self.hidden_list.append((
-                    torch.autograd.Variable(
-                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda()),
-                    torch.autograd.Variable(
-                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda())))
-            else:
-                self.hidden_list.append((
-                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim)),
-                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim))))
-
-    def forward(self, x, doc_len, config):
-
-        x = x.view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
-                   config.getint("data", "sentence_len"),
-                   config.getint("data", "vec_size"))
-
-        sentence_out, self.sentence_hidden = self.lstm_sentence(x, self.sentence_hidden)
-        # print(doc_len)
-        if config.get("net", "method") == "LAST":
-            temp_out = []
-            for a in range(0, len(sentence_out)):
-                idx = a // config.getint("data", "sentence_num")
-                idy = a % config.getint("data", "sentence_num")
-                # print(idx,idy)
-                temp_out.append(sentence_out[a][doc_len[idx][idy + 2] - 1])
-            sentence_out = torch.stack(temp_out)
-        elif config.get("net", "method") == "MAX":
-            sentence_out = sentence_out.contiguous().view(
-                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
-                config.getint("data", "sentence_len"),
-                config.getint("net", "hidden_size"))
-            sentence_out = torch.max(sentence_out, dim=2)[0]
-            sentence_out = sentence_out.view(
-                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
-                config.getint("net", "hidden_size"))
-            """lx = len(sentence_out)
-            sentence_out = sentence_out.contiguous().view(
-                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
-                config.getint("data", "sentence_len"),
-                config.getint("net", "hidden_size"))
-            temp_out = []
-            for a in range(0, lx):
-                idx = a // config.getint("data", "sentence_num")
-                idy = a % config.getint("data", "sentence_num")
-                ly = doc_len[idx][idy+2].data[0]
-                temp_out.append(torch.max(sentence_out[idx,idy,0:ly+1,:],dim=0)[0])
-            sentence_out = torch.stack(temp_out)"""
-        else:
-            gg
-        sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
-                                         self.hidden_dim)
-
-        lstm_out, self.document_hidden = self.lstm_document(sentence_out, self.document_hidden)
-        attention_value = lstm_out
-
-        if config.get("net", "method") == "LAST":
-            outv = []
-            for a in range(0, len(doc_len)):
-                outv.append(lstm_out[a][doc_len[a][1] - 1])
-            lstm_out = torch.cat(outv)
-        elif config.get("net", "method") == "MAX":
-            outv = []
-            for a in range(0, len(doc_len)):
-                outv.append(torch.max(lstm_out[a, 0:doc_len[a][1].data[0]], dim=0)[0])
-            lstm_out = torch.stack(outv)
-            # lstm_out = torch.max(lstm_out, dim=1)[0]
-        else:
-            gg
-
-        outputs = []
-        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-        graph = generate_graph(config)
-
-        first = []
-        for a in range(0, len(task_name) + 1):
-            first.append(True)
-        for a in range(1, len(task_name) + 1):
-            h, c = self.cell_list[a](lstm_out, self.hidden_list[a])
-            for b in range(1, len(task_name) + 1):
-                if graph[a][b]:
-                    hp, cp = self.hidden_list[b]
-                    if first[b]:
-                        first[b] = False
-                        hp, cp = h, c
-                    else:
-                        hp = hp + self.hidden_state_fc_list[a][b](h)
-                        cp = cp + self.cell_state_fc_list[a][b](c)
-                    self.hidden_list[b] = (hp, cp)
-            if config.getboolean("net", "attention"):
-                h = self.attention(h, attention_value)
-            if config.getboolean("net", "more_fc"):
-                outputs.append(
-                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"), -1))
-            else:
-                outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
-
-        """previous version
-        for a in range(1, len(task_name) + 1):
-            h, c = self.cell_list[a](lstm_out, self.hidden_list[a - 1])
-            h = h + self.combine_fc_list[a](lstm_out)
-            self.hidden_list[a] = h, c
-            if config.getboolean("net", "more_fc"):
-                outputs.append(
-                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size", -1)))
-            else:
-                outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
-        """
 
         return outputs
 
@@ -783,7 +580,6 @@ class NN_fact_art_final(nn.Module):
         self.birnn = nn.RNN(self.hidden_dim, self.hidden_dim, batch_first=True)
 
         self.init_hidden(config, usegpu)
-
 
         self.gru_sentence_a = nn.ModuleList(self.gru_sentence_a)
         self.gru_document_a = nn.ModuleList(self.gru_document_a)
@@ -892,13 +688,13 @@ class NN_fact_art_final(nn.Module):
         # sentence_out = self.attentionw_f(self.ufw, sentence_out)
 
         sentence_out = sentence_out.contiguous().view(
-                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
-                config.getint("data", "sentence_len"),
-                config.getint("net", "hidden_size"))
+            config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+            config.getint("data", "sentence_len"),
+            config.getint("net", "hidden_size"))
         sentence_out = torch.max(sentence_out, dim=2)[0]
         sentence_out = sentence_out.view(
-                config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
-                config.getint("net", "hidden_size"))
+            config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+            config.getint("net", "hidden_size"))
 
         sentence_out = sentence_out.view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
                                          self.hidden_dim)
@@ -906,27 +702,29 @@ class NN_fact_art_final(nn.Module):
         doc_out, self.document_hidden_f = self.gru_document_f(sentence_out, self.document_hidden_f)
 
         # df = self.attentions_f(self.ufs, doc_out)
-        doc_out = doc_out.contiguous().view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"), config.getint("net", "hidden_size"))
-        df = torch.max(doc_out, dim = 1)[0]
+        doc_out = doc_out.contiguous().view(config.getint("data", "batch_size"), config.getint("data", "sentence_num"),
+                                            config.getint("net", "hidden_size"))
+        df = torch.max(doc_out, dim=1)[0]
 
         uas = self.attfc_as(df)
         uaw = self.attfc_aw(df)
         # print(uaw.size())
-        uaw = torch.split(uaw, 1, dim = 0)
+        uaw = torch.split(uaw, 1, dim=0)
         # print(uaw)
         tmp_uaw = []
         for i in range(config.getint("data", "batch_size")):
             for j in range(config.getint("data", "sentence_num")):
                 tmp_uaw.append(uaw[i])
         # print(tmp_uaw)
-        uaw = torch.cat(tmp_uaw, dim = 0)
+        uaw = torch.cat(tmp_uaw, dim=0)
         uad = self.attfc_ad(df)
 
         out_art = []
         x_a = torch.unbind(x_a, dim=1)
         for i in range(self.top_k):
             x = x_a[i]
-            x = x.contiguous().view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"), config.getint("data", "sentence_len"), config.getint("data", "vec_size"))
+            x = x.contiguous().view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                                    config.getint("data", "sentence_len"), config.getint("data", "vec_size"))
             # print(x.size()) 
             sentence_out, self.sentence_hidden_a[i] = self.gru_sentence_a[i](x, self.sentence_hidden_a[i])
 
@@ -969,8 +767,8 @@ class NN_fact_art_final(nn.Module):
                         hp = hp + self.hidden_state_fc_list[a][b](h)
                         cp = cp + self.cell_state_fc_list[a][b](c)
                     self.hidden_list[b] = (hp, cp)
-            # if config.getboolean("net", "attention"):
-                # h = self.attetion(h, attention_value)
+                    # if config.getboolean("net", "attention"):
+                    # h = self.attetion(h, attention_value)
             if config.getboolean("net", "more_fc"):
                 outputs.append(
                     self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"), -1))
