@@ -11,11 +11,12 @@ from data_formatter import check, parse
 
 transformer = word2vec()
 
-num_process = 4
+train_num_process = 4
+test_num_process = 4
 
 
 class reader():
-    def __init__(self, file_list, config):
+    def __init__(self, file_list, config, num_process):
         self.file_list = file_list
 
         self.temp_file = None
@@ -23,6 +24,7 @@ class reader():
 
         self.file_queue = multiprocessing.Queue()
         self.data_queue = multiprocessing.Queue()
+        self.init_file_list()
         for a in range(0, num_process):
             self.read_process = multiprocessing.Process(target=self.always_read_data,
                                                         args=(config, self.data_queue, self.file_queue, transformer, a))
@@ -37,7 +39,7 @@ class reader():
         put_needed = False
         while True:
             if data_queue.qsize() < cnt:
-                data = self.fetch_data_process(self, config, file_queue, transformer)
+                data = self.fetch_data_process(config, file_queue, transformer)
                 if data is None:
                     if put_needed:
                         data_queue.put(data)
@@ -47,12 +49,13 @@ class reader():
                     put_needed = True
 
     def gen_new_file(self, config, file_queue):
-        if self.rest == 0:
+        if file_queue.qsize() == 0:
+            self.temp_file = None
             return
         try:
             p = file_queue.get(timeout=1)
-            self.temp_file = open(os.path.join(config.get("data", "data_path"), str(self.file_list[p])), "r")
-            print("Loading file from " + str(self.file_list[p]))
+            self.temp_file = open(os.path.join(config.get("data", "data_path"), p), "r")
+            print("Loading file from " + str(p))
         except Exception as e:
             self.temp_file = None
 
@@ -63,7 +66,7 @@ class reader():
 
         if batch_size > len(data_list):
             if self.temp_file is None:
-                self.gen_new_file(config)
+                self.gen_new_file(config, file_queue)
                 if self.temp_file is None:
                     return None
 
@@ -82,7 +85,8 @@ class reader():
             if len(data_list) < batch_size:
                 return None
 
-        dataloader = DataLoader(self.data_list[0:batch_size], batch_size=batch_size,
+
+        dataloader = DataLoader(data_list[0:batch_size], batch_size=batch_size,
                                 shuffle=config.getboolean("data", "shuffle"), drop_last=True)
 
         for idx, data in enumerate(dataloader):
@@ -91,24 +95,24 @@ class reader():
         return None
 
     def fetch_data(self, config):
-        print("=================== %d ==================" % self.queue.qsize())
-        data = self.queue.get()
+        #print("=================== %d ==================" % self.data_queue.qsize())
+        data = self.data_queue.get()
         if data is None:
             self.init_file_list()
 
         return data
 
 
-def create_dataset(file_list, config):
-    return reader(file_list, config)
+def create_dataset(file_list, config, num_process):
+    return reader(file_list, config, num_process)
 
 
 def init_train_dataset(config):
-    return create_dataset(get_data_list(config.get("data", "train_data")), config)
+    return create_dataset(get_data_list(config.get("data", "train_data")), config, train_num_process)
 
 
 def init_test_dataset(config):
-    return create_dataset(get_data_list(config.get("data", "test_data")), config)
+    return create_dataset(get_data_list(config.get("data", "test_data")), config, test_num_process)
 
 
 def init_dataset(config):
