@@ -24,15 +24,27 @@ config = configparser.RawConfigParser()
 config.read(configFilePath)
 
 import torch
-
-from model import MULTI_LSTM, train_file
+from model import *
 from file_reader import init_dataset
 
 train_dataset, test_dataset = init_dataset(config)
 
-print("Building net...")
 
-net = MULTI_LSTM(config, usegpu)
+print("Building net...")
+net = None
+
+model_name = config.get("net", "name")
+
+if model_name == "CNN":
+    net = CNN(config, usegpu)
+elif model_name == "MULTI_LSTM":
+    net = MULTI_LSTM(config, usegpu)
+elif model_name == "CNN_FINAL":
+    net = CNN_FINAL(config, usegpu)
+elif model_name == "MULTI_LSTM_FINAL":
+    net = MULTI_LSTM_FINAL(config, usegpu)
+else:
+    gg
 if torch.cuda.is_available() and usegpu:
     net = net.cuda()
 

@@ -1,12 +1,16 @@
 import random
 import os
 import json
-from data_formatter import parse, check, get_data_list
+import time
+from utils import get_data_list
 from torch.utils.data import DataLoader
+import multiprocessing
 
 
 class reader():
-    def __init__(self, file_list):
+    def __init__(self, file_list, config):
+        from data_formatter import check, parse
+
         self.file_list = file_list
         self.use_list = []
         for a in range(0, len(file_list)):
@@ -15,6 +19,25 @@ class reader():
         self.temp_file = None
         self.rest = len(self.file_list)
         self.read_cnt = 0
+
+        self.check = check
+        self.parse = parse
+        self.get_data_list = get_data_list
+
+        self.queue = multiprocessing.Queue()
+        self.read_process = multiprocessing.Process(target=self.always_read_data, args=(self.queue, config))
+        self.read_process.start()
+
+    def always_read_data(self, queue, config):
+        cnt = 10
+        while True:
+            if queue.size() < cnt:
+                queue.put(self.fetch_data_process(config))
+            else:
+                time.sleep(1)
+
+    def fetch_data(self, config):
+        return self.queue.get()
 
     def gen_new_file(self, config):
         if self.rest == 0:
@@ -31,12 +54,8 @@ class reader():
 
         self.temp_file = open(os.path.join(config.get("data", "data_path"), str(self.file_list[p])), "r")
         cnt = 0
-        #while cnt < 8192 + 1152 + 62:
-        #    x = self.temp_file.readline()
-        #    if check(json.loads(x),config):
-        #        cnt += 1
 
-    def fetch_data(self, config):
+    def fetch_data_process(self, config):
         batch_size = config.getint("data", "batch_size")
 
         if batch_size > len(self.data_list):
@@ -51,8 +70,8 @@ class reader():
                     self.gen_new_file(config)
                     continue
                 y = json.loads(x)
-                if check(y, config):
-                    self.data_list.append(parse(y, config))
+                if self.check(y, config):
+                    self.data_list.append(self.parse(y, config))
                     self.read_cnt += 1
 
             if len(self.data_list) < batch_size:

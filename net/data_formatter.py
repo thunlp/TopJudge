@@ -32,10 +32,6 @@ for line in f:
     law_dict2[data] = len(law_list2) - 1"""
 
 
-def get_data_list(d):
-    return d.replace(" ", "").split(",")
-
-
 def analyze_crit(data, config):
     return accusation_dict[data[0]]
 

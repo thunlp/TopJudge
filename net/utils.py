@@ -1,6 +1,9 @@
 import torch
 
 
+def get_data_list(d):
+    return d.replace(" ", "").split(",")
+
 def get_num_classes(s):
     if s == "crit":
         return 41
