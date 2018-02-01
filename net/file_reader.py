@@ -25,18 +25,18 @@ class reader():
         self.get_data_list = get_data_list
 
         self.queue = multiprocessing.Queue()
-        self.read_process = multiprocessing.Process(target=self.always_read_data, args=(self.queue, config))
-        self.read_process.start()
+        for a in range(0,4):
+            self.read_process = multiprocessing.Process(target=self.always_read_data, args=(self.queue, config))
+            self.read_process.start()
 
     def always_read_data(self, queue, config):
         cnt = 10
         while True:
-            if queue.size() < cnt:
+            if queue.qsize() < cnt:
                 queue.put(self.fetch_data_process(config))
-            else:
-                time.sleep(1)
 
     def fetch_data(self, config):
+        print("=================== %d ==================" % self.queue.qsize())
         return self.queue.get()
 
     def gen_new_file(self, config):
@@ -92,7 +92,7 @@ class reader():
 
 
 def create_dataset(file_list, config):
-    return reader(file_list)
+    return reader(file_list,config)
 
 
 def init_train_dataset(config):
