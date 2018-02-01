@@ -910,12 +910,12 @@ def train(net, train_dataset, test_dataset, usegpu, config):
         test(net, test_dataset, usegpu, config, epoch_num + 1)
         if not (os.path.exists(model_path)):
             os.makedirs(model_path)
-        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
+        torch.save(net, os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
 
     print("Training done")
 
     test(net, test_dataset, usegpu, config, 0)
-    torch.save(net.state_dict(), os.path.join(model_path, "model-0.pkl"))
+    torch.save(net, os.path.join(model_path, "model-0.pkl"))
 
     return net
 
@@ -1059,9 +1059,9 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
         test_file(net, test_dataset, usegpu, config, epoch_num + 1)
         if not (os.path.exists(model_path)):
             os.makedirs(model_path)
-        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
+        torch.save(net, os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
 
     print("Training done")
 
     test_file(net, test_dataset, usegpu, config, 0)
-    torch.save(net.state_dict(), os.path.join(model_path, "model-0.pkl"))
+    torch.save(net.state_dict(), os.path.join(model_path, "model.pkl"))
