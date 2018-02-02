@@ -69,18 +69,20 @@ class CNN_ENCODER(nn.Module):
             conv_out.append(y)
 
         conv_out = torch.cat(conv_out, dim=1)
-        print(conv_out)
-        gg
         conv_out = conv_out.view(config.getint("data", "batch_size"),
                                  config.getint("data", "sentence_num") * config.getint("data", "sentence_len"), -1)
 
         self.attention = conv_out
+        print(conv_out)
         fc_input = torch.max(conv_out, dim=1)[0]
+        print(fc_input)
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
 
         fc_input = fc_input.view(-1, features)
+        print(fc_input)
+        gg
 
         return fc_input
 
