@@ -10,9 +10,11 @@ from word2vec import word2vec
 from data_formatter import check, parse
 
 print("working...")
-transformer = word2vec()
+import h5py
+transformer = h5py.File('/data/disk1/private/zhonghaoxi/law/word2vec/data.h5','r')
+"""transformer = word2vec()
 manager = multiprocessing.Manager()
-transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
+transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}"""
 #print(len(transformer))
 #transformer = manager.list([transformer])
 
