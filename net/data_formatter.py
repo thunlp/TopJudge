@@ -2,7 +2,7 @@ import os
 import json
 import torch
 import random
-import numpy
+import numpy as np
 
 accusation_list = []
 accusation_dict = {}
@@ -159,7 +159,7 @@ def load(x, transformer):
 def get_word_vec(x, config, transformer):
     # if not (x in word_dict):
     #    word_dict[x] = torch.rand(config.getint("data", "vec_size"))
-    vec = transformer.load(x)
+    vec = load(x,transformer)
     # print(type(vec))
     return vec
 

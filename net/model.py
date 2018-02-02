@@ -69,6 +69,8 @@ class CNN_ENCODER(nn.Module):
             conv_out.append(y)
 
         conv_out = torch.cat(conv_out, dim=1)
+        print(conv_out)
+        gg
         conv_out = conv_out.view(config.getint("data", "batch_size"),
                                  config.getint("data", "sentence_num") * config.getint("data", "sentence_len"), -1)
 

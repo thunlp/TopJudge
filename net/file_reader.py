@@ -9,15 +9,17 @@ from word2vec import word2vec
 
 from data_formatter import check, parse
 
+print("working...")
 transformer = word2vec()
 manager = multiprocessing.Manager()
-dic = manager.dict()
-for x in transformer.word2id.keys():
-    dic[x] = transformer.vec[transformer.word2id[x]]
-transformer = dic
+transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
+#print(len(transformer))
+#transformer = manager.list([transformer])
 
-train_num_process = 4
-test_num_process = 4
+print("working done")
+
+train_num_process = 1
+test_num_process = 1
 
 
 class reader():
@@ -81,6 +83,7 @@ class reader():
                     self.gen_new_file(config, file_queue)
                     if self.temp_file is None:
                         return None
+                    continue
 
                 try:
                     y = json.loads(x)
