@@ -11,16 +11,17 @@ from data_formatter import check, parse
 
 #print("working...")
 import h5py
-#transformer = word2vec()
+transformer = word2vec()
 #manager = multiprocessing.Manager()
-#transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
+transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
+#transformer = None
 #print(len(transformer))
 #transformer = manager.list([transformer])
 
 print("working done")
 
-train_num_process = 10
-test_num_process = 10
+train_num_process = 5
+test_num_process = 2
 
 
 class reader():
@@ -45,7 +46,7 @@ class reader():
             self.file_queue.put(self.file_list[a])
 
     def always_read_data(self, config, data_queue, file_queue,  idx, transformer):
-        transformer = h5py.File('/data/disk1/private/zhonghaoxi/law/word2vec/data.h5','r')
+        #transformer = h5py.File('/data/disk1/private/zhonghaoxi/law/word2vec/data.h5','r')
         cnt = 10
         put_needed = False
         while True:

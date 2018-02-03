@@ -51,7 +51,15 @@ print("Net building done.")
 
 try:
     train_file(net, train_dataset, test_dataset, usegpu, config)
-except KeyboardInterrupt:
+except Exception as e:
+    print(e)
     for x in train_dataset.read_process:
         x.terminate()
+        print(x,x.is_alive())
         x.join()
+        print(x,x.is_alive())
+    for x in test_dataset.read_process:
+        x.terminate()
+        print(x,x.is_alive())
+        x.join()
+        print(x,x.is_alive())
