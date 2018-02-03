@@ -151,15 +151,15 @@ word_dict = {}
 
 def load(x, transformer):
     try:
-        return transformer[x].astype(dtype=np.float32)
+        return transformer[x].value.astype(dtype=np.float32)
     except:
-        return transformer['UNK'].astype(dtype=np.float32)
+        return transformer['UNK'].value.astype(dtype=np.float32)
 
 
 def get_word_vec(x, config, transformer):
     # if not (x in word_dict):
     #    word_dict[x] = torch.rand(config.getint("data", "vec_size"))
-    vec = load(x,transformer)
+    vec = load(x, transformer)
     # print(type(vec))
     return vec
 

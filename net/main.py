@@ -29,7 +29,6 @@ from file_reader import init_dataset
 
 train_dataset, test_dataset = init_dataset(config)
 
-
 print("Building net...")
 net = None
 
@@ -50,4 +49,9 @@ if torch.cuda.is_available() and usegpu:
 
 print("Net building done.")
 
-train_file(net, train_dataset, test_dataset, usegpu, config)
+try:
+    train_file(net, train_dataset, test_dataset, usegpu, config)
+except KeyboardInterrupt:
+    for x in train_dataset.read_process:
+        x.terminate()
+        x.join()

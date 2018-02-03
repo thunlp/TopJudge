@@ -11,16 +11,16 @@ from data_formatter import check, parse
 
 #print("working...")
 import h5py
-transformer = word2vec()
-manager = multiprocessing.Manager()
-transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
+#transformer = word2vec()
+#manager = multiprocessing.Manager()
+#transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
 #print(len(transformer))
 #transformer = manager.list([transformer])
 
 print("working done")
 
-train_num_process = 4
-test_num_process = 4
+train_num_process = 10
+test_num_process = 10
 
 
 class reader():
@@ -33,17 +33,19 @@ class reader():
         self.file_queue = multiprocessing.Queue()
         self.data_queue = multiprocessing.Queue()
         self.init_file_list()
+        self.read_process = []
         for a in range(0, num_process):
-            self.read_process = multiprocessing.Process(target=self.always_read_data,
+            process = multiprocessing.Process(target=self.always_read_data,
                                                         args=(config, self.data_queue, self.file_queue, a, transformer))
-            self.read_process.start()
+            self.read_process.append(process)
+            self.read_process[-1].start()
 
     def init_file_list(self):
         for a in range(0, len(self.file_list)):
             self.file_queue.put(self.file_list[a])
 
     def always_read_data(self, config, data_queue, file_queue,  idx, transformer):
-        #transformer = h5py.File('/data/disk1/private/zhonghaoxi/law/word2vec/data.h5','r')
+        transformer = h5py.File('/data/disk1/private/zhonghaoxi/law/word2vec/data.h5','r')
         cnt = 10
         put_needed = False
         while True:
