@@ -47,7 +47,7 @@ class reader():
 
     def always_read_data(self, config, data_queue, file_queue,  idx, transformer):
         #transformer = h5py.File('/data/disk1/private/zhonghaoxi/law/word2vec/data.h5','r')
-        cnt = 10
+        cnt = 1000
         put_needed = False
         while True:
             if data_queue.qsize() < cnt:
