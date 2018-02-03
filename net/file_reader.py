@@ -52,7 +52,7 @@ class reader():
         while True:
             if data_queue.qsize() < cnt:
                 data = self.fetch_data_process(config, file_queue, transformer)
-                if data is None:
+                if data is None and idx == 0:
                     if put_needed:
                         data_queue.put(data)
                     put_needed = False
