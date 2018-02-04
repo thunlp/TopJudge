@@ -4,6 +4,7 @@ import torch
 def get_data_list(d):
     return d.replace(" ", "").split(",")
 
+
 def get_num_classes(s):
     if s == "crit":
         return 41
@@ -131,3 +132,17 @@ def generate_graph(config):
         graph[arr[a][0]][arr[a][1]] = True
 
     return graph
+
+
+
+
+def generate_article_list():
+    f = open("result/xf.txt", "r")
+    xf_data = json.loads(f.readline())
+    f = open("result/law_result1.txt", "r")
+    law_list = []
+    for line in f:
+        arr = line.split(" ")
+        tiao = int(arr[0])
+        zhiyi = int(arr[1])
+        data = xf_data["[%d, %d]" % (tiao, zhiyi)]

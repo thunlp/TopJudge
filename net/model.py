@@ -7,7 +7,7 @@ import torch.optim as optim
 import os
 import configparser
 
-from utils import calc_accuracy, gen_result, get_num_classes, generate_graph
+from utils import calc_accuracy, gen_result, get_num_classes, generate_graph, generate_article_list
 import pdb
 
 
@@ -56,7 +56,8 @@ class CNN_ENCODER(nn.Module):
             self.convs.append(nn.Conv2d(1, config.getint("net", "filters"), (a, config.getint("data", "vec_size"))))
 
         self.convs = nn.ModuleList(self.convs)
-        self.feature_len = (-config.getint("net", "min_gram")+config.getint("net", "max_gram") + 1)*config.getint("net","filters")
+        self.feature_len = (-config.getint("net", "min_gram") + config.getint("net", "max_gram") + 1) * config.getint(
+            "net", "filters")
 
     def forward(self, x, doc_len, config):
         x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
@@ -69,19 +70,19 @@ class CNN_ENCODER(nn.Module):
             conv_out.append(y)
 
         conv_out = torch.cat(conv_out, dim=1)
-        conv_out = conv_out.view(config.getint("data", "batch_size"),-1 ,
+        conv_out = conv_out.view(config.getint("data", "batch_size"), -1,
                                  config.getint("data", "sentence_num") * config.getint("data", "sentence_len"))
 
-        self.attention = conv_out.transpose(1,2)
-        #print(conv_out)
+        self.attention = conv_out.transpose(1, 2)
+        # print(conv_out)
         fc_input = torch.max(conv_out, dim=2)[0]
-        #print(fc_input)
+        # print(fc_input)
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
 
         fc_input = fc_input.view(-1, features)
-        #print(fc_input)
+        # print(fc_input)
 
         return fc_input
 
@@ -165,14 +166,31 @@ class LSTM_ENCODER(nn.Module):
         return lstm_out
 
 
+class ARTICLE_ENCODER(nn.Module):
+    def __init__(self, config, usegpu):
+        super(ARTICLE_ENCODER, self).__init__()
+
+        self.article_encoder = CNN_ENCODER(config, usegpu)
+        self.falv_list = generate_article_list()
+
+    def init_hidden(self, config, usegpu):
+        pass
+
+    def forward(self, x, doc_len, config):
+        idx = torch.max(x)[1].value
+        x = self.falv_list[idx]
+        x = self.article_encoder(x, doc_len, config)
+        return x
+
+
 class FC_DECODER(nn.Module):
     def __init__(self, config, usegpu):
         super(FC_DECODER, self).__init__()
         try:
             features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
-                                                                                                             "filters")
+                                                                                                                 "filters")
         except configparser.NoOptionError:
-            features = config.getint("net","hidden_size")
+            features = config.getint("net", "hidden_size")
 
         self.outfc = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
@@ -205,9 +223,9 @@ class FC_DECODER(nn.Module):
 class LSTM_DECODER(nn.Module):
     def __init__(self, config, usegpu):
         super(LSTM_DECODER, self).__init__()
-        self.feature_len = config.getint("net","hidden_size")
+        self.feature_len = config.getint("net", "hidden_size")
 
-        features = config.getint("net","hidden_size")
+        features = config.getint("net", "hidden_size")
         self.hidden_dim = features
         self.outfc = []
         task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
@@ -295,6 +313,135 @@ class LSTM_DECODER(nn.Module):
         return outputs
 
 
+class LSTM_DECODER_ARTICLE(nn.Module):
+    def __init__(self, config, usegpu):
+        super(LSTM_DECODER_ARTICLE, self).__init__()
+        self.feature_len = config.getint("net", "hidden_size")
+
+        features = config.getint("net", "hidden_size")
+        self.hidden_dim = features
+        self.outfc = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for x in task_name:
+            self.outfc.append(nn.Linear(
+                features, get_num_classes(x)
+            ))
+
+        self.midfc = []
+        for x in task_name:
+            self.midfc.append(nn.Linear(features, features))
+
+        self.cell_list = [None]
+        for x in task_name:
+            self.cell_list.append(nn.LSTMCell(config.getint("net", "hidden_size"), config.getint("net", "hidden_size")))
+
+        self.hidden_state_fc_list = []
+        for a in range(0, len(task_name) + 1):
+            arr = []
+            for b in range(0, len(task_name) + 1):
+                arr.append(nn.Linear(features, features))
+            arr = nn.ModuleList(arr)
+            self.hidden_state_fc_list.append(arr)
+
+        self.cell_state_fc_list = []
+        for a in range(0, len(task_name) + 1):
+            arr = []
+            for b in range(0, len(task_name) + 1):
+                arr.append(nn.Linear(features, features))
+            arr = nn.ModuleList(arr)
+            self.cell_state_fc_list.append(arr)
+
+        self.attention = Attention(config)
+        self.outfc = nn.ModuleList(self.outfc)
+        self.midfc = nn.ModuleList(self.midfc)
+        self.cell_list = nn.ModuleList(self.cell_list)
+        self.hidden_state_fc_list = nn.ModuleList(self.hidden_state_fc_list)
+        self.cell_state_fc_list = nn.ModuleList(self.cell_state_fc_list)
+
+        self.article_encoder = ARTICLE_ENCODER(config, usegpu)
+        self.article_fc_list = []
+        for a in range(0, len(task_name) + 1):
+            self.article_fc_list.append(nn.Linear(features, features))
+        self.article_fc_list = nn.ModuleList(self.article_fc_list)
+
+    def init_hidden(self, config, usegpu):
+        self.article_encoder.init_hidden(config, usegpu)
+        self.hidden_list = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        for a in range(0, len(task_name) + 1):
+            if torch.cuda.is_available() and usegpu:
+                self.hidden_list.append((
+                    torch.autograd.Variable(
+                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                    torch.autograd.Variable(
+                        torch.zeros(config.getint("data", "batch_size"), self.hidden_dim).cuda())))
+            else:
+                self.hidden_list.append((
+                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim)),
+                    torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim))))
+
+    def forward(self, x, doc_len, config, attention):
+        fc_input = x
+        outputs = []
+        task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+        graph = generate_graph(config)
+
+        first = []
+        for a in range(0, len(task_name) + 1):
+            first.append(True)
+        for a in range(1, len(task_name) + 1):
+            h, c = self.cell_list[a](fc_input, self.hidden_list[a])
+            for b in range(1, len(task_name) + 1):
+                if graph[a][b]:
+                    hp, cp = self.hidden_list[b]
+                    if first[b]:
+                        first[b] = False
+                        hp, cp = h, c
+                    else:
+                        hp = hp + self.hidden_state_fc_list[a][b](h)
+                        cp = cp + self.cell_state_fc_list[a][b](c)
+                    self.hidden_list[b] = (hp, cp)
+            # self.hidden_list[a] = h, c
+            if config.getboolean("net", "attention"):
+                h = self.attention(h, attention)
+            if config.getboolean("net", "more_fc"):
+                outputs.append(
+                    self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"), -1))
+            else:
+                outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
+
+            if a == 1:
+                article_embedding = self.article_encoder(outputs[a - 1], doc_len, config)
+                for b in range(a + 1, len(task_name) + 1):
+                    hp, cp = self.hidden_list[b]
+                    if first[b]:
+                        first[b] = False
+                        hp, cp = article_embedding, c
+                    else:
+                        hp = hp + self.article_fc_list[b](article_embedding)
+
+                    self.hidden_list[b] = (hp, cp)
+
+        return outputs
+
+
+class ARTICLE(nn.Module):
+    def __init__(self, config, usegpu):
+        super(ARTICLE, self).__init__()
+
+        self.encoder = CNN_ENCODER(config, usegpu)
+        self.decoder = LSTM_DECODER_ARTICLE(config, usegpu)
+
+    def init_hidden(self, config, usegpu):
+        self.decoder.init_hidden(config, usegpu)
+
+    def forward(self, x, doc_len, config):
+        x = self.encoder(x, doc_len, config)
+        x = self.decoder(x, doc_len, config)
+
+        return x
+
+
 class CNN(nn.Module):
     def __init__(self, config, usegpu):
         super(CNN, self).__init__()
@@ -335,7 +482,7 @@ class CNN_FINAL(nn.Module):
 
         self.encoder = CNN_ENCODER(config, usegpu)
         self.decoder = LSTM_DECODER(config, usegpu)
-        self.trans_linear = nn.Linear(self.encoder.feature_len,self.decoder.feature_len)
+        self.trans_linear = nn.Linear(self.encoder.feature_len, self.decoder.feature_len)
 
     def init_hidden(self, config, usegpu):
         self.decoder.init_hidden(config, usegpu)
@@ -343,7 +490,7 @@ class CNN_FINAL(nn.Module):
     def forward(self, x, doc_len, config):
         x = self.encoder(x, doc_len, config)
         if self.encoder.feature_len != self.decoder.feature_len:
-            #print(self.encoder.feature_len,self.decoder.feature_len)
+            # print(self.encoder.feature_len,self.decoder.feature_len)
             x = self.trans_linear(x)
         x = self.decoder(x, doc_len, config, self.encoder.attention)
 
@@ -356,7 +503,7 @@ class MULTI_LSTM_FINAL(nn.Module):
 
         self.encoder = LSTM_ENCODER(config, usegpu)
         self.decoder = LSTM_DECODER(config, usegpu)
-        self.trans_linear = nn.Linear(self.encoder.feature_len,self.decoder.feature_len)
+        self.trans_linear = nn.Linear(self.encoder.feature_len, self.decoder.feature_len)
 
     def init_hidden(self, config, usegpu):
         self.encoder.init_hidden(config, usegpu)
