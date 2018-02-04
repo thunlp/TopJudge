@@ -115,8 +115,6 @@ class LSTM_SINGLE_ENCODER(nn.Module):
         lstm_out, self.hidden = self.lstm(x, self.hidden)
 
         self.attention = lstm_out
-        self.attention = torch.transpose(1, 2)
-        print(self.attention)
         if config.get("net", "method") == "LAST":
             outv = []
             for a in range(0, len(doc_len)):
@@ -124,8 +122,6 @@ class LSTM_SINGLE_ENCODER(nn.Module):
             lstm_out = torch.cat(outv)
         elif config.get("net", "method") == "MAX":
             lstm_out = torch.max(lstm_out, dim=1)[0]
-            print(lstm_out)
-            gg
         else:
             gg
 
