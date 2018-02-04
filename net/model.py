@@ -64,7 +64,7 @@ class CNN_ENCODER(nn.Module):
         conv_out = []
 
         for conv in self.convs:
-            #print("gg",type(x))
+            # print("gg",type(x))
             y = conv(x).view(config.getint("data", "batch_size"), config.getint("net", "filters"), -1)
             y = F.pad(y,
                       (0, config.getint("data", "sentence_num") * config.getint("data", "sentence_len") - len(y[0][0])))
@@ -86,6 +86,50 @@ class CNN_ENCODER(nn.Module):
         # print(fc_input)
 
         return fc_input
+
+
+class LSTM_SINGLE_ENCODER(nn.Module):
+    def __init__(self, config, usegpu):
+        super(LSTM_SINGLE_ENCODER, self).__init__()
+
+        self.data_size = config.getint("data", "vec_size")
+        self.hidden_dim = config.getint("net", "hidden_size")
+
+        self.lstm = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
+
+    def init_hidden(self, config, usegpu):
+        if torch.cuda.is_available() and usegpu:
+            self.hidden = (
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+        else:
+            self.hidden = (
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
+                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
+
+    def forward(self, x, doc_len, config):
+        x = x.view(config.getint("data", "batch_size"),
+                   config.getint("data", "sentence_num") * config.getint("data", "sentence_len"),
+                   config.getint("data", "vec_size"))
+
+        lstm_out, self.hidden = self.lstm(x, self.hidden)
+
+        self.attention = lstm_out
+        self.attention = torch.transpose(1, 2)
+        print(self.attention)
+        if config.get("net", "method") == "LAST":
+            outv = []
+            for a in range(0, len(doc_len)):
+                outv.append(lstm_out[a][doc_len[a][0] - 1])
+            lstm_out = torch.cat(outv)
+        elif config.get("net", "method") == "MAX":
+            lstm_out = torch.max(lstm_out, dim=1)[0]
+            print(lstm_out)
+            gg
+        else:
+            gg
+
+        return lstm_out
 
 
 class LSTM_ENCODER(nn.Module):
@@ -178,10 +222,10 @@ class ARTICLE_ENCODER(nn.Module):
         pass
 
     def forward(self, x, doc_len, config):
-        idx = torch.max(x,dim=1)[1]
+        idx = torch.max(x, dim=1)[1]
         x = []
         doc_len = []
-        for a in range(0,len(idx)):
+        for a in range(0, len(idx)):
             data = self.falv_list[idx[a].data[0]]
             x.append(data[0])
             doc_len.append(data[1])
@@ -459,6 +503,23 @@ class CNN(nn.Module):
 
     def init_hidden(self, config, usegpu):
         pass
+
+    def forward(self, x, doc_len, config):
+        x = self.encoder(x, doc_len, config)
+        x = self.decoder(x, doc_len, config)
+
+        return x
+
+
+class LSTM(nn.Module):
+    def __init__(self, config, usegpu):
+        super(LSTM, self).__init__()
+
+        self.encoder = LSTM_SINGLE_ENCODER(config, usegpu)
+        self.decoder = FC_DECODER(config, usegpu)
+
+    def init_hidden(self, config, usegpu):
+        self.encoder.init_hidden(config, usegpu)
 
     def forward(self, x, doc_len, config):
         x = self.encoder(x, doc_len, config)

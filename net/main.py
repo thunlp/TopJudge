@@ -44,6 +44,8 @@ elif model_name == "MULTI_LSTM_FINAL":
     net = MULTI_LSTM_FINAL(config, usegpu)
 elif model_name == "ARTICLE":
     net = ARTICLE(config, usegpu)
+elif model_name == "LSTM":
+    net = LSTM(config, usegpu)
 else:
     gg
 if torch.cuda.is_available() and usegpu:
@@ -51,10 +53,10 @@ if torch.cuda.is_available() and usegpu:
 
 print("Net building done.")
 
-if True:#try:
+if True:  # try:
     train_file(net, train_dataset, test_dataset, usegpu, config)
-#except Exception as e:
-#    print(e)
+    # except Exception as e:
+    #    print(e)
     for x in train_dataset.read_process:
         x.terminate()
         print(x, x.is_alive())
