@@ -42,6 +42,8 @@ elif model_name == "CNN_FINAL":
     net = CNN_FINAL(config, usegpu)
 elif model_name == "MULTI_LSTM_FINAL":
     net = MULTI_LSTM_FINAL(config, usegpu)
+elif model_name == "ARTICLE":
+    net = ARTICLE(config, usegpu)
 else:
     gg
 if torch.cuda.is_available() and usegpu:
@@ -55,11 +57,11 @@ except Exception as e:
     print(e)
     for x in train_dataset.read_process:
         x.terminate()
-        print(x,x.is_alive())
+        print(x, x.is_alive())
         x.join()
-        print(x,x.is_alive())
+        print(x, x.is_alive())
     for x in test_dataset.read_process:
         x.terminate()
-        print(x,x.is_alive())
+        print(x, x.is_alive())
         x.join()
-        print(x,x.is_alive())
+        print(x, x.is_alive())
