@@ -216,12 +216,13 @@ def generate_vector(data, config, transformer):
     while len(vec) < config.getint("data", "sentence_num"):
         vec.append(torch.stack(temp_vec))
         len_vec.append(1)
-    if len_vec[1] > 32:
+    if len_vec[1] > config.getint("data","sentence_num"):
         gg
     for a in range(2, len(len_vec)):
-        if len_vec[a] > 128:
+        if len_vec[a] > config.getint("data","sentence_len"):
+            print(data)
             gg
-    if len(len_vec) != 34:
+    if len(len_vec) != config.getint("data","sentence_num")+2:
         gg
 
     return torch.stack(vec), torch.LongTensor(len_vec)

@@ -140,10 +140,22 @@ import pdb
 from file_reader import transformer
 from data_formatter import generate_vector
 
-cutter = thulac.thulac()
+cutter = thulac.thulac(model_path=r"/data/disk1/private/zhonghaoxi/thulac/models", seg_only=True, filt=False)
 
+def cut(s):
+    data = cutter.cut(s)
+    result = []
+    first = True
+    for x, y in data:
+        if x == " ":
+            continue
+        result.append(x)
+    return result
 
-def generate_article_list(config):
+import torch
+from torch.autograd import Variable
+
+def generate_article_list(config, usegpu):
     f = open("result/xf.txt", "r")
     xf_data = json.loads(f.readline())
     f = open("result/law_result1.txt", "r")
@@ -152,18 +164,33 @@ def generate_article_list(config):
         arr = line.split(" ")
         tiao = int(arr[0])
         zhiyi = int(arr[1])
+        #print(tiao,zhiyi)
         data = xf_data["[%d, %d]" % (tiao, zhiyi)]
 
         sentence = ""
         for x in data["tk"]:
             sentence += x["content"]
+        sentence = sentence.replace(u"、"," ")
 
         sentence = sentence.split(u"。")
+        sentence_temp = []
+        for x in sentence:
+            y = x.split(u"，")
+            for z in y:
+                sentence_temp.append(z)
+        sentence = sentence_temp
         for a in range(0, len(sentence)):
-            sentence[a] = cutter.cut(sentence[a])
+            sentence[a] = cut(sentence[a])
 
         vec = generate_vector(sentence, config, transformer)
+        if torch.cuda.is_available() and usegpu:
+            vec = (Variable(vec[0].cuda()),Variable(vec[1].cuda()))
+        else:
+            vec = (Variable(vec[0]),Variable(vec[1]))
+        
 
-        pdb.set_trace()
+        #pdb.set_trace()
 
         law_list.append(vec)
+
+    return law_list

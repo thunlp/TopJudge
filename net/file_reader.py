@@ -117,6 +117,7 @@ class reader():
         data = self.data_queue.get()
         if data is None:
             self.init_file_list()
+        #print("done one")
 
         return data
 

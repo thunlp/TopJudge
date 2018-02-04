@@ -51,10 +51,10 @@ if torch.cuda.is_available() and usegpu:
 
 print("Net building done.")
 
-try:
+if True:#try:
     train_file(net, train_dataset, test_dataset, usegpu, config)
-except Exception as e:
-    print(e)
+#except Exception as e:
+#    print(e)
     for x in train_dataset.read_process:
         x.terminate()
         print(x, x.is_alive())

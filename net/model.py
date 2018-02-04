@@ -64,6 +64,7 @@ class CNN_ENCODER(nn.Module):
         conv_out = []
 
         for conv in self.convs:
+            #print("gg",type(x))
             y = conv(x).view(config.getint("data", "batch_size"), config.getint("net", "filters"), -1)
             y = F.pad(y,
                       (0, config.getint("data", "sentence_num") * config.getint("data", "sentence_len") - len(y[0][0])))
@@ -171,14 +172,21 @@ class ARTICLE_ENCODER(nn.Module):
         super(ARTICLE_ENCODER, self).__init__()
 
         self.article_encoder = CNN_ENCODER(config, usegpu)
-        self.falv_list = generate_article_list(config)
+        self.falv_list = generate_article_list(config, usegpu)
 
     def init_hidden(self, config, usegpu):
         pass
 
     def forward(self, x, doc_len, config):
-        idx = torch.max(x)[1].value
-        x = self.falv_list[idx]
+        idx = torch.max(x,dim=1)[1]
+        x = []
+        doc_len = []
+        for a in range(0,len(idx)):
+            data = self.falv_list[idx[a].data[0]]
+            x.append(data[0])
+            doc_len.append(data[1])
+        x = torch.stack(x)
+        doc_len = torch.stack(doc_len)
         x = self.article_encoder(x, doc_len, config)
         return x
 
@@ -437,7 +445,7 @@ class ARTICLE(nn.Module):
 
     def forward(self, x, doc_len, config):
         x = self.encoder(x, doc_len, config)
-        x = self.decoder(x, doc_len, config)
+        x = self.decoder(x, doc_len, config, self.encoder.attention)
 
         return x
 
