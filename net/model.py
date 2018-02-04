@@ -171,7 +171,7 @@ class ARTICLE_ENCODER(nn.Module):
         super(ARTICLE_ENCODER, self).__init__()
 
         self.article_encoder = CNN_ENCODER(config, usegpu)
-        self.falv_list = generate_article_list()
+        self.falv_list = generate_article_list(config)
 
     def init_hidden(self, config, usegpu):
         pass

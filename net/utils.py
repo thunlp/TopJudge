@@ -134,9 +134,16 @@ def generate_graph(config):
     return graph
 
 
+import json
+import thulac
+import pdb
+from file_reader import transformer
+from data_formatter import generate_vector
+
+cutter = thulac.thulac()
 
 
-def generate_article_list():
+def generate_article_list(config):
     f = open("result/xf.txt", "r")
     xf_data = json.loads(f.readline())
     f = open("result/law_result1.txt", "r")
@@ -146,3 +153,17 @@ def generate_article_list():
         tiao = int(arr[0])
         zhiyi = int(arr[1])
         data = xf_data["[%d, %d]" % (tiao, zhiyi)]
+
+        sentence = ""
+        for x in data["tk"]:
+            sentence += x["content"]
+
+        sentence = sentence.split(u"。")
+        for a in range(0, len(sentence)):
+            sentence[a] = cutter.cut(sentence[a])
+
+        vec = generate_vector(sentence, config, transformer)
+
+        pdb.set_trace()
+
+        law_list.append(vec)
