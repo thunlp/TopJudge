@@ -47,12 +47,12 @@ class reader():
 
     def always_read_data(self, config, data_queue, file_queue,  idx, transformer):
         #transformer = h5py.File('/data/disk1/private/zhonghaoxi/law/word2vec/data.h5','r')
-        cnt = 10
+        cnt = 1000
         put_needed = False
         while True:
             if data_queue.qsize() < cnt:
                 data = self.fetch_data_process(config, file_queue, transformer)
-                if data is None:
+                if data is None and idx == 0:
                     if put_needed:
                         data_queue.put(data)
                     put_needed = False
