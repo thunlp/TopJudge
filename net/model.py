@@ -95,17 +95,17 @@ class LSTM_SINGLE_ENCODER(nn.Module):
         self.data_size = config.getint("data", "vec_size")
         self.hidden_dim = config.getint("net", "hidden_size")
 
-        self.lstm = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
+        self.lstm = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True, num_layers=config.getint("net","num_layers"))
 
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
             self.hidden = (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim).cuda()))
         else:
             self.hidden = (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim)))
+                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim)),
+                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim)))
 
     def forward(self, x, doc_len, config):
         x = x.view(config.getint("data", "batch_size"),
@@ -135,22 +135,22 @@ class LSTM_ENCODER(nn.Module):
         self.data_size = config.getint("data", "vec_size")
         self.hidden_dim = config.getint("net", "hidden_size")
 
-        self.lstm_sentence = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True)
-        self.lstm_document = nn.LSTM(self.hidden_dim, self.hidden_dim, batch_first=True)
+        self.lstm_sentence = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True,num_layers=config.getint("net","num_layers"))
+        self.lstm_document = nn.LSTM(self.hidden_dim, self.hidden_dim, batch_first=True,num_layers=config.getint("net","num_layers"))
         self.feature_len = self.hidden_dim
 
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
             self.sentence_hidden = (
                 torch.autograd.Variable(
-                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                    torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
                                 self.hidden_dim).cuda()),
                 torch.autograd.Variable(
-                    torch.zeros(1, config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                    torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
                                 self.hidden_dim).cuda()))
             self.document_hidden = (
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()),
-                torch.autograd.Variable(torch.zeros(1, config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim).cuda()),
+                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim).cuda()))
         else:
             self.sentence_hidden = (
                 torch.autograd.Variable(
