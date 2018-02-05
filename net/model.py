@@ -1206,12 +1206,12 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
     first = True
     epps = config.get("train","pre_train")
     if epps is None:
-        epps = 0
+        epps = -1
     else:
-        epps = int(epps)
+        epps = int(epps)-1
 
     print("Training begin")
-    for epoch_num in range(epps, epoch):
+    for epoch_num in range(epps+1, epoch):
         running_loss = 0
         running_acc = []
         for a in range(0, len(task_name)):
