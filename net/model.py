@@ -1204,11 +1204,11 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
 
     total_loss = []
     first = True
-    epps = config.get("train","pre_train")
-    if epps is None:
-        epps = -1
-    else:
+    try:
+        epps = config.get("train","pre_train")
         epps = int(epps)-1
+    except Exception as e:
+        epps = -1
 
     print("Training begin")
     for epoch_num in range(epps+1, epoch):

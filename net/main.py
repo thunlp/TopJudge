@@ -49,8 +49,10 @@ elif model_name == "LSTM":
 else:
     gg
 
-if not(config.get("train","pre_train") is None):
+try:
     net = torch.load(os.path.join(config.get("train","model_path"),"model-"+config.get("train","pre_train")+".pkl"))
+except Exception as e:
+    pass
  
 
 if torch.cuda.is_available() and usegpu:
