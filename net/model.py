@@ -477,10 +477,11 @@ class ARTICLE(nn.Module):
     def __init__(self, config, usegpu):
         super(ARTICLE, self).__init__()
 
-        self.encoder = CNN_ENCODER(config, usegpu)
+        self.encoder = LSTM_ENCODER(config, usegpu)
         self.decoder = LSTM_DECODER_ARTICLE(config, usegpu)
 
     def init_hidden(self, config, usegpu):
+        self.encoder.init_hidden(config, usegpu)
         self.decoder.init_hidden(config, usegpu)
 
     def forward(self, x, doc_len, config):
@@ -1276,10 +1277,11 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                         for c in range(0, get_num_classes(task_name[a])):
                             running_acc[a][-1]["list"].append(0)
 
-        test_file(net, test_dataset, usegpu, config, epoch_num + 1)
+        torch.save(net, os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
+        if (epoch_num+1) % 1 ==0:
+            test_file(net, test_dataset, usegpu, config, epoch_num + 1)
         if not (os.path.exists(model_path)):
             os.makedirs(model_path)
-        torch.save(net, os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
 
     print("Training done")
 
