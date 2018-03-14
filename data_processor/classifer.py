@@ -20,19 +20,19 @@ word_doc_list = [u"判决书", u"裁定书", u"调解书", u"决定书", u"通�
 
 
 def get_type_of_case(obj):
-    if obj["content"] == "":
+    if not("content" in obj) or obj["content"] == "":
         return None
 
     for a in range(0, len(word_case_list)):
         match = re.search(word_case_list[a], obj["content"])
         if not (match is None):
-            return a + 1
+            return a
 
     return None
 
 
 def get_type_of_doc(obj):
-    if obj["Title"] == "":
+    if not("Title" in obj) or obj["Title"] == "":
         return None
 
     for a in range(0, len(word_doc_list)):
@@ -63,13 +63,13 @@ def draw_out(in_path, file_num):
             out_file = word_case_list[type1].replace("\\s", "") + word_doc_list[type2]
 
         ouf_path = os.path.join(out_path, out_file)
-        os.makedirs(out_path)
-        ouf_path = os.path.join(out_path, str(file_num))
+        if not(os.path.exists(ouf_path)):
+            os.makedirs(ouf_path)
+        ouf_path = os.path.join(ouf_path, str(file_num))
         ouf = open(ouf_path, "a")
         print(json.dumps(data, ensure_ascii=False), file=ouf)
 
-        if cnt % 50 == 0:
-            break
+        if cnt % 50000 == 0:
             print(in_path, cnt)
             # break
 
