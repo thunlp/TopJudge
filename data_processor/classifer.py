@@ -17,31 +17,34 @@ num_process = 1
 
 
 def draw_out(in_path, out_path):
-    print(in_path)
+    #print(in_path)
     inf = open(in_path, "r")
     ouf = open(out_path, "w")
 
     cnt = 0
     for line in inf:
-        try:
+        #try:
             data = json.loads(line)
-            print(data["caseType"],data["docType"],data["document"]["Title"])
+            print("1 "+data["caseType"])
+            print("2 "+data["docType"])
+            print("3 "+data["document"]["Title"])
+            print("")
             break
             cnt += 1
             if cnt % 500000 == 0:
                 print(in_path, cnt)
                 # break
 
-        except Exception as e:
-            print(e)
+        #except Exception as e:
+        #    print(e)
             # gg
 
 
 def work(from_id, to_id):
     for a in range(int(from_id), int(to_id)):
-        print(str(a) + " begin to work")
+        #print(str(a) + " begin to work")
         draw_out(os.path.join(in_path, str(a)), os.path.join(out_path, str(a)))
-        print(str(a) + " work done")
+        #print(str(a) + " work done")
 
 
 if __name__ == "__main__":
