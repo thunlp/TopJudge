@@ -113,7 +113,11 @@ def generate_fact(s):
 
     result = re.findall(regex,s)
 
-    print(len(result))
+    if len(result)>0:
+        for x in result:
+            print(x)
+        gg
+
 
 
 def draw_out(in_path, out_path):
@@ -138,7 +142,7 @@ def draw_out(in_path, out_path):
                 # for x in filter_list:
                 #    s = s.replace(chr(x), ' ')
 
-                s = cut(s)
+                """s = cut(s)
 
                 l = len(s.split(mid_text))
                 # print(l)
@@ -146,7 +150,7 @@ def draw_out(in_path, out_path):
                     res["content"] = s
                 else:
                     # print(s)
-                    continue
+                    continue"""
 
                 #res["meta"], able = analyze_meta(data["meta_info"])
                 #if not (able):
