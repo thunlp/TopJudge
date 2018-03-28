@@ -12,8 +12,8 @@ mid_text = u"  _(:з」∠)_  "
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
 
-num_file = 1
-num_process = 1
+num_file = 20
+num_process = 4
 
 word_case_list = [u"刑\s事", u"民\s事", u"行\s政", u"赔\s偿", u"执\s行"]
 word_doc_list = [u"判决书", u"裁定书", u"调解书", u"决定书", u"通知书", u"批复", u"答复", u"函", u"令"]
