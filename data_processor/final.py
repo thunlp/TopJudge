@@ -6,7 +6,7 @@ import thulac
 
 cutter = thulac.thulac(model_path=r"/home/zhx/models", seg_only=True, filt=False)
 
-in_path = "/disk/mysql/law_data/classfied_data/刑事判决书"
+in_path = "/disk/mysql/law_data/classified_data/刑事判决书"
 out_path = "/disk/mysql/law_data/final_data2/"
 mid_text = u"\t"
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
@@ -127,7 +127,6 @@ def draw_out(in_path, out_path):
                 #               91, 93, 92, 124, 35, 36, 37, 94, 38, 42, 40, 41, 95, 45, 43, 61, 9700, 9734, 9733]
                 s = data["document"]["AJJBQK"].replace("b", "").replace("\t", "")
                 print(s)
-                gg
                 # for x in filter_list:
                 #    s = s.replace(chr(x), ' ')
 
@@ -141,15 +140,16 @@ def draw_out(in_path, out_path):
                     # print(s)
                     continue
 
-                res["meta"], able = analyze_meta(data["meta_info"])
-                if not (able):
-                    continue
+                #res["meta"], able = analyze_meta(data["meta_info"])
+                #if not (able):
+                #    continue
 
                 cx += 1
                 print(json.dumps(res), file=ouf)
 
             cnt += 1
-            if cnt % 50000 == 0:
+            if cnt % 50 == 0:
+                gg	
                 print(in_path, cnt, cx)
                 # break
 
