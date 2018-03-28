@@ -115,8 +115,6 @@ def generate_fact(s):
 
     print(len(result))
 
-    gg
-
 
 def draw_out(in_path, out_path):
     print(in_path)
@@ -136,7 +134,7 @@ def draw_out(in_path, out_path):
                 #               65289, 8212, 45, 43, 61, 44, 46, 60, 62, 63, 47, 33, 59, 58, 39, 34, 123, 125,
                 #               91, 93, 92, 124, 35, 36, 37, 94, 38, 42, 40, 41, 95, 45, 43, 61, 9700, 9734, 9733]
                 s = data["document"]["AJJBQK"].replace("b", "").replace("\t", "")
-                print(s)
+                s = generate_fact(s)
                 # for x in filter_list:
                 #    s = s.replace(chr(x), ' ')
 
