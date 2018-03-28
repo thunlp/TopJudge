@@ -61,7 +61,7 @@ def draw_out(in_path, file_num):
                 out_file = u"未知"
             else:
                 out_file = word_case_list[type1].replace("\\s", "") + word_doc_list[type2]
-    
+
             ouf_path = os.path.join(out_path, out_file)
             if not (os.path.exists(ouf_path)):
                 os.makedirs(ouf_path)
