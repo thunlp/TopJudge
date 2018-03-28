@@ -3,6 +3,7 @@
 import os
 import json
 import thulac
+import re
 
 cutter = thulac.thulac(model_path=r"/home/zhx/models", seg_only=True, filt=False)
 
@@ -106,6 +107,15 @@ def cut(s):
             result = result + mid_text
         result = result + x
     return result
+
+def generate_fact(s):
+    regex = re.compile(r"经审理查明，([\s\S]*)，足以认定")
+
+    result = re.findall(regex,s)
+
+    print(len(result))
+
+    gg
 
 
 def draw_out(in_path, out_path):
