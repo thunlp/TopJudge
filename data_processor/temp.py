@@ -8,7 +8,7 @@ import re
 in_path = "/disk/mysql/law_data/final_data/"
 out_path = "/disk/mysql/law_data/temp_data/"
 mid_text = u"\t"
-num_process = 1
+num_process = 4
 num_file = 20
 
 accusation_file = "/home/zhx/law_pre/data_processor/accusation_list2.txt"
@@ -18,42 +18,39 @@ for a in range(0, len(accusation_list)):
     accusation_list[a] = accusation_list[a].replace('[', '').replace(']', '')
 f.close()
 
-for a in range(0,len(accusation_list)):
-    print(a,accusation_list[a])
 
 able_list = [248,247,201]
 
-def draw_out(in_path, out_path,cnt):
+def draw_out(in_path, out_path,cntx):
     print(in_path)
     inf = open(in_path, "r")
 
     cnt = 0
     cx = 0
     for line in inf:
-        #try:
+        try:
             data = json.loads(line)
             for idx in able_list:
                 if idx in data["meta"]["crit"]:
-                    out_path = os.path.join(out_path,accusation_list[idx],str(cnt))
-                    ouf = open(out_path, "a")
+                    outf_path = os.path.join(out_path,accusation_list[idx],str(cntx))
+                    ouf = open(outf_path, "a")
                     print(json.dumps(data),file=ouf)
 
 
             cnt += 1
-            if cnt % 50 == 0:
-                gg
+            if cnt % 50000 == 0:
                 print(in_path, cnt, cx)
                 # break
 
-        #except Exception as e:
-        #    pass  # print(e)
-            # gg
+        except Exception as e:
+            pass  # print(e)
+            gg
 
 
 def work(from_id, to_id):
     for a in range(int(from_id), int(to_id)):
         print(str(a) + " begin to work")
-        draw_out(os.path.join(in_path, str(a)), os.path.join(out_path, str(a)),a)
+        draw_out(os.path.join(in_path, str(a)),out_path,a)
         print(str(a) + " work done")
 
 
