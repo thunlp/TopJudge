@@ -109,7 +109,7 @@ def cut(s):
     return result
 
 def generate_fact(s):
-    regex = re.compile(r"[公诉机关指控|经审理查明][，：]([\s\S]*)，[足以认定|本院予以确认]")
+    regex = re.compile(r"经审理查明[，：]([\s\S]*)[，。]足以认定")
 
     result = re.findall(regex,s)
 
@@ -117,6 +117,8 @@ def generate_fact(s):
         fact = result[0]
     else:
         print(s)
+
+    return fact
 
 
 
