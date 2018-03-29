@@ -118,7 +118,7 @@ def generate_fact(s):
     else:
         print(s)
 
-    return fact
+    return ""
 
 
 
@@ -162,7 +162,7 @@ def draw_out(in_path, out_path):
                 print(json.dumps(res), file=ouf)
 
             cnt += 1
-            if cnt % 5000 == 0:
+            if cnt % 50 == 0:
                 gg	
                 print(in_path, cnt, cx)
                 # break
