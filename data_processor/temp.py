@@ -9,7 +9,7 @@ in_path = "/disk/mysql/law_data/final_data/"
 out_path = "/disk/mysql/law_data/temp_data/"
 mid_text = u"\t"
 num_process = 1
-num_files = 20
+num_file = 20
 
 accusation_file = "/home/zhx/law_pre/data_processor/accusation_list2.txt"
 f = open(accusation_file, "r")
