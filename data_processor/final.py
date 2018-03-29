@@ -109,13 +109,21 @@ def cut(s):
     return result
 
 def generate_fact(s):
-    regex = re.compile(r"经审理查明[，：]([\s\S]*)[，。]足以认定")
+    regex_list = [
+        r"经审理查明[，：]([\s\S]*)[，。]足以认定",
+        r"公诉机关指控[，：]([\s\S]*)[，。]足以认定",
+        r"公诉机关指控[，：]([\s\S]*)[，。]就上述指控"
+    ]
 
-    result = re.findall(regex,s)
+    fact = None
 
-    if len(result)>0:
-        fact = result[0]
-    else:
+    for reg in regex_list:
+        regex = re.compile(reg)
+        result = re.findall(regex,s)
+        if len(result) > 0:
+            fact = result[0]
+            break
+    if fact is None:
         print(s)
 
     return ""
