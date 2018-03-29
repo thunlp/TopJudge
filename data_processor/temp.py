@@ -21,17 +21,23 @@ f.close()
 for a in range(0,len(accusation_list)):
     print(a,accusation_list[a])
 
+able_list = [248,247,201]
 
-def draw_out(in_path, out_path):
+def draw_out(in_path, out_path,cnt):
     print(in_path)
     inf = open(in_path, "r")
-    ouf = open(out_path, "w")
 
     cnt = 0
     cx = 0
     for line in inf:
         #try:
             data = json.loads(line)
+            for idx in able_list:
+                if idx in data["meta"]["crit"]:
+                    out_path = os.path.join(out_path,accusation_list[idx],str(cnt))
+                    ouf = open(out_path, "a")
+                    print(json.dumps(data),file=ouf)
+
 
             cnt += 1
             if cnt % 50 == 0:
@@ -47,7 +53,7 @@ def draw_out(in_path, out_path):
 def work(from_id, to_id):
     for a in range(int(from_id), int(to_id)):
         print(str(a) + " begin to work")
-        draw_out(os.path.join(in_path, str(a)), os.path.join(out_path, str(a)))
+        draw_out(os.path.join(in_path, str(a)), os.path.join(out_path, str(a)),a)
         print(str(a) + " work done")
 
 
