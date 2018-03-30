@@ -27,73 +27,6 @@ num_process = 1
 num_file = 20
 
 
-def analyze_time(data):
-    if data == {}:
-        return None, False
-    res = data
-    res["youqi"] = list(set(res["youqi"]))
-    res["youqi"].sort()
-    res["guanzhi"] = list(set(res["guanzhi"]))
-    res["guanzhi"].sort()
-    res["juyi"] = list(set(res["juyi"]))
-    res["juyi"].sort()
-
-    return res, True
-
-
-def analyze_money(data):
-    pass
-
-
-def analyze_law(data):
-    if len(data) == 0:
-        return None, False
-    cnt = 0
-    res = []
-    for r in data:
-        x = r["law_name"]
-        y = r["tiao_num"]
-        z = r["kuan_num"]
-        f = r["zhiyi"]
-        if x == u"中华人民共和国刑法":
-            res.append((y, z, f))
-
-    res = list(set(res))
-    res.sort()
-
-    return res, len(res) != 0
-
-
-def analyze_crit(data):
-    if len(data) == 0:
-        return None, False
-    for a in range(0, len(data)):
-        find = False
-        for b in range(0, len(accusation_list)):
-            if data[a] == accusation_list[b]:
-                data[a] = b
-                find = True
-                break
-        if not (find):
-            print(accusation_list[38])
-            print(data[a])
-            gg
-    data = list(set(data))
-    # print(data)
-    data.sort()
-    return data, True
-
-
-def analyze_meta(data):
-    res = {}
-    res["time"], able1 = analyze_time(data["term_of_imprisonment"])
-    res["law"], able2 = analyze_law(data["name_of_law"])
-    res["crit"], able3 = analyze_crit(data["name_of_accusation"])
-    # print(able1,able2,able3)
-
-    return res, able1 and able2 and able3
-
-
 def cut(s):
     data = cutter.cut(s)
     result = ""
@@ -108,26 +41,30 @@ def cut(s):
         result = result + x
     return result
 
-def generate_fact(s):
-    regex_list = [
-        r"[经审理查明|公诉机关指控|检察院指控][，：,:]([\s\S]*)[，。,][足以认定|就上述指控|上述事实]",
-        r"[经审理查明|公诉机关指控|检察院指控][，：,:]([\s\S]*)$",
-        r"^([\s\S]*)[，。,][足以认定|就上述指控|上述事实]"
-    ]
 
-    fact = None
+def generate_fact(data):
+    if "AJJBQK" in data["document"]:
+        s = data["document"]["AJJBQK"].replace("b", "").replace("\t", " ")
+        regex_list = [
+            r"[经审理查明|公诉机关指控|检察院指控][，：,:]([\s\S]*)[，。,][足以认定|就上述指控|上述事实]",
+            r"[经审理查明|公诉机关指控|检察院指控][，：,:]([\s\S]*)$",
+            r"^([\s\S]*)[，。,][足以认定|就上述指控|上述事实]"
+        ]
 
-    for reg in regex_list:
-        regex = re.compile(reg)
-        result = re.findall(regex,s)
-        if len(result) > 0:
-            fact = result[0]
-            break
-    if fact is None:
+        fact = None
+
+        for reg in regex_list:
+            regex = re.compile(reg)
+            result = re.findall(regex, s)
+            if len(result) > 0:
+                fact = result[0]
+                break
+        if not (fact is None):
+            return fact
+
+    if "SSJL" in data["document"]
+        s = data["document"]["SSJL"].replace("b", "").replace("\t", " ")
         print(s)
-
-    return ""
-
 
 
 def draw_out(in_path, out_path):
@@ -138,45 +75,18 @@ def draw_out(in_path, out_path):
     cnt = 0
     cx = 0
     for line in inf:
-        #try:
+        try:
             data = json.loads(line)
-            if "AJJBQK" in data["document"]:
-                res = {}
-
-                # filter_list = [65292, 12290, 65311, 65281, 65306, 65307, 8216, 8217, 8220, 8221, 12304, 12305,
-                #               12289, 12298, 12299, 126, 183, 64, 124, 35, 65509, 37, 8230, 38, 42, 65288,
-                #               65289, 8212, 45, 43, 61, 44, 46, 60, 62, 63, 47, 33, 59, 58, 39, 34, 123, 125,
-                #               91, 93, 92, 124, 35, 36, 37, 94, 38, 42, 40, 41, 95, 45, 43, 61, 9700, 9734, 9733]
-                s = data["document"]["AJJBQK"].replace("b", "").replace("\t", "")
-                s = generate_fact(s)
-                # for x in filter_list:
-                #    s = s.replace(chr(x), ' ')
-
-                """s = cut(s)
-
-                l = len(s.split(mid_text))
-                # print(l)
-                if l >= min_length and l <= max_length:
-                    res["content"] = s
-                else:
-                    # print(s)
-                    continue"""
-
-                #res["meta"], able = analyze_meta(data["meta_info"])
-                #if not (able):
-                #    continue
-
-                cx += 1
-                print(json.dumps(res), file=ouf)
+            fact = generate_fact(data)
 
             cnt += 1
             if cnt % 50000 == 0:
-                gg	
+                gg
                 print(in_path, cnt, cx)
                 # break
 
-        #except Exception as e:
-        #    pass  # print(e)
+        except Exception as e:
+            gg  # print(e)
             # gg
 
 
