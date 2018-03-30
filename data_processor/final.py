@@ -110,7 +110,9 @@ def cut(s):
 
 def generate_fact(s):
     regex_list = [
-        r"[经审理查明|公诉机关指控|检察院指控][，：]([\s\S]*)[，。][足以认定|就上述指控|上述事实]"
+        r"[经审理查明|公诉机关指控|检察院指控][，：,:]([\s\S]*)[，。,][足以认定|就上述指控|上述事实]",
+        r"[经审理查明|公诉机关指控|检察院指控][，：,:]([\s\S]*)$",
+        r"^([\s\S]*)[，。,][足以认定|就上述指控|上述事实]"
     ]
 
     fact = None
@@ -168,7 +170,7 @@ def draw_out(in_path, out_path):
                 print(json.dumps(res), file=ouf)
 
             cnt += 1
-            if cnt % 50 == 0:
+            if cnt % 50000 == 0:
                 gg	
                 print(in_path, cnt, cx)
                 # break
