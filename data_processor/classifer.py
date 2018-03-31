@@ -15,16 +15,17 @@ title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseT
 num_file = 20
 num_process = 4
 
-word_case_list = [u"刑\s事", u"民\s事", u"行\s政", u"赔\s偿", u"执\s行"]
-word_doc_list = [u"判决书", u"裁定书", u"调解书", u"决定书", u"通知书", u"批复", u"答复", u"函", u"令"]
+word_case_list = [r"刑(\s?)事", r"民(\s?)事", r"行(\s?)政", r"赔(\s?)偿", r"执(\s?)行"]
+word_doc_list = [r"判(\s?)决(\s?)书", r"裁(\s?)定(\s?)书", r"调(\s?)解(\s?)书", r"决(\s?)定(\s?)书", r"通(\s?)知(\s?)书", r"批复", r"答复",
+                 r"函", r"令"]
 
 
 def get_type_of_case(obj):
-    if not ("content" in obj) or obj["content"] == "":
+    if not ("Title" in obj) or obj["Title"] == "":
         return None
 
     for a in range(0, len(word_case_list)):
-        match = re.search(word_case_list[a], obj["content"])
+        match = re.search(word_case_list[a], obj["Title"])
         if not (match is None):
             return a
 
