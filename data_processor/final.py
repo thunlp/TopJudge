@@ -41,30 +41,27 @@ def cut(s):
         result = result + x
     return result
 
-def format_string(s):
-    return s.replace("b", "").replace("\t", " ").replace("t","")
 
+def format_string(s):
+    return s.replace("b", "").replace("\t", " ").replace("t", "")
 
 
 def generate_fact(data):
     if "AJJBQK" in data["document"]:
         s = format_string(data["document"]["AJJBQK"])
         regex_list = [
-            r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)",
-            r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)$",
-            r"^([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)"
+            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 2),
+            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)$", 2),
+            (r"^([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 0)
         ]
 
         fact = None
 
-        for reg in regex_list:
-            print(reg)
+        for reg, num in regex_list:
             regex = re.compile(reg)
             result = re.findall(regex, s)
-            print(result)
-            gg
             if len(result) > 0:
-                fact = result[0]
+                fact = result[0][num]
                 break
         if not (fact is None):
             return fact
@@ -72,18 +69,18 @@ def generate_fact(data):
     if "SSJL" in data["document"]:
         s = format_string(data["document"]["SSJL"])
         regex_list = [
-            r"[经审理查明|公诉机关指控|检察院指控]([，：,:]?)([\s\S]*)([，。,]?)[足以认定|就上述指控|上述事实]",
-            r"[经审理查明|公诉机关指控|检察院指控]([，：,:]?)([\s\S]*)$",
-            r"^([\s\S]*)([，。,]?)[足以认定|就上述指控|上述事实]"
+            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实])", 2),
+            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)$", 2),
+            (r"^([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 0)
         ]
 
         fact = None
 
-        for reg in regex_list:
+        for reg, num in regex_list:
             regex = re.compile(reg)
             result = re.findall(regex, s)
             if len(result) > 0:
-                fact = result[0]
+                fact = result[0][num]
                 break
         if not (fact is None):
             return fact
@@ -91,22 +88,22 @@ def generate_fact(data):
     if "content" in data["document"]:
         s = format_string(data["document"]["content"])
         regex_list = [
-            r"[经审理查明|公诉机关指控|检察院指控]([，：,:]?)([\s\S]*)([，。,]?)[足以认定|就上述指控|上述事实]",
-            r"[经审理查明|公诉机关指控|检察院指控]([，：,:]?)([\s\S]*事实一致)"
+            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 2),
+            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S])*事实一致", 2)
         ]
 
         fact = None
 
-        for reg in regex_list:
+        for reg, num in regex_list:
             regex = re.compile(reg)
             result = re.findall(regex, s)
             if len(result) > 0:
-                fact = result[0]
+                fact = result[0][num]
                 break
         if not (fact is None):
             return fact
-        
-        #print(s)
+
+            # print(s)
 
 
 def draw_out(in_path, out_path):
@@ -120,7 +117,7 @@ def draw_out(in_path, out_path):
         try:
             data = json.loads(line)
             fact = generate_fact(data)
-            #print(fact)
+            # print(fact)
 
             cnt += 1
             if cnt % 50000 == 0:
