@@ -103,7 +103,7 @@ def generate_fact(data):
         if not (fact is None):
             return fact
 
-            # print(s)
+        print(s)
 
 
 def draw_out(in_path, out_path):
