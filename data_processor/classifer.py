@@ -61,11 +61,14 @@ def draw_out(in_path, file_num):
             if type1 is None or type2 is None:
                 out_file = u"未知"
             else:
-                out_file = word_case_list[type1].replace("\\s", "") + word_doc_list[type2]
+                out_file = word_case_list[type1].replace("\\s", "").replace("(","").replace(")","").replace("?","") + word_doc_list[type2].replace("\\s","").replace("(","").replace(")","").replace("?","")
 
             ouf_path = os.path.join(out_path, out_file)
             if not (os.path.exists(ouf_path)):
-                os.makedirs(ouf_path)
+                try:
+                    os.makedirs(ouf_path)
+                except Exception as e:
+                    pass
             ouf_path = os.path.join(ouf_path, str(file_num))
             ouf = open(ouf_path, "a")
             print(json.dumps(data, ensure_ascii=False), file=ouf)

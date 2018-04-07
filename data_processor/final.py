@@ -50,8 +50,8 @@ def generate_fact(data):
     if "AJJBQK" in data["document"]:
         s = format_string(data["document"]["AJJBQK"])
         regex_list = [
-            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 2),
-            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)$", 2),
+            (r"(经审理查明|公诉机关指控|检察院指控|起诉书指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 2),
+            (r"(经审理查明|公诉机关指控|检察院指控|起诉书指控)([，：,:]?)([\s\S]*)$", 2),
             (r"^([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 0)
         ]
 
@@ -69,8 +69,8 @@ def generate_fact(data):
     if "SSJL" in data["document"]:
         s = format_string(data["document"]["SSJL"])
         regex_list = [
-            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实])", 2),
-            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)$", 2),
+            (r"(经审理查明|公诉机关指控|检察院指控|起诉书指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 2),
+            (r"(经审理查明|公诉机关指控|检察院指控|起诉书指控)([，：,:]?)([\s\S]*)$", 2),
             (r"^([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 0)
         ]
 
@@ -88,9 +88,10 @@ def generate_fact(data):
     if "content" in data["document"]:
         s = format_string(data["document"]["content"])
         regex_list = [
-            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 2),
-            (r"(经审理查明|公诉机关指控|检察院指控)([，：,:]?)([\s\S])*事实一致", 2),
-            (r"指控([，：,:])([\s\S]*。本院认为", 1)
+            (r"(经审理查明|公诉机关指控|检察院指控|起诉书指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 2),
+            (r"(经审理查明|公诉机关指控|检察院指控|起诉书指控)([，：,:]?)([\s\S])*事实一致", 2),
+            (r"指控([，：,:])([\s\S]*)。本院认为", 1),
+            (r"(经审理查明|公诉机关指控|检察院指控|起诉书指控)([，：,:]?)([\s\S])*《", 2),
         ]
 
         fact = None
@@ -103,9 +104,21 @@ def generate_fact(data):
                 break
         if not (fact is None):
             return fact
-
-        print(s)
-
+    return None
+    print(data["document"]["Title"])
+    if "AJJBQK" in data["document"]:
+        print(data["document"]["AJJBQK"])
+    else:
+        print("no AJJBQK")
+    if "SSJL" in data["document"]:
+        print(data["document"]["SSJL"])
+    else:
+        print("no SSJL")
+    if "content" in data["document"]:
+        print(data["document"]["content"])
+    else:
+        print("no content")
+    print("")
 
 def draw_out(in_path, out_path):
     print(in_path)
@@ -118,10 +131,12 @@ def draw_out(in_path, out_path):
         try:
             data = json.loads(line)
             fact = generate_fact(data)
-            # print(fact)
+            if fact is None:
+                continue
+            print(fact)
 
             cnt += 1
-            if cnt % 50000 == 0:
+            if cnt % 5000 == 0:
                 gg
                 print(in_path, cnt, cx)
                 # break
