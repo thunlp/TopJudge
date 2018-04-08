@@ -511,9 +511,17 @@ def draw_out(in_path, out_path):
                 continue
             # print(fact)
             data["meta"] = parse(data)
-            print(data["Title"])
+            if not("youqi" in data["meta"]["term_of_imprisonment"]) or len(data["meta"]["term_of_imprisonment"]["youqi"])<=1:
+                continue
+            print(data["document"]["Title"])
+            print("content",data["document"]["content"])
             print("fact", fact)
+            if "PJJG" in data["document"]:
+                print("result", data["document"]["PJJG"])
+            else:
+                print("result no result")
             print("meta", data["meta"])
+            print("")
 
             cnt += 1
             if cnt % 5000 == 0:
