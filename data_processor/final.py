@@ -389,10 +389,27 @@ def parse_money(data):
     return result_list
 
 
+def parse_criminals(data):
+    if "content" in data["document"]:
+        s = data["document"]["content"]
+        regex = re.compile(r"被告人(\S{2,3})[，。、,.]]")
+        se = set()
+
+        for result in re.finditer(regex, s):
+            se.add(s.group(1))
+
+        print(se)
+    else:
+        return set()
+
+
 def parse(data):
     result = {}
     # print(data["document"]["PJJG"])
 
+    result["criminals"] = parse_criminals(data)
+
+    return result
     result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
     result["name_of_accusation"] = parse_name_of_accusation(data)
     result["name_of_law"] = parse_name_of_law(data)
@@ -511,17 +528,18 @@ def draw_out(in_path, out_path):
                 continue
             # print(fact)
             data["meta"] = parse(data)
-            if not("youqi" in data["meta"]["term_of_imprisonment"]) or len(data["meta"]["term_of_imprisonment"]["youqi"])<=1:
+            """if not ("youqi" in data["meta"]["term_of_imprisonment"]) or len(
+                    data["meta"]["term_of_imprisonment"]["youqi"]) <= 1:
                 continue
             print(data["document"]["Title"])
-            print("content",data["document"]["content"])
+            print("content", data["document"]["content"])
             print("fact", fact)
             if "PJJG" in data["document"]:
                 print("result", data["document"]["PJJG"])
             else:
                 print("result no result")
             print("meta", data["meta"])
-            print("")
+            print("")"""
 
             cnt += 1
             if cnt % 5000 == 0:
