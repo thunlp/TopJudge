@@ -390,17 +390,28 @@ def parse_money(data):
 
 
 def parse_criminals(data):
-    if "content" in data["document"]:
-        s = data["document"]["content"]
-        regex = re.compile(r"被告人(\S{2,3})[，。、,.]]")
+    se = set()
+    if "DSRXX" in data["document"]:
+        s = format_string(data["document"]["DSRXX"])
+        regex = re.compile(r"被告人((自报|：|,)?)(\S{2,4})[，。、,.（\(]")
         se = set()
 
         for result in re.finditer(regex, s):
-            se.add(s.group(1))
+            se.add(result.group(3))
 
+    if not("DSRXX" in data["document"]) or len(se) == 0:
+        s = format_string(data["document"]["content"])
+        regex = re.compile(r"被告人((自报|：|，)?)(\S{2,4})[，。、,.（\(]")
+        se = set()
+
+        for result in re.finditer(regex, s):
+            se.add(result.group(3))
+
+    if len(se) == 0:
         print(se)
-    else:
-        return set()
+        print(data["document"]["content"])
+    return se
+
 
 
 def parse(data):
