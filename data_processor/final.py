@@ -29,7 +29,8 @@ for x in accusation_list:
         accusation_regex += "|"
     accusation_regex += x
 
-accusation_regex = r"^(被告人)?(\S{2,3}(、([^、]{2,3})))" + accusation_regex
+accusation_regex = r"(被告人){0,1}(\S{2,3}?(、([^、]{2,3}?))*)(犯){0,1}(非法){0,1}(" + accusation_regex + ")"
+print(accusation_regex)
 accusation_regex = re.compile(accusation_regex)
 
 num_process = 1
@@ -57,9 +58,9 @@ def format_string(s):
 
 def parse_criminals(data):
     se = set()
-    if "DSRXX" in data["document"]:
+    """if "DSRXX" in data["document"]:
         s = format_string(data["document"]["DSRXX"])
-        regex = re.compile(r"被告人((自报|：|,)?)(\S{2,4})[，。、,.（\(]")
+        regex = re.compile(r"被告人((自报|：|,)?)(\S{2,4}?)[，。、,.（\(]")
         se = set()
 
         for result in re.finditer(regex, s):
@@ -67,18 +68,19 @@ def parse_criminals(data):
 
     if not ("DSRXX" in data["document"]) or len(se) == 0:
         s = format_string(data["document"]["content"])
-        regex = re.compile(r"被告人((自报|：|，)?)(\S{2,4})[，。、,.（\(]")
+        regex = re.compile(r"被告人((自报|：|，)?)(\S{2,4}?)[，。、,.（\(]")
         se = set()
 
         for result in re.finditer(regex, s):
-            se.add(result.group(3))
+            se.add(result.group(3))"""
 
     for result in re.finditer(accusation_regex, data["document"]["Title"]):
-        se.add(result.group(2))
+        arr = result.group(2).split("、")
+        for x in arr:
+            se.add(x)
 
     print(se)
-    if len(se) == 0:
-        print(data["document"]["Title"])
+    print(data["document"]["Title"])
 
     return se
 
