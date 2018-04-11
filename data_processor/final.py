@@ -56,6 +56,44 @@ def format_string(s):
     return s.replace("b", "").replace("\t", " ").replace("t", "")
 
 
+def dfs_search(s, x, p, y):
+    if p >= len(x):
+        return s.count(y) != 0
+    if x[p] == "[":
+        pp = p
+        while x[pp] != "]":
+            pp += 1
+        subs = x[p + 1:pp].split(u"、")
+        for z in subs:
+            if dfs_search(s, x, pp + 1, y + z):
+                return True
+        if dfs_search(s, x, pp + 1, y + x[p + 1:pp]):
+            return True
+        else:
+            return False
+    else:
+        return dfs_search(s, x, p + 1, y + x[p])
+
+
+def check(x, s):
+    return dfs_search(s, x, 0, "")
+
+
+def parse_name_of_accusation(data):
+    if "PJJG" in data["document"]:
+        s = data["document"]["PJJG"]
+        result = []
+        for x in accusation_list:
+            if check(x, s):
+                result.append(x.replace("[", "").replace("]", ""))
+        # print(result)
+        # if len(result) == 0:
+        #    print(s)
+        return result
+    else:
+        return []
+
+
 def parse_criminals(data):
     se = set()
     """if "DSRXX" in data["document"]:
@@ -89,11 +127,12 @@ def parse(data):
     result = {}
     # print(data["document"]["PJJG"])
 
-    result["criminals"] = parse_criminals(data)
+    result["name_of_accusation"] = parse_name_of_accusation(data)
+    print(result["name_of_accusation"])
+    # result["criminals"] = parse_criminals(data)
 
     return result
     result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
-    result["name_of_accusation"] = parse_name_of_accusation(data)
     result["name_of_law"] = parse_name_of_law(data)
     result["punish_of_money"] = parse_money(data)
 
