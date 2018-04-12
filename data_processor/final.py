@@ -19,9 +19,50 @@ max_length = 1024
 accusation_file = "/home/zhx/law_pre/data_processor/accusation_list2.txt"
 f = open(accusation_file, "r")
 accusation_list = json.loads(f.readline())
-#for a in range(0, len(accusation_list)):
+# for a in range(0, len(accusation_list)):
 #    accusation_list[a] = accusation_list[a].replace('[', '').replace(']', '')
 f.close()
+
+num_list = {
+    u"〇": 0,
+    u"\uff2f": 0,
+    u"\u3007": 0,
+    u"\u25cb": 0,
+    u"\uff10": 0,
+    u"\u039f": 0,
+    u'零': 0,
+    "O": 0,
+    "0": 0,
+    u"一": 1,
+    u"元": 1,
+    u"1": 1,
+    u"二": 2,
+    u"2": 2,
+    u"两": 2,
+    u'三': 3,
+    u'3': 3,
+    u'四': 4,
+    u'4': 4,
+    u'五': 5,
+    u'5': 5,
+    u'六': 6,
+    u'6': 6,
+    u'七': 7,
+    u'7': 7,
+    u'八': 8,
+    u'8': 8,
+    u'九': 9,
+    u'9': 9,
+    u'十': 10,
+    u'百': 100,
+    u'千': 1000,
+    u'万': 10000
+}
+
+num_str = ""
+
+for x in num_list:
+    num_str = num_str + x
 
 accusation_regex = ""
 for x in accusation_list:
@@ -30,7 +71,7 @@ for x in accusation_list:
     accusation_regex += x
 
 accusation_regex = r"(被告人){0,1}(\S{2,3}?(、([^、]{2,3}?))*)(犯){0,1}(非法){0,1}(" + accusation_regex + ")"
-#print(accusation_regex)
+# print(accusation_regex)
 accusation_regex = re.compile(accusation_regex)
 
 num_process = 1
@@ -56,6 +97,112 @@ def format_string(s):
     return s.replace("b", "").replace("\t", " ").replace("t", "")
 
 
+def parse_date_with_year_and_month_begin_from(s, begin, delta):
+    # erf = open("error.log", "a")
+    pos = begin + delta
+    num1 = 0
+    while s[pos] in num_list:
+        if s[pos] == u"十":
+            if num1 == 0:
+                num1 = 1
+            num1 *= 10
+        elif s[pos] == u"百" or s[pos] == u"千" or s[pos] == u"万":
+            # print("0 " + s[begin - 10:pos + 20], file=erf)
+            return None
+        else:
+            num1 = num1 + num_list[s[pos]]
+
+        pos += 1
+
+    num = 0
+    if s[pos] == u"年":
+        num2 = 0
+        pos += 1
+        if s[pos] == u"又":
+            pos += 1
+        while s[pos] in num_list:
+            if s[pos] == u"十":
+                if num2 == 0:
+                    num2 = 1
+                num2 *= 10
+            elif s[pos] == u"百" or s[pos] == u"千" or s[pos] == u"万":
+                # print("1 " + s[begin - 10:pos + 20], file=erf)
+                return None
+            else:
+                num2 = num2 + num_list[s[pos]]
+
+            pos += 1
+        if s[pos] == u"个":
+            pos += 1
+        if num2 != 0 and s[pos] != u"月":
+            # print("2 " + s[begin - 10:pos + 20], file=erf)
+            return None
+        num = num1 * 12 + num2
+    else:
+        if s[pos] == u"个":
+            pos += 1
+        if s[pos] != u"月":
+            # print("3 " + s[begin - 10:pos + 20], file=erf)
+            return None
+        else:
+            num = num1
+
+    pos += 1
+    # print(num,s[x.start():pos])
+    return num
+
+
+def parse_term_of_imprisonment(data):
+    result = {}
+    if "PJJG" in data["document"]:
+        s = data["document"]["PJJG"].replace('b', '')
+
+        # 有期徒刑
+        youqi_arr = []
+        pattern = re.compile(u"有期徒刑")
+        for x in pattern.finditer(s):
+            pos = x.start()
+            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"有期徒刑"))
+            if not (data is None):
+                youqi_arr.append(data)
+
+        # 拘役
+        juyi_arr = []
+        pattern = re.compile(u"拘役")
+        for x in pattern.finditer(s):
+            pos = x.start()
+            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"拘役"))
+            if not (data is None):
+                juyi_arr.append(data)
+
+        # 管制
+        guanzhi_arr = []
+        pattern = re.compile(u"管制")
+        for x in pattern.finditer(s):
+            pos = x.start()
+            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"管制"))
+            if not (data is None):
+                guanzhi_arr.append(data)
+
+        # 无期
+        forever = False
+        if s.count("无期徒刑") != 0:
+            forever = True
+
+        # 死刑
+        dead = False
+        if s.count("死刑") != 0:
+            dead = True
+
+        result["youqi"] = youqi_arr
+        result["juyi"] = juyi_arr
+        result["guanzhi"] = guanzhi_arr
+        result["wuqi"] = forever
+        result["sixing"] = dead
+
+    return result
+
+
 def dfs_search(s, x, p, y):
     if p >= len(x):
         return s.count(y) != 0
@@ -76,6 +223,21 @@ def dfs_search(s, x, p, y):
 
 
 def check(x, s):
+    x = x + "["
+    nows = ""
+    cnt = 0
+    for a in range(0, len(x)):
+        if x[a] == "[":
+            if cnt == 1:
+                if not (nows in s):
+                    return False
+            cnt += 1
+            nows = ""
+        elif x[a] == "[":
+            cnt -= 1
+        elif cnt == 0:
+            nows = nows + x[a]
+    x = x[:-1]
     return dfs_search(s, x, 0, "")
 
 
@@ -90,7 +252,7 @@ def parse_name_of_accusation(data):
         for x in result:
             able = True
             for y in result:
-                if x in y and x!=y:
+                if x in y and x != y:
                     able = False
             if able:
                 arr.append(x)
@@ -125,9 +287,6 @@ def parse_criminals(data):
         for x in arr:
             se.add(x)
 
-    print(se)
-    print(data["document"]["Title"])
-
     return se
 
 
@@ -136,13 +295,11 @@ def parse(data):
     # print(data["document"]["PJJG"])
 
     result["name_of_accusation"] = parse_name_of_accusation(data)
-    #print(result["name_of_accusation"])
-    if len(result["name_of_accusation"]) == 0:
-        print(data["document"]["Title"])
-    # result["criminals"] = parse_criminals(data)
+    result["criminals"] = parse_criminals(data)
+    # result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
 
     return result
-    result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
+
     result["name_of_law"] = parse_name_of_law(data)
     result["punish_of_money"] = parse_money(data)
 
