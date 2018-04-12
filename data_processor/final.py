@@ -201,6 +201,8 @@ def parse_term_of_imprisonment(data):
     result["sixing"] = dead
 
     print(result)
+    if len(result["youqi"]) > 1 or result["sixing"] or result["wuqi"]:
+        print(s)
 
     return result
 
@@ -398,7 +400,7 @@ def draw_out(in_path, out_path):
             print("")"""
 
             cnt += 1
-            if cnt % 500000 == 0:
+            if cnt % 5000 == 0:
                 gg
                 print(in_path, cnt, cx)
                 # break
