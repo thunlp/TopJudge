@@ -153,6 +153,10 @@ def parse_date_with_year_and_month_begin_from(s, begin, delta):
 
 
 def parse_term_of_imprisonment(data):
+    if not ("判决如下" in data["document"]["content"]):
+        print(data["document"]["content"])
+    return
+
     result = {}
 
     s = data["document"]["content"].replace('b', '')
