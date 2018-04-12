@@ -4,6 +4,7 @@ import os
 import json
 import thulac
 import re
+import pdb
 
 cutter = thulac.thulac(model_path=r"/home/zhx/models", seg_only=True, filt=False)
 
@@ -157,7 +158,6 @@ def next_is(s, pos, os):
 
 
 def parse_term_of_imprisonment(data):
-    result = {}
     youqi_arr = []
     juyi_arr = []
     guanzhi_arr = []
@@ -206,7 +206,11 @@ def parse_term_of_imprisonment(data):
         if s.count("死刑") != 0:
             dead = True
     else:
-        if not ("终审判决" in s) and not ("若不服" in s):
+        reg1 = re.compile(r"终审判决")
+        reg2 = re.compile(r"[如若]不服")
+        if len(re.findall(reg1,s)) == 0 and len(re.findall(reg2,s)) == 0:
+            print(len(re.findall(reg1,s)))
+            print(len(re.findall(reg2,s)))
             pass
         else:
             pos = 0
@@ -214,7 +218,15 @@ def parse_term_of_imprisonment(data):
                 pos = result.start()
                 break
 
-            while pos < len(s) and not (next_is(s, pos, "终审判决")) and not (next_is(s, pos, "若不服")):
+            cnt = 0
+            while pos < len(s) and not (next_is(s, pos, "终审判决")) and not (next_is(s, pos, "若不服")) and not(next_is(s,pos,"如不服")):
+                if s[pos] == "(" or s[pos] == "（":
+                    cnt += 1
+                if s[pos] == ")" or s[pos] == "）":
+                    cnt -= 1
+                if cnt != 0:
+                    pos += 1
+                    continue
                 if next_is(s, pos, "有期徒刑"):
                     data = parse_date_with_year_and_month_begin_from(s, pos, len(u"有期徒刑"))
                     if not (data is None):
@@ -233,6 +245,7 @@ def parse_term_of_imprisonment(data):
                     dead = True
                 pos += 1
 
+    result = {}
     result["youqi"] = youqi_arr
     result["juyi"] = juyi_arr
     result["guanzhi"] = guanzhi_arr
