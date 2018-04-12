@@ -154,51 +154,53 @@ def parse_date_with_year_and_month_begin_from(s, begin, delta):
 
 def parse_term_of_imprisonment(data):
     result = {}
-    if "PJJG" in data["document"]:
-        s = data["document"]["PJJG"].replace('b', '')
 
-        # 有期徒刑
-        youqi_arr = []
-        pattern = re.compile(u"有期徒刑")
-        for x in pattern.finditer(s):
-            pos = x.start()
-            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"有期徒刑"))
-            if not (data is None):
-                youqi_arr.append(data)
+    s = data["document"]["content"].replace('b', '')
 
-        # 拘役
-        juyi_arr = []
-        pattern = re.compile(u"拘役")
-        for x in pattern.finditer(s):
-            pos = x.start()
-            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"拘役"))
-            if not (data is None):
-                juyi_arr.append(data)
+    # 有期徒刑
+    youqi_arr = []
+    pattern = re.compile(u"有期徒刑")
+    for x in pattern.finditer(s):
+        pos = x.start()
+        data = parse_date_with_year_and_month_begin_from(s, pos, len(u"有期徒刑"))
+        if not (data is None):
+            youqi_arr.append(data)
 
-        # 管制
-        guanzhi_arr = []
-        pattern = re.compile(u"管制")
-        for x in pattern.finditer(s):
-            pos = x.start()
-            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"管制"))
-            if not (data is None):
-                guanzhi_arr.append(data)
+    # 拘役
+    juyi_arr = []
+    pattern = re.compile(u"拘役")
+    for x in pattern.finditer(s):
+        pos = x.start()
+        data = parse_date_with_year_and_month_begin_from(s, pos, len(u"拘役"))
+        if not (data is None):
+            juyi_arr.append(data)
 
-        # 无期
-        forever = False
-        if s.count("无期徒刑") != 0:
-            forever = True
+    # 管制
+    guanzhi_arr = []
+    pattern = re.compile(u"管制")
+    for x in pattern.finditer(s):
+        pos = x.start()
+        data = parse_date_with_year_and_month_begin_from(s, pos, len(u"管制"))
+        if not (data is None):
+            guanzhi_arr.append(data)
 
-        # 死刑
-        dead = False
-        if s.count("死刑") != 0:
-            dead = True
+    # 无期
+    forever = False
+    if s.count("无期徒刑") != 0:
+        forever = True
 
-        result["youqi"] = youqi_arr
-        result["juyi"] = juyi_arr
-        result["guanzhi"] = guanzhi_arr
-        result["wuqi"] = forever
-        result["sixing"] = dead
+    # 死刑
+    dead = False
+    if s.count("死刑") != 0:
+        dead = True
+
+    result["youqi"] = youqi_arr
+    result["juyi"] = juyi_arr
+    result["guanzhi"] = guanzhi_arr
+    result["wuqi"] = forever
+    result["sixing"] = dead
+
+    print(result)
 
     return result
 
@@ -294,9 +296,9 @@ def parse(data):
     result = {}
     # print(data["document"]["PJJG"])
 
-    result["name_of_accusation"] = parse_name_of_accusation(data)
-    result["criminals"] = parse_criminals(data)
-    # result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
+    # result["name_of_accusation"] = parse_name_of_accusation(data)
+    # result["criminals"] = parse_criminals(data)
+    result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
 
     return result
 
