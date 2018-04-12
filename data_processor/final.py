@@ -19,8 +19,8 @@ max_length = 1024
 accusation_file = "/home/zhx/law_pre/data_processor/accusation_list2.txt"
 f = open(accusation_file, "r")
 accusation_list = json.loads(f.readline())
-for a in range(0, len(accusation_list)):
-    accusation_list[a] = accusation_list[a].replace('[', '').replace(']', '')
+#for a in range(0, len(accusation_list)):
+#    accusation_list[a] = accusation_list[a].replace('[', '').replace(']', '')
 f.close()
 
 accusation_regex = ""
@@ -30,7 +30,7 @@ for x in accusation_list:
     accusation_regex += x
 
 accusation_regex = r"(被告人){0,1}(\S{2,3}?(、([^、]{2,3}?))*)(犯){0,1}(非法){0,1}(" + accusation_regex + ")"
-print(accusation_regex)
+#print(accusation_regex)
 accusation_regex = re.compile(accusation_regex)
 
 num_process = 1
@@ -80,16 +80,24 @@ def check(x, s):
 
 
 def parse_name_of_accusation(data):
-    if "PJJG" in data["document"]:
-        s = data["document"]["PJJG"]
+    if "content" in data["document"]:
+        s = data["document"]["content"]
         result = []
         for x in accusation_list:
             if check(x, s):
                 result.append(x.replace("[", "").replace("]", ""))
+        arr = []
+        for x in result:
+            able = True
+            for y in result:
+                if x in y and x!=y:
+                    able = False
+            if able:
+                arr.append(x)
         # print(result)
         # if len(result) == 0:
         #    print(s)
-        return result
+        return arr
     else:
         return []
 
@@ -128,7 +136,9 @@ def parse(data):
     # print(data["document"]["PJJG"])
 
     result["name_of_accusation"] = parse_name_of_accusation(data)
-    print(result["name_of_accusation"])
+    #print(result["name_of_accusation"])
+    if len(result["name_of_accusation"]) == 0:
+        print(data["document"]["Title"])
     # result["criminals"] = parse_criminals(data)
 
     return result
@@ -199,21 +209,6 @@ def generate_fact(data):
             return fact
     return None
 
-    print(data["document"]["Title"])
-    if "AJJBQK" in data["document"]:
-        print(data["document"]["AJJBQK"])
-    else:
-        print("no AJJBQK")
-    if "SSJL" in data["document"]:
-        print(data["document"]["SSJL"])
-    else:
-        print("no SSJL")
-    if "content" in data["document"]:
-        print(data["document"]["content"])
-    else:
-        print("no content")
-    print("")
-
 
 def draw_out(in_path, out_path):
     print(in_path)
@@ -244,7 +239,7 @@ def draw_out(in_path, out_path):
             print("")"""
 
             cnt += 1
-            if cnt % 5000 == 0:
+            if cnt % 500000 == 0:
                 gg
                 print(in_path, cnt, cx)
                 # break
