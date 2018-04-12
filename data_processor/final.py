@@ -206,7 +206,7 @@ def parse_term_of_imprisonment(data):
         if s.count("死刑") != 0:
             dead = True
     else:
-        reg_list = [r"终审判决", r"[如若]不服", r"法律条文"]
+        reg_list = [r"终审判决", r"[如若]不服", r"相关法律"]
         str_list = [r"终审判决", r"如不服", r"法律条文", r"若不服"]
         for a in range(0, len(reg_list)):
             reg_list[a] = re.compile(reg_list[a])
@@ -225,9 +225,13 @@ def parse_term_of_imprisonment(data):
 
             cnt = 0
             while pos < len(s):
+                find = False
                 for x in str_list:
                     if next_is(s, pos, x):
+                        find = True
                         break
+                if find:
+                    break
                 if s[pos] == "(" or s[pos] == "（":
                     cnt += 1
                 if s[pos] == ")" or s[pos] == "）":
