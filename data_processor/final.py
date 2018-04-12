@@ -361,6 +361,29 @@ def parse_criminals(data):
 key_word_list = [u"第", u"条", u"款", u"、", u"，", u"（", u"）", u"之"]
 
 
+def sort_reason(l):
+    result_list = []
+
+    law_list = {}
+
+    for x in l:
+        z = x
+        if not (z["law_name"] in law_list):
+            law_list[z["law_name"]] = set()
+        law_list[z["law_name"]].add((z["tiao_num"], z["kuan_num"], z["zhiyi"]))
+
+    for x in law_list:
+        gg = []
+        for (y, z, r) in law_list[x]:
+            gg.append((y, z, r))
+        gg = list(set(gg))
+        gg.sort()
+        for (y, z, r) in gg:
+            result_list.append({"law_name": x, "tiao_num": y, "kuan_num": z, "zhiyi": r})
+
+    return result_list
+
+
 def get_number_from_string(s):
     for x in s:
         if not (x in num_list):
@@ -409,12 +432,11 @@ def get_number_from_string(s):
 def get_one_reason(content, rex):
     pos = rex.start()
     law_name = rex.group(1)
-    nows = rex.group().replace(u"（", u"").replace(u"）", u"")
-    # print(nows)
+    nows = content
 
     result = []
 
-    p = 0
+    p = pos
     while nows[p] != u"》":
         p += 1
     while nows[p] != u"第":
@@ -424,7 +446,7 @@ def get_one_reason(content, rex):
     kuan_num = 0
     add_kuan = True
     zhiyi = 0
-    while p < len(nows):
+    while p < len(nows) and nows[p] != "《":
         nowp = p + 1
         while not (nows[nowp] in key_word_list):
             nowp += 1
@@ -448,36 +470,13 @@ def get_one_reason(content, rex):
 
         p = nowp
 
-        while p < len(nows) and nows[p] != u'第':
+        while p < len(nows) and nows[p] != u'第' and nows[p] != "《":
             p += 1
 
     if not (add_kuan):
         result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": 0, "zhiyi": zhiyi})
 
     return result
-
-
-def sort_reason(l):
-    result_list = []
-
-    law_list = {}
-
-    for x in l:
-        z = x
-        if not (z["law_name"] in law_list):
-            law_list[z["law_name"]] = set()
-        law_list[z["law_name"]].add((z["tiao_num"], z["kuan_num"], z["zhiyi"]))
-
-    for x in law_list:
-        gg = []
-        for (y, z, r) in law_list[x]:
-            gg.append((y, z, r))
-        gg = list(set(gg))
-        gg.sort()
-        for (y, z, r) in gg:
-            result_list.append({"law_name": x, "tiao_num": y, "kuan_num": z, "zhiyi": r})
-
-    return result_list
 
 
 def parse_name_of_law(data):
@@ -488,20 +487,21 @@ def parse_name_of_law(data):
     for x in key_word_list:
         key_word_str = key_word_str + x
     rex = re.compile(r"《(中华人民共和国刑法)》第[" + key_word_str + r"]*[条款]")
-    result = rex.finditer(data["document"]["content"])
+    s = format_string(data["document"]["content"])
+    result = rex.finditer(s)
 
     result_list = []
 
     law_list = {}
 
     for x in result:
-        y = get_one_reason(data["document"]["content"], x)
+        y = get_one_reason(s, x)
         for z in y:
             if not (z["law_name"] in law_list):
                 law_list[z["law_name"]] = set()
             law_list[z["law_name"]].add((z["tiao_num"], z["kuan_num"], z["zhiyi"]))
 
-    for x in law_list:
+    for x in law_list.keys():
         for (y, z, r) in law_list[x]:
             result_list.append({"law_name": x, "tiao_num": y, "kuan_num": z, "zhiyi": r})
 
