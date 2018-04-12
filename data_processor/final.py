@@ -152,51 +152,86 @@ def parse_date_with_year_and_month_begin_from(s, begin, delta):
     return num
 
 
+def next_is(s, pos, os):
+    return s[pos:min(pos + len(os), len(s))] == os
+
+
 def parse_term_of_imprisonment(data):
-    if not ("判决如下" in data["document"]["content"]):
-        print(data["document"]["content"])
-    return
-
     result = {}
-
-    s = data["document"]["content"].replace('b', '')
-
-    # 有期徒刑
     youqi_arr = []
-    pattern = re.compile(u"有期徒刑")
-    for x in pattern.finditer(s):
-        pos = x.start()
-        data = parse_date_with_year_and_month_begin_from(s, pos, len(u"有期徒刑"))
-        if not (data is None):
-            youqi_arr.append(data)
-
-    # 拘役
     juyi_arr = []
-    pattern = re.compile(u"拘役")
-    for x in pattern.finditer(s):
-        pos = x.start()
-        data = parse_date_with_year_and_month_begin_from(s, pos, len(u"拘役"))
-        if not (data is None):
-            juyi_arr.append(data)
-
-    # 管制
     guanzhi_arr = []
-    pattern = re.compile(u"管制")
-    for x in pattern.finditer(s):
-        pos = x.start()
-        data = parse_date_with_year_and_month_begin_from(s, pos, len(u"管制"))
-        if not (data is None):
-            guanzhi_arr.append(data)
-
-    # 无期
     forever = False
-    if s.count("无期徒刑") != 0:
-        forever = True
-
-    # 死刑
     dead = False
-    if s.count("死刑") != 0:
-        dead = True
+
+    s = format_string(data["document"]["content"])
+
+    regex = re.compile(r"判决如下[：:]")
+
+    if len(re.findall(regex, s)) == 0:
+        # 有期徒刑
+        youqi_arr = []
+        pattern = re.compile(u"有期徒刑")
+        for x in pattern.finditer(s):
+            pos = x.start()
+            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"有期徒刑"))
+            if not (data is None):
+                youqi_arr.append(data)
+
+        # 拘役
+        juyi_arr = []
+        pattern = re.compile(u"拘役")
+        for x in pattern.finditer(s):
+            pos = x.start()
+            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"拘役"))
+            if not (data is None):
+                juyi_arr.append(data)
+
+        # 管制
+        guanzhi_arr = []
+        pattern = re.compile(u"管制")
+        for x in pattern.finditer(s):
+            pos = x.start()
+            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"管制"))
+            if not (data is None):
+                guanzhi_arr.append(data)
+
+        # 无期
+        forever = False
+        if s.count("无期徒刑") != 0:
+            forever = True
+
+        # 死刑
+        dead = False
+        if s.count("死刑") != 0:
+            dead = True
+    else:
+        if not ("终审判决" in s) and not ("若不服" in s):
+            pass
+        else:
+            pos = 0
+            for result in re.finditer(regex, s):
+                pos = result.start()
+                break
+
+            while pos < len(s) and not (next_is(s, pos, "终审判决")) and not (next_is(s, pos, "若不服")):
+                if next_is(s, pos, "有期徒刑"):
+                    data = parse_date_with_year_and_month_begin_from(s, pos, len(u"有期徒刑"))
+                    if not (data is None):
+                        youqi_arr.append(data)
+                elif next_is(s, pos, "拘役"):
+                    data = parse_date_with_year_and_month_begin_from(s, pos, len(u"拘役"))
+                    if not (data is None):
+                        juyi_arr.append(data)
+                elif next_is(s, pos, "管制"):
+                    data = parse_date_with_year_and_month_begin_from(s, pos, len(u"管制"))
+                    if not (data is None):
+                        guanzhi_arr.append(data)
+                elif next_is(s, pos, "无期徒刑"):
+                    forever = True
+                elif next_is(s, pos, "死刑"):
+                    dead = True
+                pos += 1
 
     result["youqi"] = youqi_arr
     result["juyi"] = juyi_arr
