@@ -515,14 +515,13 @@ def parse(data):
     # result["name_of_accusation"] = parse_name_of_accusation(data)
     # result["criminals"] = parse_criminals(data)
     # result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
+    print(data["document"]["content"])
     result["name_of_law"] = parse_name_of_law(data)
     print(result["name_of_law"])
-    print(data["document"]["content"])
     # result["punish_of_money"] = parse_money(data)
 
     return result
 
-    return result
 
 
 def generate_fact(data):
