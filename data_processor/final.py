@@ -196,6 +196,15 @@ def parse_term_of_imprisonment(data):
             if not (data is None):
                 guanzhi_arr.append(data)
 
+        # 缓刑
+        huanxing_arr = []
+        pattern = re.compile(u"缓刑")
+        for x in pattern.finditer(s):
+            pos = x.start()
+            data = parse_date_with_year_and_month_begin_from(s, pos, len(u"缓刑"))
+            if not (data is None):
+                guanzhi_arr.append(data)
+
         # 无期
         forever = False
         if s.count("无期徒刑") != 0:
@@ -251,6 +260,10 @@ def parse_term_of_imprisonment(data):
                     data = parse_date_with_year_and_month_begin_from(s, pos, len(u"管制"))
                     if not (data is None):
                         guanzhi_arr.append(data)
+                elif next_is(s, pos, "缓刑"):
+                    data = parse_date_with_year_and_month_begin_from(s, pos, len(u"缓刑"))
+                    if not (data is None):
+                        guanzhi_arr.append(data)
                 elif next_is(s, pos, "无期徒刑"):
                     forever = True
                 elif next_is(s, pos, "死刑"):
@@ -263,6 +276,7 @@ def parse_term_of_imprisonment(data):
     result["guanzhi"] = guanzhi_arr
     result["wuqi"] = forever
     result["sixing"] = dead
+    result["huanxing"] = huanxing_arr
 
     return result
 
@@ -649,6 +663,14 @@ def reformat_fact_imprisonment(fact, term):
     for x in pattern.finditer(fact):
         pos = x.start()
         data = get_numstr(fact, pos, len(u"管制"))
+        new_fact = new_fact.replace(data, "××")
+
+    # 缓刑
+    guanzhi_arr = []
+    pattern = re.compile(u"缓刑")
+    for x in pattern.finditer(fact):
+        pos = x.start()
+        data = get_numstr(fact, pos, len(u"缓刑"))
         new_fact = new_fact.replace(data, "××")
 
     new_fact = new_fact.replace("无期徒刑", "××").replace("死刑", "××")
