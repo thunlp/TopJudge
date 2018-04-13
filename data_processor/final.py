@@ -621,7 +621,7 @@ def generate_fact(data):
                 break
         if not (fact is None):
             return fact
-        
+
     return data["document"]["content"]
 
 
@@ -732,19 +732,17 @@ def draw_out(in_path, out_path):
             fact = generate_fact(data)
             if fact is None:
                 continue
-            print(fact)
             meta = parse(data)
             fact = reformat_fact(fact, meta)
 
             for a in range(0, len(meta["name_of_accusation"])):
                 meta["name_of_accusation"][a] = meta["name_of_accusation"][a].replace("[", "").replace("]", "")
-            print(fact)
-            print("")
-            # result = {"content": content, "meta": data["meta"]}
+            fact = cut(fact)
+
+            print(json.dumps({"content": fact, "meta": meta}, ensure_ascii=False), file=ouf)
 
             cnt += 1
             if cnt % 5000 == 0:
-                gg
                 print(in_path, cnt, cx)
                 # break
 
