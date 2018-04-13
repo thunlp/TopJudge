@@ -444,6 +444,44 @@ def get_one_reason(content, rex):
 
     tiao_num = 0
     kuan_num = 0
+    last_added = True
+    zhiyi = 0
+
+    while p < len(nows) and nows[p] != "《":
+        nowp = p + 1
+        while nows[nowp] in num_list.keys():
+            nowp += 1
+        if nows[nowp] == "条":
+            if not (last_added):
+                result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": 0, "zhiyi": zhiyi})
+            num = get_number_from_string(nows[p + 1:nowp])
+            tiao_num = num
+            if len(nows) > nowp + 2 and nows[nowp + 1] == u"之" and nows[nowp + 2] in num_list:
+                zhiyi = num_list[nows[nowp + 2]]
+                nowp += 2
+            else:
+                zhiyi = 0
+            last_added = False
+        elif nows[nowp] == "款":
+            last_added = True
+            num = get_number_from_string(nows[p + 1:nowp])
+            kuan_num = num
+            result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": kuan_num, "zhiyi": zhiyi})
+        else:
+            pass
+
+        p = nowp
+
+        while p < len(nows) and nows[p] != u'第' and nows[p] != "《":
+            p += 1
+
+    if not (last_added):
+        result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": 0, "zhiyi": zhiyi})
+
+    return result
+
+    tiao_num = 0
+    kuan_num = 0
     add_kuan = True
     zhiyi = 0
     while p < len(nows) and nows[p] != "《":
@@ -521,7 +559,6 @@ def parse(data):
     # result["punish_of_money"] = parse_money(data)
 
     return result
-
 
 
 def generate_fact(data):
@@ -632,6 +669,7 @@ def work(from_id, to_id):
 
 
 if __name__ == "__main__":
+
     import multiprocessing
 
     process_pool = []
