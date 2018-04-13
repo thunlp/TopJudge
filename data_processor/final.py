@@ -6,7 +6,7 @@ import thulac
 import re
 import pdb
 
-# cutter = thulac.thulac(model_path=r"/home/zhx/models", seg_only=True, filt=False)
+cutter = thulac.thulac(model_path=r"/home/zhx/models", seg_only=True, filt=False)
 
 in_path = "/disk/mysql/law_data/classified_data/刑事判决书"
 out_path = "/disk/mysql/law_data/final_data2/"
@@ -17,9 +17,9 @@ title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseT
 min_length = 32
 max_length = 1024
 
-# accusation_file = "/home/zhx/law_pre/data_processor/accusation_list2.txt"
-# f = open(accusation_file, "r")
-accusation_list = []  # json.loads(f.readline())
+accusation_file = "/home/zhx/law_pre/data_processor/accusation_list2.txt"
+f = open(accusation_file, "r")
+accusation_list = json.loads(f.readline())
 # for a in range(0, len(accusation_list)):
 #    accusation_list[a] = accusation_list[a].replace('[', '').replace(']', '')
 # f.close()
@@ -69,7 +69,7 @@ accusation_regex = ""
 for x in accusation_list:
     if len(accusation_regex) != 0:
         accusation_regex += "|"
-    accusation_regex += x
+    accusation_regex += x.replace("[", "").replace("]", "")
 
 accusation_regex = r"(被告人){0,1}(\S{2,3}?(、([^、]{2,3}?))*)(犯){0,1}(非法){0,1}(" + accusation_regex + ")"
 # print(accusation_regex)
@@ -315,7 +315,7 @@ def parse_name_of_accusation(data):
         result = []
         for x in accusation_list:
             if check(x, s):
-                result.append(x.replace("[", "").replace("]", ""))
+                result.append(x)
         arr = []
         for x in result:
             able = True
@@ -494,16 +494,13 @@ def get_one_reason(content, rex):
         while p < len(nows) and nows[p] != u'第' and nows[p] != "《":
             p += 1
 
-    if not (last_added):
+    if not last_added:
         result.append({"law_name": law_name, "tiao_num": tiao_num, "kuan_num": 0, "zhiyi": zhiyi})
 
     return result
 
 
 def parse_name_of_law(data):
-    if not ("content" in data["document"]):
-        return []
-
     key_word_str = num_str
     for x in key_word_list:
         key_word_str = key_word_str + x
@@ -529,17 +526,28 @@ def parse_name_of_law(data):
     return sort_reason(result_list)
 
 
+def parse_money(data):
+    result_list = []
+
+    rex = re.compile(u"人民币([" + num_str + "]*)元")
+    result = rex.finditer(data["document"]["content"])
+
+    for x in result:
+        datax = get_number_from_string(x.group(1))
+        result_list.append(datax)
+
+    return result_list
+
+
 def parse(data):
     result = {}
     # print(data["document"]["PJJG"])
 
-    # result["name_of_accusation"] = parse_name_of_accusation(data)
-    # result["criminals"] = parse_criminals(data)
-    # result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
-    print(data["document"]["content"])
+    result["name_of_accusation"] = parse_name_of_accusation(data)
+    result["criminals"] = parse_criminals(data)
+    result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
     result["name_of_law"] = parse_name_of_law(data)
-    print(result["name_of_law"])
-    # result["punish_of_money"] = parse_money(data)
+    result["punish_of_money"] = parse_money(data)
 
     return result
 
@@ -605,6 +613,92 @@ def generate_fact(data):
     return None
 
 
+def reformat_fact_accusation(fact, charge_list):
+    for charge in charge_list:
+        if check(charge, fact):
+            fact = fact.replace(charge.replace("[", "").replace("]", ""), "××")
+
+    return fact
+
+
+def get_numstr(s, pos, l):
+    now_str = num_str + "年又十百千万个月"
+    p = pos
+    pos += l
+    while now_str.count(s[pos]) != 0:
+        pos += 1
+    return s[p:pos]
+
+
+def reformat_fact_imprisonment(fact, term):
+    new_fact = fact
+    # 有期徒刑
+    pattern = re.compile(u"有期徒刑")
+    for x in pattern.finditer(fact):
+        pos = x.start()
+        data = get_numstr(fact, pos, len(u"有期徒刑"))
+        new_fact = new_fact.replace(data, "××")
+
+    # 拘役
+    pattern = re.compile(u"拘役")
+    for x in pattern.finditer(fact):
+        pos = x.start()
+        data = get_numstr(fact, pos, len(u"拘役"))
+        new_fact = new_fact.replace(data, "××")
+
+    # 管制
+    guanzhi_arr = []
+    pattern = re.compile(u"管制")
+    for x in pattern.finditer(fact):
+        pos = x.start()
+        data = get_numstr(fact, pos, len(u"管制"))
+        new_fact = new_fact.replace(data, "××")
+
+    new_fact = new_fact.replace("无期徒刑", "××").replace("死刑", "××")
+
+    return new_fact
+
+
+def reformat_fact_law(fact, law):
+    reg_list = [
+        r"之一",
+        r"第[、" + num_str + "]*?[条款]"
+    ]
+
+    for a in range(0, len(reg_list)):
+        reg_list[a] = re.compile(reg_list[a])
+
+    new_fact = fact
+
+    for reg in reg_list:
+        result = reg_list[a].finditer(fact)
+        for x in result:
+            new_fact = new_fact.replace(x.group(0), "××")
+
+    return new_fact
+
+
+def reformat_fact_money(fact, money):
+    rex = re.compile(u"人民币([" + num_str + "]*)元")
+    result = rex.finditer(fact)
+
+    new_fact = fact
+
+    for x in result:
+        new_fact = new_fact.replace(x.group(1), "××")
+
+    return new_fact
+
+
+def reformat_fact(fact, meta):
+    fact = reformat_fact_accusation(fact, meta["name_of_accusation"])
+    fact = reformat_fact_imprisonment(fact, meta["term_of_imprisonment"])
+    fact = reformat_fact_law(fact, meta["name_of_law"])
+    fact = reformat_fact_money(fact, meta["punish_of_money"])
+
+    return fact
+
+
 def draw_out(in_path, out_path):
     print(in_path)
     inf = open(in_path, "r")
@@ -618,20 +712,14 @@ def draw_out(in_path, out_path):
             fact = generate_fact(data)
             if fact is None:
                 continue
-            # print(fact)
-            data["meta"] = parse(data)
-            """if not ("youqi" in data["meta"]["term_of_imprisonment"]) or len(
-                    data["meta"]["term_of_imprisonment"]["youqi"]) <= 1:
-                continue
-            print(data["document"]["Title"])
-            print("content", data["document"]["content"])
-            print("fact", fact)
-            if "PJJG" in data["document"]:
-                print("result", data["document"]["PJJG"])
-            else:
-                print("result no result")
-            print("meta", data["meta"])
-            print("")"""
+            print(fact)
+            meta = parse(data)
+            fact = reformat_fact(fact, meta)
+
+            for a in range(0, len(meta["name_of_accusation"])):
+                meta["name_of_accusation"][a] = meta["name_of_accusation"][a].replace("[", "").replace("]", "")
+            print(fact)
+            # result = {"content": content, "meta": data["meta"]}
 
             cnt += 1
             if cnt % 5000 == 0:
@@ -652,13 +740,6 @@ def work(from_id, to_id):
 
 
 if __name__ == "__main__":
-    s = """
-    贵州省荔波县人民法院b刑 事 判 决 书b（2016）黔2722刑初138号b公诉机关贵州省荔波县人民检察院。b被告人彭洪前，男，1971年12月18日生，汉族，初中文化，农民，贵州省荔波县人，住荔波县。2016年      9月14日因涉嫌危险驾驶罪经荔波县公安局决定被取保候审。b贵州省荔波县人民检察院以荔检公诉刑诉[2016]126号起诉书指控被告人彭洪前犯危险驾驶罪，于2016年11月17日向本院提起公诉。本院受理后，依      法适用简易程序，实行独任审判，2016年11月23日公开开庭对本案进行了审理。荔波县人民检察院指派检察员高夕绚出庭支持公诉，被告人彭洪前到庭参加诉讼。现已审理终结。b贵州省荔波县人民检察院指控      ，2016年8月4日20时40分许，被告人彭洪前饮酒后驾驶贵JJBXXX号普通二轮摩托车，由荔波县恩铭广场往财政局方向行驶，当行驶至荔波县樟江西路小吃街路口+100米处时，与对向行驶由覃某驾驶的贵JWCXXX号普通二轮摩托车发生刮擦，后被荔波县公安局交警大队民警查获，并带至荔波县中医院抽取血样，经黔南州公安司法鉴定中心鉴定，被告人彭洪前血液酒精含量为154mg／100m1。b为证实上述事实，公诉机关      提供的证据有书证、证人证言、被告人的供述与辩解、鉴定意见、勘验笔录等。公诉机关认为，被告人彭洪前的行为已触犯了《中华人民共和国刑法》第一百三十三条之一第一款的规定，构成危险驾驶罪，提请本院依法判处，并建议对其判处拘役三个月至六个月，并处罚金。b被告人彭洪前对公诉机关指控的犯罪事实及罪名无异议，自愿认罪。b经审理查明，2016年8月4日20时40分许，被告人彭洪前饮酒后驾驶贵J      JBXXX号普通二轮摩托车，由荔波县恩铭广场往财政局方向行驶，当行驶至荔波县樟江西路小吃街路口+100米处时，与对向行驶由覃某驾驶的贵JWCXXX号普通二轮摩托车发生刮擦，后被荔波县公安局交警大队民      警查获。经鉴定，被告人彭洪前血样酒精含量为154mg／100ml。b上述事实，有受案登记表、血样提取登记表、被告人的供述、证人证言、毒物检验鉴定报告、现场照片、视听资料及身份证等证据予以证实。上      述证据经庭审举证、质证，证据来源合法，并能相互印证，本院予以确认。b本院认为，被告人彭洪前无视国家法律，饮酒后在道路上驾驶机动车辆，其驾车时血液中酒精含量为154mg／100ml，已超过了醉酒驾      车临界值80mg／100ml，系醉酒驾驶机动车，危害公共安全，其行为已触犯了《中华人民共和国刑法》第一百三十三条之一第一款：”在道路上驾驶机动车，有下列情形之一的，处拘役，并处罚金：(一)追逐竟      驶，情节恶劣的；(二)醉酒驾驶机动车的；(三)从事校车业务或者旅客运输，严重超过额定乘员载客，或者严重超过规定时速行驶的；(四)违反危险化学品安全管理规定运输危险化学品，危及公共安全的。”      规定，构成危险驾驶罪，公诉机关指控罪名成立，本院予以确认。案发后，被告人彭洪前能如实供述自己的罪行，认罪态度较好，依法可从轻处罚。依照《中华人民共和国刑法》第一百三十三条之一第一款第（二）项、第五十二条、第五十三条、第六十七条第三款、第七十二条第一款、第七十三条第一、三款之规定，判决如下：b被告人彭洪前犯危险驾驶罪，判处拘役三个月，缓刑三个月，并处罚金人民币二千元。b（缓刑考验期限，从判决确定之日起计算。罚金限于本判决生效后十五日内缴纳。）b如不服本判决，可在接到判决书的第二日起十日内通过本院或者直接向贵州省黔南布依族苗族自治州中级人民法院提出上诉。书面上诉的，应交上诉状正本一份，副本两份。b审判员　　莫晓良b二〇一六年十一月二十三日b书记员　　吴爱约"""
-    result = parse_name_of_law({"document": {"content": s}})
-    for x in result:
-        print(x)
-    gg
-
     import multiprocessing
 
     process_pool = []
