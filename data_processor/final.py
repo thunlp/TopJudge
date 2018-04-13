@@ -264,10 +264,6 @@ def parse_term_of_imprisonment(data):
     result["wuqi"] = forever
     result["sixing"] = dead
 
-    print(result)
-    if len(result["youqi"]) > 1 or result["sixing"] or result["wuqi"]:
-        print(s)
-
     return result
 
 
@@ -557,6 +553,7 @@ def generate_fact(data):
         s = format_string(data["document"]["AJJBQK"])
         regex_list = [
             (r"(经审理查明|公诉机关指控|检察院指控|起诉书指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 2),
+            (r"(经审理查明|公诉机关指控|检察院指控|起诉书指控)([，：,:]?)([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 2),
             (r"(经审理查明|公诉机关指控|检察院指控|起诉书指控)([，：,:]?)([\s\S]*)$", 2),
             (r"^([\s\S]*)([，。,]?)(足以认定|就上述指控|上述事实)", 0)
         ]
@@ -719,6 +716,7 @@ def draw_out(in_path, out_path):
             for a in range(0, len(meta["name_of_accusation"])):
                 meta["name_of_accusation"][a] = meta["name_of_accusation"][a].replace("[", "").replace("]", "")
             print(fact)
+            print("")
             # result = {"content": content, "meta": data["meta"]}
 
             cnt += 1
