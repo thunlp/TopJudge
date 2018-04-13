@@ -621,7 +621,8 @@ def generate_fact(data):
                 break
         if not (fact is None):
             return fact
-    return None
+        
+    return data["document"]["content"]
 
 
 def reformat_fact_accusation(fact, charge_list):
