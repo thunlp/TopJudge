@@ -321,26 +321,27 @@ def check(x, s):
 
 
 def parse_name_of_accusation(data):
-    if "content" in data["document"]:
-        s = data["document"]["content"]
-        result = []
-        for x in accusation_list:
-            if check(x, s):
-                result.append(x)
-        arr = []
-        for x in result:
-            able = True
-            for y in result:
-                if x in y and x != y:
-                    able = False
-            if able:
-                arr.append(x)
-        # print(result)
-        # if len(result) == 0:
-        #    print(s)
-        return arr
+    if "PJJG" in data["documnet"]:
+        s = data["document"]["PJJG"]
     else:
-        return []
+        s = data["document"]["content"]
+    s = format_string(s)
+    result = []
+    for x in accusation_list:
+        if check(x, s):
+            result.append(x)
+    arr = []
+    for x in result:
+        able = True
+        for y in result:
+            if x in y and x != y:
+                able = False
+        if able:
+            arr.append(x)
+    # print(result)
+    # if len(result) == 0:
+    #    print(s)
+    return arr
 
 
 def parse_criminals(data):
@@ -540,7 +541,7 @@ def parse_name_of_law(data):
 def parse_money(data):
     result_list = []
 
-    rex = re.compile(u"人民币([" + num_str + "]*)元")
+    rex = re.compile(u"罚金人民币([" + num_str + "]*)元")
     result = rex.finditer(data["document"]["content"])
 
     for x in result:
@@ -638,7 +639,7 @@ def get_numstr(s, pos, l):
     now_str = num_str + "年又十百千万个月"
     p = pos
     pos += l
-    while pos<len(s) and now_str.count(s[pos]) != 0:
+    while pos < len(s) and now_str.count(s[pos]) != 0:
         pos += 1
     return s[p:pos]
 
@@ -700,7 +701,7 @@ def reformat_fact_law(fact, law):
 
 
 def reformat_fact_money(fact, money):
-    rex = re.compile(u"人民币([" + num_str + "]*)元")
+    rex = re.compile(u"罚金人民币([" + num_str + "]*)元")
     result = rex.finditer(fact)
 
     new_fact = fact
@@ -735,15 +736,18 @@ def draw_out(in_path, out_path):
                 continue
             meta = parse(data)
             fact = reformat_fact(fact, meta)
+            print(data["document"]["content"])
+            print(fact)
+            print(meta)
 
             for a in range(0, len(meta["name_of_accusation"])):
                 meta["name_of_accusation"][a] = meta["name_of_accusation"][a].replace("[", "").replace("]", "")
-            fact = cut(fact)
+            #fact = cut(fact)
 
-            print(json.dumps({"content": fact, "meta": meta}, ensure_ascii=False), file=ouf)
+            #print(json.dumps({"content": fact, "meta": meta}, ensure_ascii=False), file=ouf)
 
             cnt += 1
-            if cnt % 5000 == 0:
+            if cnt % 750 == 0:
                 print(in_path, cnt, cx)
                 # break
 
