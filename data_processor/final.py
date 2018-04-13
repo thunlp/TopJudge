@@ -161,6 +161,7 @@ def parse_term_of_imprisonment(data):
     youqi_arr = []
     juyi_arr = []
     guanzhi_arr = []
+    huanxing_arr = []
     forever = False
     dead = False
 
@@ -203,7 +204,7 @@ def parse_term_of_imprisonment(data):
             pos = x.start()
             data = parse_date_with_year_and_month_begin_from(s, pos, len(u"缓刑"))
             if not (data is None):
-                guanzhi_arr.append(data)
+                huanxing_arr.append(data)
 
         # 无期
         forever = False
@@ -263,7 +264,7 @@ def parse_term_of_imprisonment(data):
                 elif next_is(s, pos, "缓刑"):
                     data = parse_date_with_year_and_month_begin_from(s, pos, len(u"缓刑"))
                     if not (data is None):
-                        guanzhi_arr.append(data)
+                        huanxing_arr.append(data)
                 elif next_is(s, pos, "无期徒刑"):
                     forever = True
                 elif next_is(s, pos, "死刑"):
@@ -554,7 +555,7 @@ def parse(data):
     # print(data["document"]["PJJG"])
 
     result["name_of_accusation"] = parse_name_of_accusation(data)
-    result["criminals"] = parse_criminals(data)
+    result["criminals"] = list(parse_criminals(data))
     result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
     result["name_of_law"] = parse_name_of_law(data)
     result["punish_of_money"] = parse_money(data)
@@ -637,7 +638,7 @@ def get_numstr(s, pos, l):
     now_str = num_str + "年又十百千万个月"
     p = pos
     pos += l
-    while now_str.count(s[pos]) != 0:
+    while pos<len(s) and now_str.count(s[pos]) != 0:
         pos += 1
     return s[p:pos]
 
