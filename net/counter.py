@@ -5,7 +5,7 @@ import json
 import re
 from data_formatter import check, format_senetence
 import configparser
-from utils import get_num_classes
+import pdb
 
 configFilePath = "../config/multi_lstm/crit/small.config"
 config = configparser.RawConfigParser()
@@ -30,7 +30,8 @@ time = {}
 law = {}
 
 
-def print_res(law, crit, time, ouf):
+def print_res(cnt,law, crit, time, ouf):
+    print("total %d" %cnt,file=ouf)
     print("law", file=ouf)
     for x in law.keys():
         print(x, law[x], file=ouf)
@@ -74,6 +75,7 @@ def count(data, config):
 
 
 def parse(data):
+    #pdb.set_trace()
     res = {}
     res["content"] = format_senetence(data["content"], config)
 
@@ -94,6 +96,7 @@ def parse(data):
 
 
 def draw_out(in_path, out_path, res_path):
+    global crit,law,time
     crit = {}
     law = {}
     time = {}
@@ -115,7 +118,7 @@ def draw_out(in_path, out_path, res_path):
             print(cnt)
 
     resf = open(res_path, "w")
-    print_res(law, crit, time, resf)
+    print_res(cnt, law, crit, time, resf)
 
 
 def work(from_id, to_id):
@@ -126,8 +129,8 @@ def work(from_id, to_id):
 
 
 if __name__ == "__main__":
-    work(0, 20)
+    work(0, num_file)
 
     ouf = open("result/count_data/total.txt", "w")
 
-    print_res(global_law, global_crit, global_time, ouf)
+    print_res(total_cnt,global_law, global_crit, global_time, ouf)
