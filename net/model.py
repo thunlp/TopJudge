@@ -1023,148 +1023,6 @@ class NN_fact_art_final(nn.Module):
         return outputs
 
 
-def test(net, test_dataset, usegpu, config, epoch):
-    net.eval()
-    running_acc = []
-    task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-    batch_size = config.getint("data", "batch_size")
-    if not (os.path.exists(config.get("train", "test_path"))):
-        os.makedirs(config.get("train", "test_path"))
-    test_result_path = os.path.join(config.get("train", "test_path"), str(epoch))
-    for a in range(0, len(task_name)):
-        running_acc.append([])
-        for b in range(0, get_num_classes(task_name[a])):
-            running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
-            running_acc[a][-1]["list"] = []
-            for c in range(0, get_num_classes(task_name[a])):
-                running_acc[a][-1]["list"].append(0)
-
-    test_data_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, drop_last=True, num_workers=1)
-    for idx, data in enumerate(test_data_loader):
-        inputs, doc_len, labels = data
-
-        net.init_hidden(config, usegpu)
-
-        if torch.cuda.is_available() and usegpu:
-            inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
-        else:
-            inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
-
-        outputs = net.forward(inputs, doc_len, config)
-        for a in range(0, len(task_name)):
-            running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
-    net.train()
-
-    print('Test result:')
-    for a in range(0, len(task_name)):
-        print("%s result:" % task_name[a])
-        try:
-            gen_result(running_acc[a], True, file_path=test_result_path + "-" + task_name[a])
-        except Exception as e:
-            pass
-    print("")
-
-
-def train(net, train_dataset, test_dataset, usegpu, config):
-    epoch = config.getint("train", "epoch")
-    batch_size = config.getint("data", "batch_size")
-    learning_rate = config.getfloat("train", "learning_rate")
-    momemtum = config.getfloat("train", "momentum")
-    shuffle = config.getboolean("data", "shuffle")
-
-    output_time = config.getint("debug", "output_time")
-    test_time = config.getint("debug", "test_time")
-    task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
-    optimizer_type = config.get("train", "optimizer")
-
-    model_path = config.get("train", "model_path")
-
-    criterion = nn.CrossEntropyLoss()
-    if optimizer_type == "adam":
-        optimizer = optim.Adam(net.parameters(), lr=learning_rate, weight_decay=1e-8)
-    elif optimizer_type == "sgd":
-        optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
-    else:
-        gg
-
-    total_loss = []
-
-    print("Training begin")
-    net.train()
-    first = True
-
-    for epoch_num in range(0, epoch):
-        running_loss = 0
-        running_acc = []
-        for a in range(0, len(task_name)):
-            running_acc.append([])
-            for b in range(0, get_num_classes(task_name[a])):
-                running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
-                running_acc[a][-1]["list"] = []
-                for c in range(0, get_num_classes(task_name[a])):
-                    running_acc[a][-1]["list"].append(0)
-
-        cnt = 0
-        train_data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle, drop_last=True,
-                                       num_workers=1)
-        for idx, data in enumerate(train_data_loader):
-            cnt += 1
-            inputs, doc_len, labels = data
-            # print("inputs",inputs)
-            # print("doc_len",doc_len)
-            # print("labels",labels)
-            if torch.cuda.is_available() and usegpu:
-                inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
-            else:
-                inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
-
-            net.init_hidden(config, usegpu)
-            optimizer.zero_grad()
-
-            outputs = net.forward(inputs, doc_len, config)
-            losses = []
-            for a in range(0, len(task_name)):
-                losses.append(criterion(outputs[a], labels.transpose(0, 1)[a]))
-                running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
-            loss = torch.sum(torch.stack(losses))
-
-            loss.backward()
-            optimizer.step()
-
-            running_loss += loss.data[0]
-
-            if cnt % output_time == 0:
-                print('[%d, %5d, %5d] loss: %.3f' %
-                      (epoch_num + 1, cnt, idx + 1, running_loss / output_time))
-                for a in range(0, len(task_name)):
-                    print("%s result:" % task_name[a])
-                    gen_result(running_acc[a])
-                print("")
-
-                total_loss.append(running_loss / output_time)
-                running_loss = 0.0
-                running_acc = []
-                for a in range(0, len(task_name)):
-                    running_acc.append([])
-                    for b in range(0, get_num_classes(task_name[a])):
-                        running_acc[a].append({"TP": 0, "FP": 0, "FN": 0})
-                        running_acc[a][-1]["list"] = []
-                        for c in range(0, get_num_classes(task_name[a])):
-                            running_acc[a][-1]["list"].append(0)
-
-        test(net, test_dataset, usegpu, config, epoch_num + 1)
-        if not (os.path.exists(model_path)):
-            os.makedirs(model_path)
-        torch.save(net, os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
-
-    print("Training done")
-
-    test(net, test_dataset, usegpu, config, 0)
-    torch.save(net, os.path.join(model_path, "model-0.pkl"))
-
-    return net
-
-
 def test_file(net, test_dataset, usegpu, config, epoch):
     net.eval()
     running_acc = []
@@ -1306,7 +1164,8 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                         for c in range(0, get_num_classes(task_name[a])):
                             running_acc[a][-1]["list"].append(0)
 
-        torch.save(net, os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
+        # torch.save(net, os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
+        torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
         if (epoch_num + 1) % 1 == 0:
             test_file(net, test_dataset, usegpu, config, epoch_num + 1)
         if not (os.path.exists(model_path)):
