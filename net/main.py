@@ -50,27 +50,26 @@ else:
     gg
 
 try:
-    net = torch.load(os.path.join(config.get("train","model_path"),"model-"+config.get("train","pre_train")+".pkl"))
+    net = torch.load(
+        os.path.join(config.get("train", "model_path"), "model-" + config.get("train", "pre_train") + ".pkl"))
 except Exception as e:
     pass
- 
 
 if torch.cuda.is_available() and usegpu:
     net = net.cuda()
 
 print("Net building done.")
 
-if True:  # try:
-    train_file(net, train_dataset, test_dataset, usegpu, config)
-    # except Exception as e:
-    #    print(e)
-    for x in train_dataset.read_process:
-        x.terminate()
-        print(x, x.is_alive())
-        x.join()
-        print(x, x.is_alive())
-    for x in test_dataset.read_process:
-        x.terminate()
-        print(x, x.is_alive())
-        x.join()
-        print(x, x.is_alive())
+train_file(net, train_dataset, test_dataset, usegpu, config)
+# except Exception as e:
+#    print(e)
+for x in train_dataset.read_process:
+    x.terminate()
+    print(x, x.is_alive())
+    x.join()
+    print(x, x.is_alive())
+for x in test_dataset.read_process:
+    x.terminate()
+    print(x, x.is_alive())
+    x.join()
+    print(x, x.is_alive())

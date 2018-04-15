@@ -95,17 +95,26 @@ class LSTM_SINGLE_ENCODER(nn.Module):
         self.data_size = config.getint("data", "vec_size")
         self.hidden_dim = config.getint("net", "hidden_size")
 
-        self.lstm = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True, num_layers=config.getint("net","num_layers"))
+        self.lstm = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True,
+                            num_layers=config.getint("net", "num_layers"))
 
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
             self.hidden = (
-                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim).cuda()),
-                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+                torch.autograd.Variable(
+                    torch.zeros(config.getint("net", "num_layers"), config.getint("data", "batch_size"),
+                                self.hidden_dim).cuda()),
+                torch.autograd.Variable(
+                    torch.zeros(config.getint("net", "num_layers"), config.getint("data", "batch_size"),
+                                self.hidden_dim).cuda()))
         else:
             self.hidden = (
-                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim)),
-                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim)))
+                torch.autograd.Variable(
+                    torch.zeros(config.getint("net", "num_layers"), config.getint("data", "batch_size"),
+                                self.hidden_dim)),
+                torch.autograd.Variable(
+                    torch.zeros(config.getint("net", "num_layers"), config.getint("data", "batch_size"),
+                                self.hidden_dim)))
 
     def forward(self, x, doc_len, config):
         x = x.view(config.getint("data", "batch_size"),
@@ -135,22 +144,30 @@ class LSTM_ENCODER(nn.Module):
         self.data_size = config.getint("data", "vec_size")
         self.hidden_dim = config.getint("net", "hidden_size")
 
-        self.lstm_sentence = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True,num_layers=config.getint("net","num_layers"))
-        self.lstm_document = nn.LSTM(self.hidden_dim, self.hidden_dim, batch_first=True,num_layers=config.getint("net","num_layers"))
+        self.lstm_sentence = nn.LSTM(self.data_size, self.hidden_dim, batch_first=True,
+                                     num_layers=config.getint("net", "num_layers"))
+        self.lstm_document = nn.LSTM(self.hidden_dim, self.hidden_dim, batch_first=True,
+                                     num_layers=config.getint("net", "num_layers"))
         self.feature_len = self.hidden_dim
 
     def init_hidden(self, config, usegpu):
         if torch.cuda.is_available() and usegpu:
             self.sentence_hidden = (
                 torch.autograd.Variable(
-                    torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                    torch.zeros(config.getint("net", "num_layers"),
+                                config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
                                 self.hidden_dim).cuda()),
                 torch.autograd.Variable(
-                    torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
+                    torch.zeros(config.getint("net", "num_layers"),
+                                config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
                                 self.hidden_dim).cuda()))
             self.document_hidden = (
-                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim).cuda()),
-                torch.autograd.Variable(torch.zeros(config.getint("net","num_layers"), config.getint("data", "batch_size"), self.hidden_dim).cuda()))
+                torch.autograd.Variable(
+                    torch.zeros(config.getint("net", "num_layers"), config.getint("data", "batch_size"),
+                                self.hidden_dim).cuda()),
+                torch.autograd.Variable(
+                    torch.zeros(config.getint("net", "num_layers"), config.getint("data", "batch_size"),
+                                self.hidden_dim).cuda()))
         else:
             self.sentence_hidden = (
                 torch.autograd.Variable(
@@ -479,7 +496,7 @@ class ARTICLE(nn.Module):
 
         self.encoder = LSTM_ENCODER(config, usegpu)
         self.decoder = LSTM_DECODER_ARTICLE(config, usegpu)
-        self.dropout = nn.Dropout(config.getfloat("train","dropout"))
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
 
     def init_hidden(self, config, usegpu):
         self.encoder.init_hidden(config, usegpu)
@@ -499,7 +516,7 @@ class CNN(nn.Module):
 
         self.encoder = CNN_ENCODER(config, usegpu)
         self.decoder = FC_DECODER(config, usegpu)
-        self.dropout = nn.Dropout(config.getfloat("train","dropout"))
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
 
     def init_hidden(self, config, usegpu):
         pass
@@ -518,7 +535,7 @@ class LSTM(nn.Module):
 
         self.encoder = LSTM_SINGLE_ENCODER(config, usegpu)
         self.decoder = FC_DECODER(config, usegpu)
-        self.dropout = nn.Dropout(config.getfloat("train","dropout"))
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
 
     def init_hidden(self, config, usegpu):
         self.encoder.init_hidden(config, usegpu)
@@ -537,7 +554,7 @@ class MULTI_LSTM(nn.Module):
 
         self.encoder = LSTM_ENCODER(config, usegpu)
         self.decoder = FC_DECODER(config, usegpu)
-        self.dropout = nn.Dropout(config.getfloat("train","dropout"))
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
 
     def init_hidden(self, config, usegpu):
         self.encoder.init_hidden(config, usegpu)
@@ -557,7 +574,7 @@ class CNN_FINAL(nn.Module):
         self.encoder = CNN_ENCODER(config, usegpu)
         self.decoder = LSTM_DECODER(config, usegpu)
         self.trans_linear = nn.Linear(self.encoder.feature_len, self.decoder.feature_len)
-        self.dropout = nn.Dropout(config.getfloat("train","dropout"))
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
 
     def init_hidden(self, config, usegpu):
         self.decoder.init_hidden(config, usegpu)
@@ -580,7 +597,7 @@ class MULTI_LSTM_FINAL(nn.Module):
         self.encoder = LSTM_ENCODER(config, usegpu)
         self.decoder = LSTM_DECODER(config, usegpu)
         self.trans_linear = nn.Linear(self.encoder.feature_len, self.decoder.feature_len)
-        self.dropout = nn.Dropout(config.getfloat("train","dropout"))
+        self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
 
     def init_hidden(self, config, usegpu):
         self.encoder.init_hidden(config, usegpu)
@@ -1218,13 +1235,13 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
     total_loss = []
     first = True
     try:
-        epps = config.get("train","pre_train")
-        epps = int(epps)-1
+        epps = config.get("train", "pre_train")
+        epps = int(epps) - 1
     except Exception as e:
         epps = -1
 
     print("Training begin")
-    for epoch_num in range(epps+1, epoch):
+    for epoch_num in range(epps + 1, epoch):
         running_loss = 0
         running_acc = []
         for a in range(0, len(task_name)):
@@ -1290,7 +1307,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                             running_acc[a][-1]["list"].append(0)
 
         torch.save(net, os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
-        if (epoch_num+1) % 1 ==0:
+        if (epoch_num + 1) % 1 == 0:
             test_file(net, test_dataset, usegpu, config, epoch_num + 1)
         if not (os.path.exists(model_path)):
             os.makedirs(model_path)

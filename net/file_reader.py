@@ -9,18 +9,19 @@ from word2vec import word2vec
 
 from data_formatter import check, parse
 
-#print("working...")
+# print("working...")
 import h5py
+
 transformer = word2vec()
-#manager = multiprocessing.Manager()
+# manager = multiprocessing.Manager()
 transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
-#transformer = None
-#print(len(transformer))
-#transformer = manager.list([transformer])
+# transformer = None
+# print(len(transformer))
+# transformer = manager.list([transformer])
 
 print("working done")
 
-train_num_process = 7
+train_num_process = 5
 test_num_process = 5
 
 
@@ -37,7 +38,7 @@ class reader():
         self.read_process = []
         for a in range(0, num_process):
             process = multiprocessing.Process(target=self.always_read_data,
-                                                        args=(config, self.data_queue, self.file_queue, a, transformer))
+                                              args=(config, self.data_queue, self.file_queue, a, transformer))
             self.read_process.append(process)
             self.read_process[-1].start()
 
@@ -45,8 +46,8 @@ class reader():
         for a in range(0, len(self.file_list)):
             self.file_queue.put(self.file_list[a])
 
-    def always_read_data(self, config, data_queue, file_queue,  idx, transformer):
-        #transformer = h5py.File('/data/disk1/private/zhonghaoxi/law/word2vec/data.h5','r')
+    def always_read_data(self, config, data_queue, file_queue, idx, transformer):
+        # transformer = h5py.File('/data/disk1/private/zhonghaoxi/law/word2vec/data.h5','r')
         cnt = 20
         put_needed = False
         while True:
@@ -113,11 +114,11 @@ class reader():
         return None
 
     def fetch_data(self, config):
-        #print("=================== %d ==================" % self.data_queue.qsize())
+        # print("=================== %d ==================" % self.data_queue.qsize())
         data = self.data_queue.get()
         if data is None:
             self.init_file_list()
-        #print("done one")
+        # print("done one")
 
         return data
 

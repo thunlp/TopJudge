@@ -52,8 +52,6 @@ def check_law(data):
         return False
     if not ((arr1[0][0], arr1[0][1]) in law_dict1):
         return False
-    # if not((arr2[0][0],arr2[0][1],arr2[0][2]) in law_dict2):
-    #    return False
     return True
 
 
@@ -65,7 +63,6 @@ def analyze_law1(data, config):
         arr1.append((x, z))
 
     return law_dict1[(arr1[0][0], arr1[0][1])]
-    return arr1[0][0] * 10 + arr1[0][1]
 
 
 def analyze_law2(data, config):
@@ -83,12 +80,7 @@ def analyze_time(data, config):
     if data["wuqi"]:
         return 0
     v = 0
-    for x in data["youqi"]:
-        v = max(x, v)
-    for x in data["juyi"]:
-        v = max(x, v)
-    for x in data["guanzhi"]:
-        v = max(x, v)
+    v = data["youqi"][-1]
     if v > 10 * 12:
         return 1
     if v > 7 * 12:
@@ -108,42 +100,6 @@ def analyze_time(data, config):
     if v > 0:
         return 9
     return 10
-    # print(data)
-    # gg
-    if data["sixing"]:
-        return 0
-    if data["wuqi"]:
-        return 1
-    v = 0
-    for x in data["youqi"]:
-        v = max(x, v)
-    for x in data["juyi"]:
-        v = max(x, v)
-    for x in data["guanzhi"]:
-        v = max(x, v)
-    if v > 25 * 12:
-        return 2
-    if v > 15 * 12:
-        return 3
-    if v > 10 * 12:
-        return 4
-    if v > 7 * 12:
-        return 5
-    if v > 5 * 12:
-        return 6
-    if v > 3 * 12:
-        return 7
-    if v > 2 * 12:
-        return 8
-    if v > 1 * 12:
-        return 9
-    if v > 9:
-        return 10
-    if v > 6:
-        return 11
-    if v > 0:
-        return 12
-    return 13
 
 
 word_dict = {}
@@ -157,17 +113,24 @@ def load(x, transformer):
 
 
 def get_word_vec(x, config, transformer):
-    # if not (x in word_dict):
-    #    word_dict[x] = torch.rand(config.getint("data", "vec_size"))
     vec = load(x, transformer)
-    # print(type(vec))
     return vec
-
-    # return word_dict[x], True
 
 
 cnt1 = 0
 cnt2 = 0
+
+
+def format_senetence(data, config):
+    result = data.split("。")
+    for a in range(0, len(result)):
+        temp = result[a].split("\t")
+        result[a] = []
+        for x in temp:
+            if x != "":
+                result[a].append(x)
+
+    return result
 
 
 def parse_sentence(data, config):
@@ -176,7 +139,9 @@ def parse_sentence(data, config):
     result = data
     if result is None:
         return False
-    lastp = 0
+
+    result = format_senetence(data, config)
+
     if len(result) == 0:
         return False
 
@@ -195,6 +160,8 @@ def parse_sentence(data, config):
 
 def generate_vector(data, config, transformer):
     # data = parse_sentence(data, config)
+    data = format_senetence(data, config)
+
     vec = []
     len_vec = [0, 0]
     for x in data:
@@ -216,13 +183,13 @@ def generate_vector(data, config, transformer):
     while len(vec) < config.getint("data", "sentence_num"):
         vec.append(torch.stack(temp_vec))
         len_vec.append(1)
-    if len_vec[1] > config.getint("data","sentence_num"):
+    if len_vec[1] > config.getint("data", "sentence_num"):
         gg
     for a in range(2, len(len_vec)):
-        if len_vec[a] > config.getint("data","sentence_len"):
+        if len_vec[a] > config.getint("data", "sentence_len"):
             print(data)
             gg
-    if len(len_vec) != config.getint("data","sentence_num")+2:
+    if len(len_vec) != config.getint("data", "sentence_num") + 2:
         gg
 
     return torch.stack(vec), torch.LongTensor(len_vec)
@@ -250,13 +217,13 @@ def parse(data, config, transformer):
 
 
 def check(data, config):
+    if len(data["meta"]["criminals"]) != 1:
+        return False
     data["meta"]["crit"] = list(set(data["meta"]["crit"]))
     if len(data["meta"]["crit"]) > 1 or len(data["meta"]["crit"]) == 0:
         return False
     if not (int(data["meta"]["crit"][0]) in accusation_dict):
         return False
-    # if len(data["content"].split("\t")) > config.getint("data", "pad_length"):
-    #    return False
     if not (parse_sentence(data["content"], config)):
         return False
 
