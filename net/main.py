@@ -56,6 +56,7 @@ except Exception as e:
     pass
 
 if torch.cuda.is_available() and usegpu:
+    print("gpu ing")
     net = net.cuda()
 
 print("Net building done.")
