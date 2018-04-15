@@ -200,11 +200,11 @@ def parse(data, config, transformer):
     label = []
     for x in label_list:
         if x == "crit":
-            label.append(analyze_crit(data["meta"]["crit"], config))
+            label.append(analyze_crit(data["meta"]["name_of_accusation"], config))
         if x == "law1":
-            label.append(analyze_law1(data["meta"]["law"], config))
+            label.append(analyze_law1(data["meta"]["name_of_law"], config))
         if x == "law2":
-            label.append(analyze_law2(data["meta"]["law"], config))
+            label.append(analyze_law2(data["meta"]["name_of_law"], config))
         if x == "time":
             label.append(analyze_time(data["meta"]["time"], config))
     # print(data)
@@ -219,15 +219,15 @@ def parse(data, config, transformer):
 def check(data, config):
     if len(data["meta"]["criminals"]) != 1:
         return False
-    data["meta"]["crit"] = list(set(data["meta"]["crit"]))
-    if len(data["meta"]["crit"]) > 1 or len(data["meta"]["crit"]) == 0:
+    data["meta"]["name_of_accusation"] = list(set(data["meta"]["name_of_accusation"]))
+    if len(data["meta"]["name_of_accusation"]) > 1 or len(data["meta"]["name_of_accusation"]) == 0:
         return False
-    if not (int(data["meta"]["crit"][0]) in accusation_dict):
+    if not (int(data["meta"]["name_of_accusation"][0]) in accusation_dict):
         return False
     if not (parse_sentence(data["content"], config)):
         return False
 
-    if not (check_law(data["meta"]["law"])):
+    if not (check_law(data["meta"]["name_of_law"])):
         return False
 
     return True

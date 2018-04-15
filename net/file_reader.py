@@ -22,7 +22,7 @@ transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
 print("working done")
 
 train_num_process = 5
-test_num_process = 5
+test_num_process = 1
 
 
 class reader():
