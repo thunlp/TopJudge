@@ -56,6 +56,8 @@ def count(data, config):
     total_cnt += 1
 
     for x in data["law"]:
+        if x[0] < 102 or x[0]>452:
+            continue
         add(law, x)
         add(global_law, x)
 
