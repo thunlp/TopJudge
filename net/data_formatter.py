@@ -236,5 +236,5 @@ def check(data, config):
     #if not (check_law(data["meta"]["name_of_law"])):
     #    return False
 
-    print("Success")
+    #print("Success")
     return True
