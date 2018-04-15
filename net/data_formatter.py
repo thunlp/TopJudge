@@ -80,7 +80,7 @@ def analyze_time(data, config):
     if data["wuqi"]:
         return 0
     v = 0
-    if len(data["youqi"])>0:
+    if len(data["youqi"]) > 0:
         v = data["youqi"][-1]
     else:
         v = 0
@@ -221,20 +221,11 @@ def parse(data, config, transformer):
 
 def check(data, config):
     if len(data["meta"]["criminals"]) != 1:
-        #print("gg1")
         return False
-    data["meta"]["name_of_accusation"] = list(set(data["meta"]["name_of_accusation"]))
-    if len(data["meta"]["name_of_accusation"]) > 1 or len(data["meta"]["name_of_accusation"]) == 0:
-        #print("gg2")
+    if len(data["meta"]["name_of_accusation"]) == 0:
         return False
-    #if not (int(data["meta"]["name_of_accusation"][0]) in accusation_dict):
-    #    return False
     if not (parse_sentence(data["content"], config)):
-        #print("gg3")
         return False
 
-    #if not (check_law(data["meta"]["name_of_law"])):
-    #    return False
-
-    #print("Success")
+    # print("Success")
     return True
