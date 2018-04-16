@@ -34,7 +34,7 @@ def check_law(data):
 
 
 def analyze_crit(data, config):
-    res = torch.from_numpy(np.zeros(get_num_classes("crit"), dtype=np.int64))
+    res = torch.from_numpy(np.zeros(get_num_classes("crit")))
     for x in data:
         if x in accusation_dict.key():
             res[accusation_dict[x]] = 1
@@ -42,7 +42,7 @@ def analyze_crit(data, config):
 
 
 def analyze_law(data, config):
-    res = torch.from_numpy(np.zeros(get_num_classes("law"), dtype=np.int64))
+    res = torch.from_numpy(np.zeros(get_num_classes("law")))
     for x in data:
         y = (x[0], x[1], x[2])
         if y in law_dict.key():
@@ -51,7 +51,7 @@ def analyze_law(data, config):
 
 
 def analyze_time(data, config):
-    res = torch.from_numpy(np.zeros(get_num_classes("time"), dtype=np.int64))
+    res = torch.from_numpy(np.zeros(get_num_classes("time")))
 
     v = 0
     if len(data["youqi"]) > 0:
