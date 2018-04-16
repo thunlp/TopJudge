@@ -117,12 +117,14 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                 reals.append(labels[:, accumulate:accumulate + num_class])
                 accumulate += num_class
 
-            labels = accumulate
+            labels = reals
 
             net.init_hidden(config, usegpu)
             optimizer.zero_grad()
 
             outputs = net.forward(inputs, doc_len, config)
+            print(labels)
+            print(outputs)
             loss = 0
             for a in range(0, len(task_name)):
                 loss = loss + criterion(outputs[a], labels[a])
