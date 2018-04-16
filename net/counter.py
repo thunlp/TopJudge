@@ -3,10 +3,11 @@
 import os
 import json
 import re
-from data_formatter import check, format_senetence, generate_vector
 import configparser
-from file_reader import transformer
 import pdb
+
+from net.data_formatter import check, generate_vector, format_sentence
+from net.file_reader import transformer
 
 configFilePath = "../config/multi_lstm/crit/small.config"
 config = configparser.RawConfigParser()

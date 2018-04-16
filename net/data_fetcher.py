@@ -1,7 +1,8 @@
 import os
 import json
-import torch
-from data_formatter import parse, check, get_data_list
+
+from net.data_formatter import parse, check
+from net.utils import get_data_list
 
 
 def create_dataset(file_list, config):

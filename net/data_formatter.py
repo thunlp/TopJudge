@@ -4,29 +4,8 @@ import torch
 import random
 import numpy as np
 
-min_frequency = 10
-
-accusation_list = []
-accusation_dict = {}
-f = open("result/crit_result.txt", "r")
-for line in f:
-    data = line[:-1].split(" ")
-    name = data[0]
-    num = int(data[1])
-    if num > min_frequency:
-        accusation_list.append(name)
-        accusation_dict[name] = len(accusation_list) - 1
-
-law_list = []
-law_dict = {}
-f = open("result/law_result1.txt", "r")
-for line in f:
-    data = line[:-1].split(" ")
-    name = (int(data[0]), int(data[1]), int(data[2]))
-    num = int(data[3])
-    if num > min_frequency:
-        law_list.append(name)
-        law_dict[name] = len(law_list) - 1
+from net.loader import accusation_dict, accusation_list, law_dict, law_list
+from net.utils import get_num_classes
 
 
 def check_crit(data):
@@ -55,42 +34,56 @@ def check_law(data):
 
 
 def analyze_crit(data, config):
-    return accusation_dict[data[0]]
+    res = np.zeros(get_num_classes("crit"), dtype=np.int64)
+    for x in data:
+        if x in accusation_dict.key():
+            res[accusation_dict[x]] = 1
+    return res
 
 
 def analyze_law(data, config):
-    return accusation_dict[data[0]]
+    res = np.zeros(get_num_classes("law"), dtype=np.int64)
+    for x in data:
+        y = (x[0], x[1], x[2])
+        if y in law_dict.key():
+            res[law_dict[y]] = 1
+    return res
 
 
 def analyze_time(data, config):
-    if data["sixing"]:
-        return 0
-    if data["wuqi"]:
-        return 0
+    res = np.zeros(get_num_classes("time"), dtype=np.int64)
+
     v = 0
     if len(data["youqi"]) > 0:
         v = data["youqi"][-1]
     else:
         v = 0
-    if v > 10 * 12:
-        return 1
-    if v > 7 * 12:
-        return 2
-    if v > 5 * 12:
-        return 3
-    if v > 3 * 12:
-        return 4
-    if v > 2 * 12:
-        return 5
-    if v > 1 * 12:
-        return 6
-    if v > 9:
-        return 7
-    if v > 6:
-        return 8
-    if v > 0:
-        return 9
-    return 10
+
+    if data["sixing"]:
+        opt = 0
+    elif data["wuqi"]:
+        opt = 0
+    elif v > 10 * 12:
+        opt = 1
+    elif v > 7 * 12:
+        opt = 2
+    elif v > 5 * 12:
+        opt = 3
+    elif v > 3 * 12:
+        opt = 4
+    elif v > 2 * 12:
+        opt = 5
+    elif v > 1 * 12:
+        opt = 6
+    elif v > 9:
+        opt = 7
+    elif v > 6:
+        opt = 8
+    elif v > 0:
+        opt = 9
+    else:
+        opt = 10
+    res[opt] = 1
 
 
 word_dict = {}
@@ -152,40 +145,7 @@ def parse_sentence(data, config):
 def generate_vector(data, config, transformer):
     vec = []
     len_vec = [0, 0]
-    for x in data:
-        temp_vec = []
-        len_vec.append(len(x))
-        len_vec[1] += 1
-        for y in x:
-            len_vec[0] += 1
-            z = get_word_vec(y, config, transformer)
-            temp_vec.append(z.to_list())
-        while len(temp_vec) < config.getint("data", "sentence_len"):
-            temp_vec.append(get_word_vec("BLANK", config, transformer).to_list())
-        vec.append(temp_vec)
-
-    temp_vec = []
-    while len(temp_vec) < config.getint("data", "sentence_len"):
-        temp_vec.append(get_word_vec("BLANK", config, transformer).to_list())
-
-    while len(vec) < config.getint("data", "sentence_num"):
-        vec.append(temp_vec)
-        len_vec.append(1)
-    if len_vec[1] > config.getint("data", "sentence_num"):
-        gg
-    for a in range(2, len(len_vec)):
-        if len_vec[a] > config.getint("data", "sentence_len"):
-            print(data)
-            gg
-    if len(len_vec) != config.getint("data", "sentence_num") + 2:
-        gg
-
-    return torch.stack(vec), torch.LongTensor(len_vec)
-
-"""
-def generate_vector(data, config, transformer):
-    vec = []
-    len_vec = [0, 0]
+    blank = torch.from_numpy(get_word_vec("BLANK", config, transformer))
     for x in data:
         temp_vec = []
         len_vec.append(len(x))
@@ -195,12 +155,12 @@ def generate_vector(data, config, transformer):
             z = get_word_vec(y, config, transformer)
             temp_vec.append(torch.from_numpy(z))
         while len(temp_vec) < config.getint("data", "sentence_len"):
-            temp_vec.append(torch.from_numpy(get_word_vec("BLANK", config, transformer)))
+            temp_vec.append(blank)
         vec.append(torch.stack(temp_vec))
 
     temp_vec = []
     while len(temp_vec) < config.getint("data", "sentence_len"):
-        temp_vec.append(torch.from_numpy(get_word_vec("BLANK", config, transformer)))
+        temp_vec.append(blank)
 
     while len(vec) < config.getint("data", "sentence_num"):
         vec.append(torch.stack(temp_vec))
@@ -215,7 +175,6 @@ def generate_vector(data, config, transformer):
         gg
 
     return torch.stack(vec), torch.LongTensor(len_vec)
-"""
 
 
 def parse(data, config, transformer):
@@ -229,13 +188,13 @@ def parse(data, config, transformer):
         if x == "time":
             label.append(analyze_time(data["meta"]["time"], config))
     vector, len_vec = generate_vector(data["content"], config, transformer)
-    return vector, len_vec, torch.LongTensor(label)
+    return vector, len_vec, torch.cat(label)
 
 
 def check(data, config):
     if len(data["meta"]["criminals"]) != 1:
         return False
-    if len(data["meta"]["crit"]) == 0:
+    if len(data["meta"]["crit"]) == 0 or len(data["meta"]["law"]) == 0:
         return False
     if not (check_crit(data["meta"]["crit"])):
         return False

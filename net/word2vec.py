@@ -1,18 +1,18 @@
-#coding:utf-8
+# coding:utf-8
 import numpy as np
 import json
 import pickle
 
 
 class word2vec:
-
     word_num = 0
     vec_len = 0
     word2id = None
     vec = None
 
-    def __init__(self, word_dic="/home/zhonghaoxi/word2vec/word2id.pkl", vec_path="/home/zhonghaoxi/word2vec/vec_nor.npy"):
-    #def __init__(self, word_dic="/home/zhonghaoxi/law/word2vec/word2id.pkl", vec_path="/home/zhonghaoxi/law/word2vec/vec_nor.npy"):
+    def __init__(self, word_dic="/home/zhonghaoxi/word2vec/word2id.pkl",
+                 vec_path="/home/zhonghaoxi/word2vec/vec_nor.npy"):
+        # def __init__(self, word_dic="/home/zhonghaoxi/law/word2vec/word2id.pkl", vec_path="/home/zhonghaoxi/law/word2vec/vec_nor.npy"):
         print("begin to load word embedding")
         f = open(word_dic, "rb")
         (self.word_num, self.vec_len) = pickle.load(f)
@@ -26,6 +26,7 @@ class word2vec:
             return self.vec[self.word2id[word]].astype(dtype=np.float32)
         except:
             return self.vec[self.word2id['UNK']].astype(dtype=np.float32)
+
 
 if __name__ == "__main__":
     a = word2vec()

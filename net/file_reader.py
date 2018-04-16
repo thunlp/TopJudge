@@ -2,12 +2,13 @@ import random
 import os
 import json
 import time
-from utils import get_data_list
 from torch.utils.data import DataLoader
 import multiprocessing
-from word2vec import word2vec
+import random
 
-from data_formatter import check, parse
+from net.data_formatter import check, parse
+from net.utils import get_data_list
+from net.word2vec import word2vec
 
 # print("working...")
 import h5py
@@ -21,9 +22,6 @@ transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
 
 print("working done")
 
-train_num_process = 3
-test_num_process = 1
-
 
 class reader():
     def __init__(self, file_list, config, num_process):
@@ -34,43 +32,48 @@ class reader():
 
         self.file_queue = multiprocessing.Queue()
         self.data_queue = multiprocessing.Queue()
+        self.lock = multiprocessing.Lock()
         self.init_file_list()
         self.read_process = []
+        self.i_am_final = False
+
         for a in range(0, num_process):
             process = multiprocessing.Process(target=self.always_read_data,
                                               args=(config, self.data_queue, self.file_queue, a, transformer))
             self.read_process.append(process)
             self.read_process[-1].start()
 
-    def init_file_list(self):
+    def init_file_list(self, config):
+        if config.getboolean("data", "shuffle"):
+            random.shuffle(self.file_list)
         for a in range(0, len(self.file_list)):
             self.file_queue.put(self.file_list[a])
 
     def always_read_data(self, config, data_queue, file_queue, idx, transformer):
-        # transformer = h5py.File('/data/disk1/private/zhonghaoxi/law/word2vec/data.h5','r')
         cnt = 20
-        put_needed = False
         while True:
             if data_queue.qsize() < cnt:
                 data = self.fetch_data_process(config, file_queue, transformer)
                 if data is None:
-                    if put_needed and idx == 0:
+                    if self.i_am_final:
                         data_queue.put(data)
-                    put_needed = False
                 else:
                     data_queue.put(data)
-                    put_needed = True
 
     def gen_new_file(self, config, file_queue):
         if file_queue.qsize() == 0:
             self.temp_file = None
             return
+        self.lock.acquire()
         try:
             p = file_queue.get(timeout=1)
             self.temp_file = open(os.path.join(config.get("data", "data_path"), p), "r")
+            if self.file_queue.qsize() == 0:
+                self.i_am_final = True
             print("Loading file from " + str(p))
         except Exception as e:
             self.temp_file = None
+        self.lock.release()
 
     def fetch_data_process(self, config, file_queue, transformer):
         batch_size = config.getint("data", "batch_size")
@@ -128,11 +131,13 @@ def create_dataset(file_list, config, num_process):
 
 
 def init_train_dataset(config):
-    return create_dataset(get_data_list(config.get("data", "train_data")), config, train_num_process)
+    return create_dataset(get_data_list(config.get("data", "train_data")), config,
+                          config.getint("train", "train_num_process"))
 
 
 def init_test_dataset(config):
-    return create_dataset(get_data_list(config.get("data", "test_data")), config, test_num_process)
+    return create_dataset(get_data_list(config.get("data", "test_data")), config,
+                          config.getint("test", "test_num_process"))
 
 
 def init_dataset(config):

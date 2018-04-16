@@ -1,4 +1,14 @@
 import torch
+from torch.autograd import Variable
+import json
+import thulac
+import pdb
+
+from net.loader import accusation_dict, accusation_list, law_dict, law_list
+from net.file_reader import transformer
+from net.data_formatter import generate_vector
+
+cutter = thulac.thulac(model_path=r"/data/disk1/private/zhonghaoxi/thulac/models", seg_only=True, filt=False)
 
 
 def get_data_list(d):
@@ -7,32 +17,37 @@ def get_data_list(d):
 
 def get_num_classes(s):
     if s == "crit":
-        return 41
-    if s == "law1":
-        return 39
-    if s == "law2":
-        return 48
+        return len(accusation_list)
+    if s == "law":
+        return len(law_list)
     if s == "time":
         return 11
     gg
 
 
 def calc_accuracy(outputs, labels, res):
-    # print("outputs",outputs)
-    # print("labels",labels)
-    o_la = []
+    if len(labels[0]) != len(outputs[0]):
+        gg
     for a in range(0, len(labels)):
-        it_is = int(outputs[a].max(dim=0)[1].data.cpu().numpy())
-        should_be = int(labels[a].data.cpu().numpy())
-        if it_is == should_be:
-            res[it_is]["TP"] += 1
-        else:
-            res[it_is]["FP"] += 1
-            res[should_be]["FN"] += 1
-        o_la.append((it_is, should_be))
-        res[should_be]["list"][it_is] += 1
+        for b in range(0, len(labels[0])):
+            if outputs[a][b] < 0.5:
+                output_is = 0
+            else:
+                output_is = 1
+            if labels[a][b] < 0.5:
+                label_is = 0
+            else:
+                label_is = 1
+
+            if label_is == 1:
+                if output_is == 1:
+                    res[b]["TP"] += 1
+                else:
+                    res[b]["FN"] += 1
+            else:
+                if output_is == 1:
+                    res[b]["FP"] += 1
     return res
-    return res, o_la
 
 
 def gen_result(res, test=False, file_path=None):
@@ -50,7 +65,7 @@ def gen_result(res, test=False, file_path=None):
         if res[a]["TP"] + res[a]["FP"] != 0:
             precision.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FP"]))
         else:
-            precision.append(0)
+            continue
         if res[a]["TP"] + res[a]["FN"] != 0:
             recall.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FN"]))
         else:
@@ -73,26 +88,26 @@ def gen_result(res, test=False, file_path=None):
     else:
         micro_f1 = 2 * micro_precision * micro_recall / (micro_precision + micro_recall)
     macro_f1 = 0
-    for a in range(0, len(res)):
+    for a in range(0, len(f1)):
         macro_precision += precision[a]
         macro_recall += recall[a]
         macro_f1 += f1[a]
 
-    macro_precision /= len(res)
-    macro_recall /= len(res)
-    macro_f1 /= len(res)
+    macro_precision /= len(f1)
+    macro_recall /= len(f1)
+    macro_f1 /= len(f1)
 
-    print("Micro precisison\t%.3f" % micro_precision)
-    print("Macro precisison\t%.3f" % macro_precision)
+    print("Micro precision\t%.3f" % micro_precision)
+    print("Macro precision\t%.3f" % macro_precision)
     print("Micro recall\t%.3f" % micro_recall)
     print("Macro recall\t%.3f" % macro_recall)
     print("Micro f1\t%.3f" % micro_f1)
     print("Macro f1\t%.3f" % macro_f1)
 
-    if test:
+    if test and not (file_path is None):
         f = open(file_path, "w")
-        print("Micro precisison\t%.3f" % micro_precision, file=f)
-        print("Macro precisison\t%.3f" % macro_precision, file=f)
+        print("Micro precision\t%.3f" % micro_precision, file=f)
+        print("Macro precision\t%.3f" % macro_precision, file=f)
         print("Micro recall\t%.3f" % micro_recall, file=f)
         print("Macro recall\t%.3f" % macro_recall, file=f)
         print("Micro f1\t%.3f" % micro_f1, file=f)
@@ -101,12 +116,12 @@ def gen_result(res, test=False, file_path=None):
         for a in range(0, len(res)):
             print("%d\t" % a, end='', file=f)
         print("", file=f)
-        for a in range(0, len(res)):
+        """for a in range(0, len(res)):
             print("%d\t" % a, end='', file=f)
             for b in range(0, len(res)):
                 print("%d\t" % res[a]["list"][b], end='', file=f)
             print("", file=f)
-        f.close()
+        f.close()"""
 
     print("")
 
@@ -134,14 +149,6 @@ def generate_graph(config):
     return graph
 
 
-import json
-import thulac
-import pdb
-from file_reader import transformer
-from data_formatter import generate_vector
-
-cutter = thulac.thulac(model_path=r"/data/disk1/private/zhonghaoxi/thulac/models", seg_only=True, filt=False)
-
 def cut(s):
     data = cutter.cut(s)
     result = []
@@ -152,8 +159,6 @@ def cut(s):
         result.append(x)
     return result
 
-import torch
-from torch.autograd import Variable
 
 def generate_article_list(config, usegpu):
     f = open("result/xf.txt", "r")
@@ -164,13 +169,13 @@ def generate_article_list(config, usegpu):
         arr = line.split(" ")
         tiao = int(arr[0])
         zhiyi = int(arr[1])
-        #print(tiao,zhiyi)
+        # print(tiao,zhiyi)
         data = xf_data["[%d, %d]" % (tiao, zhiyi)]
 
         sentence = ""
         for x in data["tk"]:
             sentence += x["content"]
-        sentence = sentence.replace(u"、"," ")
+        sentence = sentence.replace(u"、", " ")
 
         sentence = sentence.split(u"。")
         sentence_temp = []
@@ -184,12 +189,11 @@ def generate_article_list(config, usegpu):
 
         vec = generate_vector(sentence, config, transformer)
         if torch.cuda.is_available() and usegpu:
-            vec = (Variable(vec[0].cuda()),Variable(vec[1].cuda()))
+            vec = (Variable(vec[0].cuda()), Variable(vec[1].cuda()))
         else:
-            vec = (Variable(vec[0]),Variable(vec[1]))
-        
+            vec = (Variable(vec[0]), Variable(vec[1]))
 
-        #pdb.set_trace()
+        # pdb.set_trace()
 
         law_list.append(vec)
 

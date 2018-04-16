@@ -1,6 +1,11 @@
 import argparse
 import configparser
 import os
+import torch
+
+from net.model import *
+from net.file_reader import init_dataset
+from net.work import test_file
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', '-m')
@@ -23,37 +28,35 @@ else:
 config = configparser.RawConfigParser()
 config.read(configFilePath)
 
-import torch
-from model import *
-from file_reader import init_dataset
-
 train_dataset, test_dataset = init_dataset(config)
-
 
 print("Building net...")
 net = None
 
 model_name = config.get("net", "name")
 
-"""if model_name == "CNN":
-    net = CNN(config, usegpu)
-elif model_name == "MULTI_LSTM":
-    net = MULTI_LSTM(config, usegpu)
-elif model_name == "CNN_FINAL":
-    net = CNN_FINAL(config, usegpu)
-elif model_name == "MULTI_LSTM_FINAL":
-    net = MULTI_LSTM_FINAL(config, usegpu)
+match_list = {
+    "CNN": CNN,
+    "MultiLSTM": MultiLSTM,
+    "CNNSeq": CNNSeq,
+    "MultiLSTMSeq": MultiLSTMSeq,
+    "Article": Article,
+    "LSTM": LSTM
+}
+
+if model_name in match_list.keys():
+    net = match_list[model_name](config, usegpu)
 else:
-    gg"""
+    gg
+
 print("Net building done.")
 
 print("Loading model...")
-net = torch.load(args.model)
-#net.load_state_dict(torch.load(args.model))
+net.load_state_dict(torch.load(args.model))
 if torch.cuda.is_available() and usegpu:
     net = net.cuda()
 print("Model loaded.")
 
 print("Testing model...")
-test_file(net,test_dataset,usegpu,config,0)
+test_file(net, test_dataset, usegpu, config, 0)
 print("Test done.")

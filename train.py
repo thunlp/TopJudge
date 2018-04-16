@@ -2,6 +2,11 @@ import configparser
 import argparse
 import os
 import pdb
+import torch
+
+from net.model import *
+from net.file_reader import init_dataset
+from net.work import train_file
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', '-c')
@@ -23,10 +28,6 @@ else:
 config = configparser.RawConfigParser()
 config.read(configFilePath)
 
-import torch
-from model import *
-from file_reader import init_dataset
-
 train_dataset, test_dataset = init_dataset(config)
 
 print("Building net...")
@@ -34,18 +35,17 @@ net = None
 
 model_name = config.get("net", "name")
 
-if model_name == "CNN":
-    net = CNN(config, usegpu)
-elif model_name == "MULTI_LSTM":
-    net = MULTI_LSTM(config, usegpu)
-elif model_name == "CNN_FINAL":
-    net = CNN_FINAL(config, usegpu)
-elif model_name == "MULTI_LSTM_FINAL":
-    net = MULTI_LSTM_FINAL(config, usegpu)
-elif model_name == "ARTICLE":
-    net = ARTICLE(config, usegpu)
-elif model_name == "LSTM":
-    net = LSTM(config, usegpu)
+match_list = {
+    "CNN": CNN,
+    "MultiLSTM": MultiLSTM,
+    "CNNSeq": CNNSeq,
+    "MultiLSTMSeq": MultiLSTMSeq,
+    "Article": Article,
+    "LSTM": LSTM
+}
+
+if model_name in match_list.keys():
+    net = match_list[model_name](config, usegpu)
 else:
     gg
 
@@ -56,14 +56,12 @@ except Exception as e:
     pass
 
 if torch.cuda.is_available() and usegpu:
-    print("gpu ing")
     net = net.cuda()
 
 print("Net building done.")
 
 train_file(net, train_dataset, test_dataset, usegpu, config)
-# except Exception as e:
-#    print(e)
+
 for x in train_dataset.read_process:
     x.terminate()
     print(x, x.is_alive())
