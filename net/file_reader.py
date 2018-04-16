@@ -137,7 +137,7 @@ def init_train_dataset(config):
 
 def init_test_dataset(config):
     return create_dataset(get_data_list(config.get("data", "test_data")), config,
-                          config.getint("test", "test_num_process"))
+                          config.getint("train", "test_num_process"))
 
 
 def init_dataset(config):

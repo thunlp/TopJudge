@@ -2,7 +2,7 @@ min_frequency = 10
 
 accusation_list = []
 accusation_dict = {}
-f = open("result/crit_result.txt", "r")
+f = open("net/result/crit_result.txt", "r")
 for line in f:
     data = line[:-1].split(" ")
     name = data[0]
@@ -13,7 +13,7 @@ for line in f:
 
 law_list = []
 law_dict = {}
-f = open("result/law_result1.txt", "r")
+f = open("net/result/law_result.txt", "r")
 for line in f:
     data = line[:-1].split(" ")
     name = (int(data[0]), int(data[1]), int(data[2]))
