@@ -35,7 +35,7 @@ class reader():
         self.file_queue = multiprocessing.Queue()
         self.data_queue = multiprocessing.Queue()
         self.lock = multiprocessing.Lock()
-        self.init_file_list()
+        self.init_file_list(config)
         self.read_process = []
         self.i_am_final = False
 
@@ -122,7 +122,7 @@ class reader():
         # print("=================== %d ==================" % self.data_queue.qsize())
         data = self.data_queue.get()
         if data is None:
-            self.init_file_list()
+            self.init_file_list(config)
         # print("done one")
 
         return data
