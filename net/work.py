@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.optim as optim
+from net.model.loss import cross_entropy_loss
 
 from net.utils import calc_accuracy, gen_result
 from net.loader import get_num_classes
@@ -67,7 +68,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
 
     model_path = config.get("train", "model_path")
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = cross_entropy_loss
     if optimizer_type == "adam":
         optimizer = optim.Adam(net.parameters(), lr=learning_rate, weight_decay=1e-3)
     elif optimizer_type == "sgd":
