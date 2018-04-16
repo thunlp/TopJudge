@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from net.model.layer import AttentionTanH
-from net.utils import get_num_classes
+from net.loader import get_num_classes
 
 
 class NNFactArt(nn.Module):

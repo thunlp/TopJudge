@@ -4,7 +4,8 @@ import torch.nn.functional as F
 
 from net.model.encoder import ArticleEncoder
 from net.model.layer.attention import Attention
-from net.utils import get_num_classes, generate_graph
+from net.utils import  generate_graph
+from net.loader import get_num_classes
 
 
 class LSTMArticleDecoder(nn.Module):

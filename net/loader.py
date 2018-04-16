@@ -21,3 +21,13 @@ for line in f:
     if num > min_frequency:
         law_list.append(name)
         law_dict[name] = len(law_list) - 1
+
+
+def get_num_classes(s):
+    if s == "crit":
+        return len(accusation_list)
+    if s == "law":
+        return len(law_list)
+    if s == "time":
+        return 11
+    gg

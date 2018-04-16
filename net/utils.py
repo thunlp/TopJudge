@@ -4,7 +4,6 @@ import json
 import thulac
 import pdb
 
-from net.loader import accusation_dict, accusation_list, law_dict, law_list
 from net.file_reader import transformer
 from net.data_formatter import generate_vector
 
@@ -13,16 +12,6 @@ cutter = thulac.thulac(model_path=r"/data/disk1/private/zhonghaoxi/thulac/models
 
 def get_data_list(d):
     return d.replace(" ", "").split(",")
-
-
-def get_num_classes(s):
-    if s == "crit":
-        return len(accusation_list)
-    if s == "law":
-        return len(law_list)
-    if s == "time":
-        return 11
-    gg
 
 
 def calc_accuracy(outputs, labels, res):

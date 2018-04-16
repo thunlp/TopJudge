@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import configparser
-from net.utils import get_num_classes
+from net.loader import get_num_classes
 
 
 class FCDecoder(nn.Module):

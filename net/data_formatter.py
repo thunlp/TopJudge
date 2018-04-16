@@ -5,7 +5,7 @@ import random
 import numpy as np
 
 from net.loader import accusation_dict, accusation_list, law_dict, law_list
-from net.utils import get_num_classes
+from net.loader import get_num_classes
 
 
 def check_crit(data):

@@ -4,7 +4,8 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.optim as optim
 
-from net.utils import calc_accuracy, gen_result, get_num_classes
+from net.utils import calc_accuracy, gen_result
+from net.loader import get_num_classes
 
 
 def test_file(net, test_dataset, usegpu, config, epoch):
