@@ -27,6 +27,7 @@ class FCDecoder(nn.Module):
 
         self.outfc = nn.ModuleList(self.outfc)
         self.midfc = nn.ModuleList(self.midfc)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x, doc_len, config):
         fc_input = x
@@ -38,5 +39,8 @@ class FCDecoder(nn.Module):
             else:
                 outputs.append(fc(fc_input))
             now_cnt += 1
+
+        for a in range(0,len(outputs)):
+            outputs[a] = self.sigmoid(outputs[a])
 
         return outputs

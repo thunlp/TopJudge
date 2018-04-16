@@ -51,6 +51,7 @@ class LSTMDecoder(nn.Module):
         self.cell_list = nn.ModuleList(self.cell_list)
         self.hidden_state_fc_list = nn.ModuleList(self.hidden_state_fc_list)
         self.cell_state_fc_list = nn.ModuleList(self.cell_state_fc_list)
+        self.sigmoid = nn.Sigmoid()
 
     def init_hidden(self, config, usegpu):
         self.hidden_list = []
@@ -96,5 +97,8 @@ class LSTMDecoder(nn.Module):
                     self.outfc[a - 1](F.relu(self.midfc[a - 1](h))).view(config.getint("data", "batch_size"), -1))
             else:
                 outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
+
+        for a in range(0, len(outputs)):
+            outputs[a] = self.sigmoid(outputs[a])
 
         return outputs

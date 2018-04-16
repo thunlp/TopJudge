@@ -52,6 +52,7 @@ class LSTMArticleDecoder(nn.Module):
         self.cell_list = nn.ModuleList(self.cell_list)
         self.hidden_state_fc_list = nn.ModuleList(self.hidden_state_fc_list)
         self.cell_state_fc_list = nn.ModuleList(self.cell_state_fc_list)
+        self.sigmoid = nn.Sigmoid()
 
         self.article_encoder = ArticleEncoder(config, usegpu)
         self.article_fc_list = []
@@ -116,5 +117,8 @@ class LSTMArticleDecoder(nn.Module):
                         hp = hp + self.article_fc_list[b](article_embedding)
 
                     self.hidden_list[b] = (hp, cp)
+
+        for a in range(0, len(outputs)):
+            outputs[a] = self.sigmoid(outputs[a])
 
         return outputs
