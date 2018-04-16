@@ -4,74 +4,62 @@ import torch
 import random
 import numpy as np
 
+min_frequency = 10
+
 accusation_list = []
 accusation_dict = {}
 f = open("result/crit_result.txt", "r")
 for line in f:
-    data = int(line[:-1].replace("\n", "").split(" ")[1])
-    accusation_list.append(data)
-    accusation_dict[data] = len(accusation_list) - 1
+    data = line[:-1].split(" ")
+    name = data[0]
+    num = int(data[1])
+    if num > min_frequency:
+        accusation_list.append(name)
+        accusation_dict[name] = len(accusation_list) - 1
 
-law_list1 = []
-law_dict1 = {}
+law_list = []
+law_dict = {}
 f = open("result/law_result1.txt", "r")
 for line in f:
-    arr = line[:-1].replace("\n", "").split(" ")
-    data = int(arr[0]), int(arr[1])
-    law_list1.append(data)
-    law_dict1[data] = len(law_list1) - 1
+    data = line[:-1].split(" ")
+    name = (int(data[0]), int(data[1]), int(data[2]))
+    num = int(data[3])
+    if num > min_frequency:
+        law_list.append(name)
+        law_dict[name] = len(law_list) - 1
 
-"""law_list2 = []
-law_dict2 = {}
-f = open("result/law_result2.txt", "r")
-for line in f:
-    arr = line[:-1].replace("\n", "").split(" ")
-    data = int(arr[0]), int(arr[1]), int(arr[2])
-    law_list2.append(data)
-    law_dict2[data] = len(law_list2) - 1"""
+
+def check_crit(data):
+    for x in data:
+        if not (x in accusation_dict.keys()):
+            return False
+    return True
+
+
+def check_law(data):
+    arr = []
+    for x, y, z in data:
+        if x < 102 or x > 452:
+            continue
+        if not ((x, y, z) in law_dict.keys()):
+            return False
+        arr.append((x, y, z))
+
+    arr = list(set(arr))
+    arr.sort()
+
+    for x in arr:
+        if not (x in arr):
+            return False
+    return True
 
 
 def analyze_crit(data, config):
     return accusation_dict[data[0]]
 
 
-def check_law(data):
-    arr1 = []
-    arr2 = []
-    for x, y, z in data:
-        if x < 102:
-            continue
-        arr1.append((x, z))
-        arr2.append((x, z, y))
-
-    arr1 = list(set(arr1))
-    arr1.sort()
-    arr2 = list(set(arr2))
-    arr2.sort()
-    if len(arr1) != 1:  # or len(arr2) != 1:
-        return False
-    if not ((arr1[0][0], arr1[0][1]) in law_dict1):
-        return False
-    return True
-
-
-def analyze_law1(data, config):
-    arr1 = []
-    for x, y, z in data:
-        if x < 102:
-            continue
-        arr1.append((x, z))
-
-    return law_dict1[(arr1[0][0], arr1[0][1])]
-
-
-def analyze_law2(data, config):
-    arr2 = []
-    for x, y, z in data:
-        if x < 102:
-            continue
-        arr2.append((x, z, y))
-    return law_dict2[(arr2[0][0], arr2[0][1], arr2[0][2])]
+def analyze_law(data, config):
+    return accusation_dict[data[0]]
 
 
 def analyze_time(data, config):
@@ -111,7 +99,7 @@ word_dict = {}
 def load(x, transformer):
     try:
         return transformer[x].astype(dtype=np.float32)
-    except:
+    except Exception as e:
         return transformer['UNK'].astype(dtype=np.float32)
 
 
@@ -124,7 +112,7 @@ cnt1 = 0
 cnt2 = 0
 
 
-def format_senetence(data, config):
+def format_sentence(data, config):
     result = data.split("。")
     for a in range(0, len(result)):
         temp = result[a].split("\t")
@@ -143,7 +131,7 @@ def parse_sentence(data, config):
     if result is None:
         return False
 
-    result = format_senetence(data, config)
+    result = format_sentence(data, config)
 
     if len(result) == 0:
         return False
@@ -162,9 +150,40 @@ def parse_sentence(data, config):
 
 
 def generate_vector(data, config, transformer):
-    # data = parse_sentence(data, config)
-    data = format_senetence(data, config)
+    vec = []
+    len_vec = [0, 0]
+    for x in data:
+        temp_vec = []
+        len_vec.append(len(x))
+        len_vec[1] += 1
+        for y in x:
+            len_vec[0] += 1
+            z = get_word_vec(y, config, transformer)
+            temp_vec.append(z.to_list())
+        while len(temp_vec) < config.getint("data", "sentence_len"):
+            temp_vec.append(get_word_vec("BLANK", config, transformer).to_list())
+        vec.append(temp_vec)
 
+    temp_vec = []
+    while len(temp_vec) < config.getint("data", "sentence_len"):
+        temp_vec.append(get_word_vec("BLANK", config, transformer).to_list())
+
+    while len(vec) < config.getint("data", "sentence_num"):
+        vec.append(temp_vec)
+        len_vec.append(1)
+    if len_vec[1] > config.getint("data", "sentence_num"):
+        gg
+    for a in range(2, len(len_vec)):
+        if len_vec[a] > config.getint("data", "sentence_len"):
+            print(data)
+            gg
+    if len(len_vec) != config.getint("data", "sentence_num") + 2:
+        gg
+
+    return torch.stack(vec), torch.LongTensor(len_vec)
+
+"""
+def generate_vector(data, config, transformer):
     vec = []
     len_vec = [0, 0]
     for x in data:
@@ -196,6 +215,7 @@ def generate_vector(data, config, transformer):
         gg
 
     return torch.stack(vec), torch.LongTensor(len_vec)
+"""
 
 
 def parse(data, config, transformer):
@@ -203,29 +223,23 @@ def parse(data, config, transformer):
     label = []
     for x in label_list:
         if x == "crit":
-            label.append(analyze_crit(data["meta"]["name_of_accusation"], config))
-        if x == "law1":
-            label.append(analyze_law1(data["meta"]["name_of_law"], config))
-        if x == "law2":
-            label.append(analyze_law2(data["meta"]["name_of_law"], config))
+            label.append(analyze_crit(data["meta"]["crit"], config))
+        if x == "law":
+            label.append(analyze_law(data["meta"]["law"], config))
         if x == "time":
-            label.append(analyze_time(data["meta"]["term_of_imprisonment"], config))
-    # print(data)
+            label.append(analyze_time(data["meta"]["time"], config))
     vector, len_vec = generate_vector(data["content"], config, transformer)
-    # print(data)
-    # print(vector)
-    # print(len_vec)
-    # print(label)
     return vector, len_vec, torch.LongTensor(label)
 
 
 def check(data, config):
     if len(data["meta"]["criminals"]) != 1:
         return False
-    if len(data["meta"]["name_of_accusation"]) == 0:
+    if len(data["meta"]["crit"]) == 0:
         return False
-    if not (parse_sentence(data["content"], config)):
+    if not (check_crit(data["meta"]["crit"])):
+        return False
+    if not (check_law(data["meta"]["law"])):
         return False
 
-    # print("Success")
     return True

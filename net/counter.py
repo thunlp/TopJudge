@@ -3,8 +3,9 @@
 import os
 import json
 import re
-from data_formatter import check, format_senetence
+from data_formatter import check, format_senetence, generate_vector
 import configparser
+from file_reader import transformer
 import pdb
 
 configFilePath = "../config/multi_lstm/crit/small.config"
@@ -30,8 +31,8 @@ time = {}
 law = {}
 
 
-def print_res(cnt,law, crit, time, ouf):
-    print("total %d" %cnt,file=ouf)
+def print_res(cnt, law, crit, time, ouf):
+    print("total %d" % cnt, file=ouf)
     print("law", file=ouf)
     for x in law.keys():
         print(x, law[x], file=ouf)
@@ -56,7 +57,7 @@ def count(data, config):
     total_cnt += 1
 
     for x in data["law"]:
-        if x[0] < 102 or x[0]>452:
+        if x[0] < 102 or x[0] > 452:
             continue
         add(law, x)
         add(global_law, x)
@@ -77,7 +78,7 @@ def count(data, config):
 
 
 def parse(data):
-    #pdb.set_trace()
+    # pdb.set_trace()
     res = {}
     res["content"] = format_senetence(data["content"], config)
 
@@ -98,7 +99,7 @@ def parse(data):
 
 
 def draw_out(in_path, out_path, res_path):
-    global crit,law,time
+    global crit, law, time
     crit = {}
     law = {}
     time = {}
@@ -115,6 +116,7 @@ def draw_out(in_path, out_path, res_path):
         data = parse(data)
         count(data["meta"], config)
         cnt += 1
+        data["content"] = generate_vector(data["content"], config, transformer)
         print(json.dumps(data, ensure_ascii=False), file=ouf)
         if cnt % 5000 == 0:
             print(cnt)
@@ -135,4 +137,4 @@ if __name__ == "__main__":
 
     ouf = open("result/count_data/total.txt", "w")
 
-    print_res(total_cnt,global_law, global_crit, global_time, ouf)
+    print_res(total_cnt, global_law, global_crit, global_time, ouf)
