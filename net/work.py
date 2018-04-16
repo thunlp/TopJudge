@@ -38,9 +38,18 @@ def test_file(net, test_dataset, usegpu, config, epoch):
         else:
             inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
+        reals = []
+        accumulate = 0
+        for a in range(0, len(task_name)):
+            num_class = get_num_classes(task_name[a])
+            reals.append(labels[:, accumulate:accumulate + num_class])
+            accumulate += num_class
+
+        labels = reals
+
         outputs = net.forward(inputs, doc_len, config)
         for a in range(0, len(task_name)):
-            running_acc[a] = calc_accuracy(outputs[a], labels.transpose(0, 1)[a], running_acc[a])
+            running_acc[a] = calc_accuracy(outputs[a], labels[a], running_acc[a])
 
     net.train()
 
@@ -124,8 +133,8 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             optimizer.zero_grad()
 
             outputs = net.forward(inputs, doc_len, config)
-            print(labels)
-            print(outputs)
+            #print(labels)
+            #print(outputs)
             loss = 0
             for a in range(0, len(task_name)):
                 loss = loss + criterion(outputs[a], labels[a].float())

@@ -37,6 +37,8 @@ def calc_accuracy(outputs, labels, res):
 
 
 def gen_result(res, test=False, file_path=None):
+    #for x in res:
+    #    print(x)
     precision = []
     recall = []
     f1 = []
@@ -52,7 +54,7 @@ def gen_result(res, test=False, file_path=None):
         if res[a]["TP"] + res[a]["FP"] != 0:
             precision.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FP"]))
         else:
-            continue
+            precision.append(0)
         nowp += 1
         if res[a]["TP"] + res[a]["FN"] != 0:
             recall.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FN"]))
@@ -67,9 +69,15 @@ def gen_result(res, test=False, file_path=None):
     #    print("Class\t%d:\tprecesion\t%.3f\trecall\t%.3f\tf1\t%.3f" % (a, precesion[a], recall[a], f1[a]))
 
     # print(total["TP"], total["FP"], total["FN"])
-    micro_precision = total["TP"] / (total["TP"] + total["FP"])
+    if total["TP"] + total["FP"] == 0:
+        micro_precision = 0
+    else:
+        micro_precision = total["TP"] / (total["TP"] + total["FP"])
     macro_precision = 0
-    micro_recall = total["TP"] / (total["TP"] + total["FN"])
+    if total["TP"] + total["FN"] == 0:
+        micro_recall = 0
+    else:
+        micro_recall = total["TP"] / (total["TP"] + total["FN"])
     macro_recall = 0
     if micro_precision + micro_recall == 0:
         micro_f1 = 0
@@ -81,9 +89,10 @@ def gen_result(res, test=False, file_path=None):
         macro_recall += recall[a]
         macro_f1 += f1[a]
 
-    macro_precision /= len(f1)
-    macro_recall /= len(f1)
-    macro_f1 /= len(f1)
+    if len(f1) > 0:
+        macro_precision /= len(f1)
+        macro_recall /= len(f1)
+        macro_f1 /= len(f1)
 
     print("Micro precision\t%.3f" % micro_precision)
     print("Macro precision\t%.3f" % macro_precision)
