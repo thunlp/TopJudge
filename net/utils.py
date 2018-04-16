@@ -16,11 +16,11 @@ def calc_accuracy(outputs, labels, res):
         gg
     for a in range(0, len(labels)):
         for b in range(0, len(labels[0])):
-            if outputs[a][b] < 0.5:
+            if outputs[a][b].data[0] < 0.5:
                 output_is = 0
             else:
                 output_is = 1
-            if labels[a][b] < 0.5:
+            if labels[a][b].data[0] < 0.5:
                 label_is = 0
             else:
                 label_is = 1

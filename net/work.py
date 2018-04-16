@@ -128,7 +128,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             print(outputs)
             loss = 0
             for a in range(0, len(task_name)):
-                loss = loss + criterion(outputs[a], labels[a])
+                loss = loss + criterion(outputs[a], labels[a].float())
                 running_acc[a] = calc_accuracy(outputs[a], labels[a], running_acc[a])
 
             loss.backward()
