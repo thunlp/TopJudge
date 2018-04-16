@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from net.model.encoder import CNNEncoder
-from net.utils import generate_article_list
+from net.file_reader import generate_article_list
 
 
 class ArticleEncoder(nn.Module):
