@@ -44,6 +44,7 @@ def gen_result(res, test=False, file_path=None):
     total["TP"] = 0
     total["FP"] = 0
     total["FN"] = 0
+    nowp = -1
     for a in range(0, len(res)):
         total["TP"] += res[a]["TP"]
         total["FP"] += res[a]["FP"]
@@ -52,12 +53,13 @@ def gen_result(res, test=False, file_path=None):
             precision.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FP"]))
         else:
             continue
+        nowp += 1
         if res[a]["TP"] + res[a]["FN"] != 0:
             recall.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FN"]))
         else:
             recall.append(0)
-        if precision[a] + recall[a] != 0:
-            f1.append(2 * precision[a] * recall[a] / (precision[a] + recall[a]))
+        if precision[nowp] + recall[nowp] != 0:
+            f1.append(2 * precision[nowp] * recall[nowp] / (precision[nowp] + recall[nowp]))
         else:
             f1.append(0)
 
