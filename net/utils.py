@@ -4,7 +4,7 @@ import json
 import thulac
 import pdb
 
-cutter = thulac.thulac(model_path=r"/data/disk1/private/zhonghaoxi/thulac/models", seg_only=True, filt=False)
+cutter = thulac.thulac(model_path=r"/data/zhx/thulac/models", seg_only=True, filt=False)
 
 
 def get_data_list(d):

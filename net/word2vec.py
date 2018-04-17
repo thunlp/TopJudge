@@ -10,8 +10,8 @@ class word2vec:
     word2id = None
     vec = None
 
-    def __init__(self, word_dic="/home/zhonghaoxi/word2vec/word2id.pkl",
-                 vec_path="/home/zhonghaoxi/word2vec/vec_nor.npy"):
+    def __init__(self, word_dic="/data/zhx/law/word2vec/word2id.pkl",
+                 vec_path="/data/zhx/law/word2vec/vec_nor.npy"):
         # def __init__(self, word_dic="/home/zhonghaoxi/law/word2vec/word2id.pkl", vec_path="/home/zhonghaoxi/law/word2vec/vec_nor.npy"):
         print("begin to load word embedding")
         f = open(word_dic, "rb")
