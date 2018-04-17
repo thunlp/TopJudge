@@ -53,14 +53,18 @@ class reader():
 
     def always_read_data(self, config, data_queue, file_queue, idx, transformer):
         cnt = 20
+        put_needed = False
         while True:
             if data_queue.qsize() < cnt:
                 data = self.fetch_data_process(config, file_queue, transformer)
                 if data is None:
-                    if self.i_am_final:
+                    if self.i_am_final and put_needed:
                         data_queue.put(data)
+                        put_needed = False
+                        self.i_am_final = False
                 else:
                     data_queue.put(data)
+                    put_needed = True
 
     def gen_new_file(self, config, file_queue):
         if file_queue.qsize() == 0:

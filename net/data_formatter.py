@@ -9,13 +9,15 @@ from net.loader import get_num_classes
 
 
 def check_crit(data):
+    return True
     for x in data:
-        if not (x in accusation_dict.keys()):
+        if x in accusation_dict.keys():
             return False
     return True
 
 
 def check_law(data):
+    return True
     arr = []
     for x, y, z in data:
         if x < 102 or x > 452:
