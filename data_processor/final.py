@@ -693,7 +693,7 @@ def reformat_fact_law(fact, law):
     new_fact = fact
 
     for reg in reg_list:
-        result = reg_list[a].finditer(fact)
+        result = reg.finditer(fact)
         for x in result:
             new_fact = new_fact.replace(x.group(0), "××")
 
