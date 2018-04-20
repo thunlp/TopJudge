@@ -31,7 +31,7 @@ def check_law(data):
     cnt = 0
     for x in arr:
         if x in arr:
-            cnt += 1#return False
+            cnt += 1  # return False
     return cnt > 0
 
 
@@ -53,7 +53,7 @@ def analyze_law(data, config):
 
 
 def analyze_law_tiao(data, config):
-    res = torch.from_numpy(np.zeros(get_num_classes("law_tiao")))
+    res = torch.from_numpy(np.zeros(get_num_classes("law1")))
     for x in data:
         y = (x[0], x[1])
         if y in law_dict_tiao.keys():

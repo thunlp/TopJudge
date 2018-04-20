@@ -1,6 +1,6 @@
 min_frequency = 100
 
-#10 214 474
+# 10 214 474
 
 accusation_list = []
 accusation_dict = {}
@@ -41,7 +41,7 @@ def get_num_classes(s):
         return len(accusation_list)
     if s == "law":
         return len(law_list)
-    if s == "law_tiao":
+    if s == "law1":
         return len(law_list_tiao)
     if s == "time":
         return 11
@@ -50,3 +50,4 @@ def get_num_classes(s):
 
 print(len(accusation_list))
 print(len(law_list))
+print(len(law_list_tiao))
