@@ -33,42 +33,38 @@ def calc_accuracy(outputs, labels, res):
             else:
                 if output_is == 1:
                     res[b]["FP"] += 1
+                else:
+                    res[b]["TN"] += 1
     return res
 
 
 def gen_result(res, test=False, file_path=None):
-    #for x in res:
-    #    print(x)
     precision = []
     recall = []
     f1 = []
-    total = {}
-    total["TP"] = 0
-    total["FP"] = 0
-    total["FN"] = 0
-    nowp = -1
+    total = {"TP": 0, "FP": 0, "FN": 0, "TN": 0}
     for a in range(0, len(res)):
         total["TP"] += res[a]["TP"]
         total["FP"] += res[a]["FP"]
         total["FN"] += res[a]["FN"]
-        if res[a]["TP"] + res[a]["FP"] != 0:
+        total["TN"] += res[a]["FN"]
+
+        # According to https://github.com/dice-group/gerbil/wiki/Precision,-Recall-and-F1-measure
+
+        if res[a]["TP"] == 0:
+            if res[a]["FP"] == 0 and res[a]["FN"] == 0:
+                precision.append(1)
+                recall.append(1)
+                f1.append(1)
+            else:
+                precision.append(0)
+                recall.append(0)
+                f1.append(0)
+        else:
             precision.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FP"]))
-        else:
-            precision.append(0)
-        nowp += 1
-        if res[a]["TP"] + res[a]["FN"] != 0:
             recall.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FN"]))
-        else:
-            recall.append(0)
-        if precision[nowp] + recall[nowp] != 0:
-            f1.append(2 * precision[nowp] * recall[nowp] / (precision[nowp] + recall[nowp]))
-        else:
-            f1.append(0)
+            f1.append(2 * precision[-1] * recall[-1] / (precision[-1] + recall[-1]))
 
-    # for a in range(0, len(res)):
-    #    print("Class\t%d:\tprecesion\t%.3f\trecall\t%.3f\tf1\t%.3f" % (a, precesion[a], recall[a], f1[a]))
-
-    # print(total["TP"], total["FP"], total["FN"])
     if total["TP"] + total["FP"] == 0:
         micro_precision = 0
     else:
@@ -89,10 +85,9 @@ def gen_result(res, test=False, file_path=None):
         macro_recall += recall[a]
         macro_f1 += f1[a]
 
-    if len(f1) > 0:
-        macro_precision /= len(f1)
-        macro_recall /= len(f1)
-        macro_f1 /= len(f1)
+    macro_precision /= len(f1)
+    macro_recall /= len(f1)
+    macro_f1 /= len(f1)
 
     print("Micro precision\t%.3f" % micro_precision)
     print("Macro precision\t%.3f" % macro_precision)
@@ -113,12 +108,10 @@ def gen_result(res, test=False, file_path=None):
         for a in range(0, len(res)):
             print("%d\t" % a, end='', file=f)
         print("", file=f)
-        """for a in range(0, len(res)):
-            print("%d\t" % a, end='', file=f)
-            for b in range(0, len(res)):
-                print("%d\t" % res[a]["list"][b], end='', file=f)
+        for a in range(0, len(res)):
+            print("%d " % a, res[a], file=f)
             print("", file=f)
-        f.close()"""
+        f.close()
 
     print("")
 
