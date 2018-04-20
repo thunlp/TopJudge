@@ -22,12 +22,25 @@ for line in f:
         law_list.append(name)
         law_dict[name] = len(law_list) - 1
 
+law_list_tiao = []
+law_dict_tiao = {}
+f = open("net/result/law_result_tiao.txt", "r")
+for line in f:
+    data = line[:-1].split(" ")
+    name = (int(data[0]), int(data[1]))
+    num = int(data[2])
+    if num > min_frequency:
+        law_list_tiao.append(name)
+        law_dict_tiao[name] = len(law_list_tiao) - 1
+
 
 def get_num_classes(s):
     if s == "crit":
         return len(accusation_list)
     if s == "law":
         return len(law_list)
+    if s == "law_tiao":
+        return len(law_list_tiao)
     if s == "time":
         return 11
     gg
