@@ -177,17 +177,17 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                     for b in range(0, get_num_classes(task_name[a])):
                         running_acc[a].append({"TP": 0, "FP": 0, "FN": 0, "TN": 0})
 
-        for a in range(0, len(task_name)):
-            gen_result(total_acc[a], True,
-                       file_path=os.path.join(config.get("train", "test_path"), "total") + "-" + task_name[a],
-                       class_name=task_name[a])
-
         if not (os.path.exists(model_path)):
             os.makedirs(model_path)
         torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
 
         if (epoch_num + 1) % 1 == 0:
             test_file(net, test_dataset, usegpu, config, epoch_num + 1)
+
+        for a in range(0, len(task_name)):
+            gen_result(total_acc[a], True,
+                       file_path=os.path.join(config.get("train", "test_path"), "total") + "-" + task_name[a],
+                       class_name=task_name[a])
 
     print_info("Training done")
 
