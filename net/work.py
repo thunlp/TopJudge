@@ -151,7 +151,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
 
             running_loss += loss.data[0]
 
-            print_info("One round done, next round")
+            # print_info("One round done, next round")
 
             if cnt % output_time == 0:
                 print('[%d, %5d, %5d] loss: %.3f' %
