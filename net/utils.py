@@ -3,10 +3,20 @@ from torch.autograd import Variable
 import json
 import thulac
 import pdb
+import time
 
 from net.loader import get_name
 
 cutter = thulac.thulac(model_path=r"/data/zhx/thulac/models", seg_only=True, filt=False)
+
+
+def print_time():
+    print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+
+
+def print_info(s):
+    times = str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+    print("[%s] %s" % (times, s))
 
 
 def get_data_list(d):
