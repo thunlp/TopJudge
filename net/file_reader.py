@@ -64,7 +64,7 @@ class reader():
                         self.i_am_final = False
                 else:
                     data_queue.put(data)
-                    #print(data_queue.qsize())
+                    # print(data_queue.qsize())
                     put_needed = True
 
     def gen_new_file(self, config, file_queue):
@@ -77,7 +77,7 @@ class reader():
             self.temp_file = open(os.path.join(config.get("data", "data_path"), p), "r")
             if self.file_queue.qsize() == 0:
                 self.i_am_final = True
-            print("Loading file from " + str(p))
+            print_info("Loading file from " + str(p))
         except Exception as e:
             self.temp_file = None
         self.lock.release()

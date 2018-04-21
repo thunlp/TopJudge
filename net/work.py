@@ -105,7 +105,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
         cnt = 0
         idx = 0
         while True:
-            print_info("One round begin, waiting for data...")
+            # print_info("One round begin, waiting for data...")
             data = train_dataset.fetch_data(config)
             if data is None:
                 break
@@ -127,14 +127,14 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
 
             labels = reals
 
-            print_info("Data fetch done, forwarding...")
+            # print_info("Data fetch done, forwarding...")
 
             net.init_hidden(config, usegpu)
             optimizer.zero_grad()
 
             outputs = net.forward(inputs, doc_len, config)
 
-            print_info("Forward done, lossing...")
+            # print_info("Forward done, lossing...")
             # print(labels)
             # print(outputs)
             loss = 0
@@ -142,7 +142,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                 loss = loss + criterion(outputs[a], labels[a].float())
                 running_acc[a] = calc_accuracy(outputs[a], labels[a], running_acc[a])
 
-            print_info("Loss done, backwarding...")
+            # print_info("Loss done, backwarding...")
 
             loss.backward()
             # pdb.set_trace()

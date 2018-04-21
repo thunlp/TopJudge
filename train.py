@@ -7,6 +7,7 @@ import torch
 from net.model import *
 from net.file_reader import init_dataset
 from net.work import train_file
+from net.utils import print_info
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', '-c')
@@ -30,7 +31,7 @@ config.read(configFilePath)
 
 train_dataset, test_dataset = init_dataset(config)
 
-print("Building net...")
+print_info("Building net...")
 net = None
 
 model_name = config.get("net", "name")
@@ -58,7 +59,7 @@ except Exception as e:
 if torch.cuda.is_available() and usegpu:
     net = net.cuda()
 
-print("Net building done.")
+print_info("Net building done.")
 
 train_file(net, train_dataset, test_dataset, usegpu, config)
 
