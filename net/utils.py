@@ -33,7 +33,7 @@ def calc_accuracy(outputs, labels, res):
     nr_classes = outputs.size(1)
     for i in range(nr_classes):
         outputs1 = (outputs[:, i] >= 0.5).long()
-        labels1 = (outputs[:, i] >= 0.5).long()
+        labels1 = (labels[:, i] >= 0.5).long()
         res[i]["TP"] += int((labels1 * outputs1).sum())
         res[i]["FN"] += int((labels1 * (1 - outputs1)).sum())
         res[i]["FP"] += int(((1 - labels1) * outputs1).sum())
