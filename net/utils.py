@@ -104,14 +104,11 @@ def gen_result(res, test=False, file_path=None, class_name=None):
         print("Macro recall\t%.3f" % macro_recall, file=f)
         print("Micro f1\t%.3f" % micro_f1, file=f)
         print("Macro f1\t%.3f" % macro_f1, file=f)
-        print(" \t", file=f)
-        for a in range(0, len(res)):
-            print("%d\t" % a, end='', file=f)
         print("", file=f)
         for a in range(0, len(res)):
             temp = res[a]
-            temp.pop("list")
             temp["total"] = temp["TP"] + temp["FN"]
+            temp["precision"], temp["recall"], temp["f1"] = get_value(temp)
             if not (class_name is None):
                 print("%d %s " % (a, get_name(class_name, a)), res[a], file=f)
             else:

@@ -52,7 +52,7 @@ class reader():
             self.file_queue.put(self.file_list[a])
 
     def always_read_data(self, config, data_queue, file_queue, idx, transformer):
-        cnt = 20
+        cnt = 40
         put_needed = False
         while True:
             if data_queue.qsize() < cnt:
@@ -64,6 +64,7 @@ class reader():
                         self.i_am_final = False
                 else:
                     data_queue.put(data)
+                    #print(data_queue.qsize())
                     put_needed = True
 
     def gen_new_file(self, config, file_queue):
