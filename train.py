@@ -51,8 +51,9 @@ else:
     gg
 
 try:
-    net = torch.load(
-        os.path.join(config.get("train", "model_path"), "model-" + config.get("train", "pre_train") + ".pkl"))
+    net.load_state_dict(
+        torch.load(
+            os.path.join(config.get("train", "model_path"), "model-" + config.get("train", "pre_train") + ".pkl")))
 except Exception as e:
     pass
 

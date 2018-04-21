@@ -37,7 +37,8 @@ class reader():
         self.lock = multiprocessing.Lock()
         self.init_file_list(config)
         self.read_process = []
-        self.i_am_final = False
+        self.num_process = num_process
+        self.none_cnt = 0
 
         for a in range(0, num_process):
             process = multiprocessing.Process(target=self.always_read_data,
@@ -58,10 +59,9 @@ class reader():
             if data_queue.qsize() < cnt:
                 data = self.fetch_data_process(config, file_queue, transformer)
                 if data is None:
-                    if self.i_am_final and put_needed:
+                    if put_needed:
                         data_queue.put(data)
                         put_needed = False
-                        self.i_am_final = False
                 else:
                     data_queue.put(data)
                     # print(data_queue.qsize())
@@ -75,8 +75,6 @@ class reader():
         try:
             p = file_queue.get(timeout=1)
             self.temp_file = open(os.path.join(config.get("data", "data_path"), p), "r")
-            if self.file_queue.qsize() == 0:
-                self.i_am_final = True
             print_info("Loading file from " + str(p))
         except Exception as e:
             self.temp_file = None
@@ -125,9 +123,16 @@ class reader():
 
     def fetch_data(self, config):
         # print("=================== %d ==================" % self.data_queue.qsize())
-        data = self.data_queue.get()
-        if data is None:
-            self.init_file_list(config)
+        while True:
+            data = self.data_queue.get()
+            if data is None:
+                self.none_cnt += 1
+                if self.none_cnt == self.num_process:
+                    self.init_file_list(config)
+                    self.none_cnt = 0
+                    break
+            else:
+                break
         # print("done one")
 
         return data
