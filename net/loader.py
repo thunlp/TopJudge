@@ -48,6 +48,33 @@ def get_num_classes(s):
     gg
 
 
+def get_name(s, num):
+    if s == "crit":
+        return accusation_list[num]
+    if s == "law":
+        return law_list[num]
+    if s == "law1":
+        return law_list_tiao[num]
+    if s == "time":
+        map_list = {
+            0: "死刑或无期",
+            1: "十年以上",
+            2: "七到十年",
+            3: "五到七年",
+            4: "三到五年",
+            5: "二到三年",
+            6: "一到二年",
+            7: "九到十二个月",
+            8: "六到九个月",
+            9: "零到六个月",
+            10: "没事"
+        }
+
+        return map_list[num]
+
+    gg
+
+
 print(len(accusation_list))
-print(len(law_list))
+# print(len(law_list))
 print(len(law_list_tiao))

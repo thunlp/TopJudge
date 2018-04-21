@@ -13,6 +13,8 @@ def check_crit(data):
     for x in data:
         if x in accusation_dict.keys():
             cnt += 1
+        else:
+            return False
     return cnt > 0
 
 
@@ -21,7 +23,7 @@ def check_law(data):
     for x, y, z in data:
         if x < 102 or x > 452:
             continue
-        if not ((x, y, z) in law_dict.keys()):
+        if not ((x, y) in law_dict_tiao.keys()):
             return False
         arr.append((x, y, z))
 

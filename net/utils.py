@@ -4,6 +4,8 @@ import json
 import thulac
 import pdb
 
+from net.loader import get_name
+
 cutter = thulac.thulac(model_path=r"/data/zhx/thulac/models", seg_only=True, filt=False)
 
 
@@ -38,7 +40,26 @@ def calc_accuracy(outputs, labels, res):
     return res
 
 
-def gen_result(res, test=False, file_path=None):
+def get_value(res):
+    # According to https://github.com/dice-group/gerbil/wiki/Precision,-Recall-and-F1-measure
+    if res["TP"] == 0:
+        if res["FP"] == 0 and res["FN"] == 0:
+            precision = 1.0
+            recall = 1.0
+            f1 = 1.0
+        else:
+            precision = 0.0
+            recall = 0.0
+            f1 = 0.0
+    else:
+        precision = 1.0 * res["TP"] / (res["TP"] + res["FP"])
+        recall = 1.0 * res["TP"] / (res["TP"] + res["FN"])
+        f1 = 2 * precision * recall / (precision + recall)
+
+    return precision, recall, f1
+
+
+def gen_result(res, test=False, file_path=None, class_name=None):
     precision = []
     recall = []
     f1 = []
@@ -49,36 +70,15 @@ def gen_result(res, test=False, file_path=None):
         total["FN"] += res[a]["FN"]
         total["TN"] += res[a]["FN"]
 
-        # According to https://github.com/dice-group/gerbil/wiki/Precision,-Recall-and-F1-measure
+        p, r, f = get_value(res[a])
+        precision.append(p)
+        recall.append(r)
+        f1.append(f)
 
-        if res[a]["TP"] == 0:
-            if res[a]["FP"] == 0 and res[a]["FN"] == 0:
-                precision.append(1)
-                recall.append(1)
-                f1.append(1)
-            else:
-                precision.append(0)
-                recall.append(0)
-                f1.append(0)
-        else:
-            precision.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FP"]))
-            recall.append(res[a]["TP"] / (res[a]["TP"] + res[a]["FN"]))
-            f1.append(2 * precision[-1] * recall[-1] / (precision[-1] + recall[-1]))
+    micro_precision, micro_recall, micro_f1 = get_value(total)
 
-    if total["TP"] + total["FP"] == 0:
-        micro_precision = 0
-    else:
-        micro_precision = total["TP"] / (total["TP"] + total["FP"])
     macro_precision = 0
-    if total["TP"] + total["FN"] == 0:
-        micro_recall = 0
-    else:
-        micro_recall = total["TP"] / (total["TP"] + total["FN"])
     macro_recall = 0
-    if micro_precision + micro_recall == 0:
-        micro_f1 = 0
-    else:
-        micro_f1 = 2 * micro_precision * micro_recall / (micro_precision + micro_recall)
     macro_f1 = 0
     for a in range(0, len(f1)):
         macro_precision += precision[a]
@@ -109,8 +109,13 @@ def gen_result(res, test=False, file_path=None):
             print("%d\t" % a, end='', file=f)
         print("", file=f)
         for a in range(0, len(res)):
-            print("%d " % a, res[a], file=f)
-            print("", file=f)
+            temp = res[a]
+            temp.pop("list")
+            temp["total"] = temp["TP"] + temp["FN"]
+            if not (class_name is None):
+                print("%d %s " % (a, get_name(class_name, a)), res[a], file=f)
+            else:
+                print("%d " % a, res[a], file=f)
         f.close()
 
     print("")

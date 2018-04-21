@@ -20,9 +20,6 @@ def test_file(net, test_dataset, usegpu, config, epoch):
         running_acc.append([])
         for b in range(0, get_num_classes(task_name[a])):
             running_acc[a].append({"TP": 0, "FP": 0, "FN": 0, "TN": 0})
-            running_acc[a][-1]["list"] = []
-            for c in range(0, get_num_classes(task_name[a])):
-                running_acc[a][-1]["list"].append(0)
 
     while True:
         data = test_dataset.fetch_data(config)
@@ -57,7 +54,7 @@ def test_file(net, test_dataset, usegpu, config, epoch):
     for a in range(0, len(task_name)):
         print("%s result:" % task_name[a])
         try:
-            gen_result(running_acc[a], True, file_path=test_result_path + "-" + task_name[a])
+            gen_result(running_acc[a], True, file_path=test_result_path + "-" + task_name[a], class_name=task_name[a])
         except Exception as e:
             pass
     print("")
@@ -97,13 +94,13 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
     for epoch_num in range(epps + 1, epoch):
         running_loss = 0
         running_acc = []
+        total_acc = []
         for a in range(0, len(task_name)):
             running_acc.append([])
+            total_acc.append([])
             for b in range(0, get_num_classes(task_name[a])):
                 running_acc[a].append({"TP": 0, "FP": 0, "FN": 0, "TN": 0})
-                running_acc[a][-1]["list"] = []
-                for c in range(0, get_num_classes(task_name[a])):
-                    running_acc[a][-1]["list"].append(0)
+                total_acc[a].append({"TP": 0, "FP": 0, "FN": 0, "TN": 0})
 
         cnt = 0
         idx = 0
@@ -149,7 +146,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
 
             if cnt % output_time == 0:
                 print('[%d, %5d, %5d] loss: %.3f' %
-                      (epoch_num + 1, cnt, idx + 1, running_loss / output_time))
+                      (epoch_num + 1, cnt, idx, running_loss / output_time))
                 for a in range(0, len(task_name)):
                     print("%s result:" % task_name[a])
                     gen_result(running_acc[a])
@@ -157,14 +154,23 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
 
                 total_loss.append(running_loss / output_time)
                 running_loss = 0.0
+                for a in range(0, len(running_acc)):
+                    for b in range(0, len(running_acc[a])):
+                        total_acc[a][b]["TP"] += running_acc[a][b]["TP"]
+                        total_acc[a][b]["FP"] += running_acc[a][b]["FP"]
+                        total_acc[a][b]["FN"] += running_acc[a][b]["FN"]
+                        total_acc[a][b]["TN"] += running_acc[a][b]["TN"]
+
                 running_acc = []
                 for a in range(0, len(task_name)):
                     running_acc.append([])
                     for b in range(0, get_num_classes(task_name[a])):
-                        running_acc[a].append({"TP": 0, "FP": 0, "FN": 0, "TN":0})
-                        running_acc[a][-1]["list"] = []
-                        for c in range(0, get_num_classes(task_name[a])):
-                            running_acc[a][-1]["list"].append(0)
+                        running_acc[a].append({"TP": 0, "FP": 0, "FN": 0, "TN": 0})
+
+        for a in range(0, len(task_name)):
+            gen_result(total_acc[a], True,
+                       file_path=os.path.join(config.get("train", "test_path"), "total") + "-" + task_name[a],
+                       class_name=task_name[a])
 
         if not (os.path.exists(model_path)):
             os.makedirs(model_path)
