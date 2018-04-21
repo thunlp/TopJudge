@@ -50,7 +50,7 @@ def test_file(net, test_dataset, usegpu, config, epoch):
 
     net.train()
 
-    print('Test result:')
+    print_info('Test result:')
     for a in range(0, len(task_name)):
         print("%s result:" % task_name[a])
         try:
@@ -154,6 +154,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             # print_info("One round done, next round")
 
             if cnt % output_time == 0:
+                print_info("Current res:")
                 print('[%d, %5d, %5d] loss: %.3f' %
                       (epoch_num + 1, cnt, idx, running_loss / output_time))
                 for a in range(0, len(task_name)):
