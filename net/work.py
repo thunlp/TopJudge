@@ -90,7 +90,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
     except Exception as e:
         epps = -1
 
-    print("Training begin")
+    print_info("Training begin")
     for epoch_num in range(epps + 1, epoch):
         running_loss = 0
         running_acc = []
@@ -188,7 +188,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
         if (epoch_num + 1) % 1 == 0:
             test_file(net, test_dataset, usegpu, config, epoch_num + 1)
 
-    print("Training done")
+    print_info("Training done")
 
     test_file(net, test_dataset, usegpu, config, 0)
     torch.save(net.state_dict(), os.path.join(model_path, "model.pkl"))

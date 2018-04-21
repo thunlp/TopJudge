@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from net.data_formatter import check, parse, generate_vector
 from net.utils import get_data_list
 from net.word2vec import word2vec
-from net.utils import cut
+from net.utils import cut, print_info
 
 # print("working...")
 import h5py

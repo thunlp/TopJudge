@@ -25,6 +25,25 @@ def get_data_list(d):
 
 def calc_accuracy(outputs, labels, res):
     if len(labels[0]) != len(outputs[0]):
+        raise ValueError('Input dimensions of labels and outputs must match.')
+
+    outputs = outputs.data
+    labels = labels.data
+
+    nr_classes = outputs.size(1)
+    for i in range(nr_classes):
+        outputs1 = (outputs[:, i] >= 0.5).long()
+        labels1 = (outputs[:, i] >= 0.5).long()
+        res[i]["TP"] += int((labels1 * outputs1).sum())
+        res[i]["FN"] += int((labels1 * (1 - outputs1)).sum())
+        res[i]["FP"] += int(((1 - labels1) * outputs1).sum())
+        res[i]["TN"] += int(((1 - labels1) * (1 - outputs1)).sum())
+
+    return res
+
+
+def calc_accuracy_v3(outputs, labels, res):
+    if len(labels[0]) != len(outputs[0]):
         gg
     for a in range(0, len(labels)):
         for b in range(0, len(labels[0])):
