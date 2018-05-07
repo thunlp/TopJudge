@@ -52,7 +52,7 @@ def calc_accuracy(outputs, labels, loss_type, res):
                 res[it_is]["TP"] += 1
             else:
                 res[it_is]["FP"] += 1
-                res[it_is]["TN"] += 1
+                res[should_be]["FN"] += 1
 
         return res
 
