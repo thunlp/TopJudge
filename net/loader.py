@@ -1,4 +1,4 @@
-min_frequency = 100
+min_frequency = 1000
 
 # 10 214 474
 

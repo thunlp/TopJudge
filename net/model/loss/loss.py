@@ -13,7 +13,7 @@ def cross_entropy_loss(outputs, labels):
 
 def one_cross_entropy_loss(outputs, labels):
     criterion = nn.CrossEntropyLoss()
-    return criterion(outputs, torch.max(labels)[1])
+    return criterion(outputs, torch.max(labels,dim=1)[1])
 
 
 def log_regression(outputs, labels):
