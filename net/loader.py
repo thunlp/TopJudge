@@ -44,7 +44,7 @@ def get_num_classes(s):
     if s == "law1":
         return len(law_list_tiao)
     if s == "time":
-        return 11
+        return 10
     gg
 
 
@@ -64,10 +64,10 @@ def get_name(s, num):
             4: "三到五年",
             5: "二到三年",
             6: "一到二年",
-            7: "九到十二个月",
-            8: "六到九个月",
-            9: "零到六个月",
-            10: "没事"
+            7: "六到十二个月",
+            #8: "六到九个月",
+            8: "零到六个月",
+            9: "没事"
         }
 
         return map_list[num]

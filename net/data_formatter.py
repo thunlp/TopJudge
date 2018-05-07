@@ -15,7 +15,7 @@ def check_crit(data):
             cnt += 1
         else:
             return False
-    return cnt > 0
+    return cnt == 1
 
 
 def check_law(data):
@@ -34,7 +34,7 @@ def check_law(data):
     for x in arr:
         if x in arr:
             cnt += 1  # return False
-    return cnt > 0
+    return cnt == 1
 
 
 def analyze_crit(data, config):
@@ -88,6 +88,11 @@ def analyze_time(data, config):
         opt = 5
     elif v > 1 * 12:
         opt = 6
+    elif v > 0:
+        opt = 8
+    else:
+        opt = 9
+    """ 
     elif v > 9:
         opt = 7
     elif v > 6:
@@ -95,7 +100,7 @@ def analyze_time(data, config):
     elif v > 0:
         opt = 9
     else:
-        opt = 10
+        opt = 10"""
     res[opt] = 1
     return res
 
