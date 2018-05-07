@@ -13,6 +13,7 @@ def test_file(net, test_dataset, usegpu, config, epoch):
     net.eval()
     running_acc = []
     task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+    task_loss_type = config.get("data", "type_of_loss").replace(" ", "").split(",")
     if not (os.path.exists(config.get("train", "test_path"))):
         os.makedirs(config.get("train", "test_path"))
     test_result_path = os.path.join(config.get("train", "test_path"), str(epoch))
@@ -46,7 +47,7 @@ def test_file(net, test_dataset, usegpu, config, epoch):
 
         outputs = net.forward(inputs, doc_len, config)
         for a in range(0, len(task_name)):
-            running_acc[a] = calc_accuracy(outputs[a], labels[a], running_acc[a])
+            running_acc[a] = calc_accuracy(outputs[a], labels[a],task_loss_type[a],running_acc[a])
 
     net.train()
 
@@ -150,7 +151,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             loss = 0
             for a in range(0, len(task_name)):
                 loss = loss + criterion[a](outputs[a], labels[a].float())
-                running_acc[a] = calc_accuracy(outputs[a], labels[a], running_acc[a])
+                running_acc[a] = calc_accuracy(outputs[a], labels[a], task_loss_type[a], running_acc[a])
 
             # print_info("Loss done, backwarding...")
 

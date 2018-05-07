@@ -23,50 +23,38 @@ def get_data_list(d):
     return d.replace(" ", "").split(",")
 
 
-def calc_accuracy(outputs, labels, res):
-    if len(labels[0]) != len(outputs[0]):
-        raise ValueError('Input dimensions of labels and outputs must match.')
+def calc_accuracy(outputs, labels, loss_type, res):
+    if loss_type == "multi_classification":
+        if len(labels[0]) != len(outputs[0]):
+            raise ValueError('Input dimensions of labels and outputs must match.')
 
-    outputs = outputs.data
-    labels = labels.data
+        outputs = outputs.data
+        labels = labels.data
 
-    nr_classes = outputs.size(1)
-    for i in range(nr_classes):
-        outputs1 = (outputs[:, i] >= 0.5).long()
-        labels1 = (labels[:, i] >= 0.5).long()
-        res[i]["TP"] += int((labels1 * outputs1).sum())
-        res[i]["FN"] += int((labels1 * (1 - outputs1)).sum())
-        res[i]["FP"] += int(((1 - labels1) * outputs1).sum())
-        res[i]["TN"] += int(((1 - labels1) * (1 - outputs1)).sum())
+        nr_classes = outputs.size(1)
+        for i in range(nr_classes):
+            outputs1 = (outputs[:, i] >= 0.5).long()
+            labels1 = (labels[:, i] >= 0.5).long()
+            res[i]["TP"] += int((labels1 * outputs1).sum())
+            res[i]["FN"] += int((labels1 * (1 - outputs1)).sum())
+            res[i]["FP"] += int(((1 - labels1) * outputs1).sum())
+            res[i]["TN"] += int(((1 - labels1) * (1 - outputs1)).sum())
 
-    return res
+        return res
 
-
-def calc_accuracy_v3(outputs, labels, res):
-    if len(labels[0]) != len(outputs[0]):
-        gg
-    for a in range(0, len(labels)):
-        for b in range(0, len(labels[0])):
-            if outputs[a][b].data[0] < 0.5:
-                output_is = 0
+    elif loss_type == "single_classification":
+        id1 = max(outputs, dim=1)[1]
+        id2 = max(labels, dim=1)[1]
+        for a in range(0, len(id1)):
+            it_is = int(id1[a])
+            should_be = int(id2[a])
+            if it_is == should_be:
+                res[it_is]["TP"] += 1
             else:
-                output_is = 1
-            if labels[a][b].data[0] < 0.5:
-                label_is = 0
-            else:
-                label_is = 1
+                res[it_is]["FP"] += 1
+                res[it_is]["TN"] += 1
 
-            if label_is == 1:
-                if output_is == 1:
-                    res[b]["TP"] += 1
-                else:
-                    res[b]["FN"] += 1
-            else:
-                if output_is == 1:
-                    res[b]["FP"] += 1
-                else:
-                    res[b]["TN"] += 1
-    return res
+        return res
 
 
 def get_value(res):
