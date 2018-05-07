@@ -43,8 +43,8 @@ def calc_accuracy(outputs, labels, loss_type, res):
         return res
 
     elif loss_type == "single_classification":
-        id1 = max(outputs, dim=1)[1]
-        id2 = max(labels, dim=1)[1]
+        id1 = torch.max(outputs, dim=1)[1]
+        id2 = torch.max(labels, dim=1)[1]
         for a in range(0, len(id1)):
             it_is = int(id1[a])
             should_be = int(id2[a])
