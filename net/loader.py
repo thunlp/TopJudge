@@ -4,11 +4,11 @@ min_frequency = 1000
 
 accusation_list = []
 accusation_dict = {}
-f = open("net/result/crit_result.txt", "r")
+f = open("net/result/crit_hisory.txt", "r")
 for line in f:
     data = line[:-1].split(" ")
     name = data[0]
-    num = int(data[1])
+    num = int(data[2])
     if num > min_frequency:
         accusation_list.append(name)
         accusation_dict[name] = len(accusation_list) - 1
@@ -26,7 +26,7 @@ for line in f:
 
 law_list_tiao = []
 law_dict_tiao = {}
-f = open("net/result/law_result_tiao.txt", "r")
+f = open("net/result/law_history.txt", "r")
 for line in f:
     data = line[:-1].split(" ")
     name = (int(data[0]), int(data[1]))
