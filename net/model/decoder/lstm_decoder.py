@@ -98,7 +98,4 @@ class LSTMDecoder(nn.Module):
             else:
                 outputs.append(self.outfc[a - 1](h).view(config.getint("data", "batch_size"), -1))
 
-        for a in range(0, len(outputs)):
-            outputs[a] = self.sigmoid(outputs[a])
-
         return outputs

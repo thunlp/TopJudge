@@ -97,7 +97,7 @@ def gen_result(res, test=False, file_path=None, class_name=None):
         total["TP"] += res[a]["TP"]
         total["FP"] += res[a]["FP"]
         total["FN"] += res[a]["FN"]
-        total["TN"] += res[a]["FN"]
+        total["TN"] += res[a]["TN"]
 
         p, r, f = get_value(res[a])
         precision.append(p)

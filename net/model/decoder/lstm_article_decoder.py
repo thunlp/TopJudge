@@ -118,7 +118,4 @@ class LSTMArticleDecoder(nn.Module):
 
                     self.hidden_list[b] = (hp, cp)
 
-        for a in range(0, len(outputs)):
-            outputs[a] = self.sigmoid(outputs[a])
-
         return outputs

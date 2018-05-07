@@ -40,7 +40,4 @@ class FCDecoder(nn.Module):
                 outputs.append(fc(fc_input))
             now_cnt += 1
 
-        for a in range(0,len(outputs)):
-            outputs[a] = self.sigmoid(outputs[a])
-
         return outputs

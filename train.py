@@ -1,4 +1,3 @@
-import configparser
 import argparse
 import os
 import pdb
@@ -8,6 +7,7 @@ from net.model import *
 from net.file_reader import init_dataset
 from net.work import train_file
 from net.utils import print_info
+from net.parser import ConfigParser
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', '-c')
@@ -26,8 +26,7 @@ else:
     usegpu = True
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
-config = configparser.RawConfigParser()
-config.read(configFilePath)
+config = ConfigParser(configFilePath)
 
 train_dataset, test_dataset = init_dataset(config)
 

@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.optim as optim
-from net.model.loss import cross_entropy_loss
+from net.model.loss import cross_entropy_loss, one_cross_entropy_loss, log_regression
 
 from net.utils import calc_accuracy, gen_result, print_info
 from net.loader import get_num_classes
@@ -70,11 +70,21 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
     output_time = config.getint("debug", "output_time")
     test_time = config.getint("debug", "test_time")
     task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
+    task_loss_type = config.get("data", "type_of_loss").replace(" ", "").split(",")
     optimizer_type = config.get("train", "optimizer")
 
     model_path = config.get("train", "model_path")
 
-    criterion = cross_entropy_loss
+    criterion = []
+    for a in range(0, len(task_name)):
+        if task_loss_type[a] == "multi_classification":
+            criterion.append(cross_entropy_loss)
+        elif task_loss_type[a] == "single_classification":
+            criterion.append(one_cross_entropy_loss)
+        elif task_loss_type[a] == "log_regression":
+            criterion.append(log_regression)
+        else:
+            gg
     if optimizer_type == "adam":
         optimizer = optim.Adam(net.parameters(), lr=learning_rate, weight_decay=1e-3)
     elif optimizer_type == "sgd":
@@ -139,7 +149,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             # print(outputs)
             loss = 0
             for a in range(0, len(task_name)):
-                loss = loss + criterion(outputs[a], labels[a].float())
+                loss = loss + criterion[a](outputs[a], labels[a].float())
                 running_acc[a] = calc_accuracy(outputs[a], labels[a], running_acc[a])
 
             # print_info("Loss done, backwarding...")

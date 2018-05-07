@@ -1,11 +1,11 @@
 import argparse
-import configparser
 import os
 import torch
 
 from net.model import *
 from net.file_reader import init_dataset
 from net.work import test_file
+from net.parser import ConfigParser
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', '-m')
@@ -25,8 +25,7 @@ else:
     usegpu = True
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
-config = configparser.RawConfigParser()
-config.read(configFilePath)
+config = ConfigParser(configFilePath)
 
 train_dataset, test_dataset = init_dataset(config)
 
