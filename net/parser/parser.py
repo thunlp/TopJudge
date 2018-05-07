@@ -25,3 +25,9 @@ class ConfigParser:
             return self.config.getfloat(field, name)
         except Exception as e:
             return self.default_config.getfloat(field, name)
+
+    def getboolean(self, field, name):
+        try:
+            return self.config.getboolean(field, name)
+        except Exception as e:
+            return self.default_config.getboolean(field, name)
