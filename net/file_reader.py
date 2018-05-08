@@ -7,7 +7,7 @@ import multiprocessing
 import random
 from torch.autograd import Variable
 
-from net.data_formatter import check, parse, generate_vector
+from net.data_formatter import check, parse, generate_vector, get_time_id, get_crit_id, get_law_id
 from net.utils import get_data_list
 from net.word2vec import word2vec
 from net.utils import cut, print_info
@@ -26,11 +26,80 @@ print("working done")
 
 duplicate_list = {
     "crit": {
-        2: 2,
-        5: 5,
+        0: 5,
+        1: 5,
+        2: 10,
+        3: 3,
+        5: 15,
+        7: 5,
+        8: 7,
+        9: 7,
+        10: 40,
+        11: 4,
+        12: 4,
+        14: 10,
+        15: 5,
+        16: 1,
+        19: 3,
+        20: 10,
+        21: 3,
+        22: 2,
+        23: 2,
+        24: 15,
+        25: 7,
+        27: 3,
+        28: 2,
+        29: 10,
+        30: 5,
+        31: 8,
+        32: 20,
+        33: 20,
+        34: 7,
+        35: 2,
+        36: 4,
+        37: 2,
+        38: 2,
+        39: 15
     },
-    "law1": {},
-    "time": {}
+    "law1": {
+        0: 5,
+        1: 5,
+        2: 10,
+        3: 3,
+        6: 15,
+        7: 5,
+        8: 5,
+        9: 5,
+        10: 30,
+        11: 4,
+        12: 4,
+        14: 10,
+        15: 5,
+        16: 1,
+        19: 3,
+        20: 10,
+        21: 3,
+        22: 2,
+        23: 2,
+        24: 20,
+        25: 10,
+        28: 5,
+        29: 10,
+        30: 10,
+        31: 20,
+        32: 20,
+        33: 5,
+        34: 2,
+        35: 2,
+        36: 2,
+        37: 15
+    },
+    "time": {
+        0: 20,
+        1: 3,
+        2: 3,
+        3: 3
+    }
 }
 
 
@@ -48,6 +117,7 @@ class reader():
         self.read_process = []
         self.num_process = num_process
         self.none_cnt = 0
+        self.train = train
 
         for a in range(0, num_process):
             process = multiprocessing.Process(target=self.always_read_data,
@@ -116,8 +186,22 @@ class reader():
                     print("==========================")
                     gg
                 if check(y, config):
-                    data_list.append(parse(y, config, transformer))
-                    self.read_cnt += 1
+                    duplicate_time = 1
+                    if self.train:
+                        id1 = get_law_id(y["meta"]["law"])
+                        id2 = get_crit_id(y["meta"]["crit"])
+                        id3 = get_time_id(y["meta"]["time"])
+                        if id1 in duplicate_list["law1"].keys():
+                            duplicate_time += duplicate_list["law1"][id1]
+                        if id2 in duplicate_list["crit"].keys():
+                            duplicate_time += duplicate_list["crit"][id3]
+                        if id3 in duplicate_list["time"].keys():
+                            duplicate_time += duplicate_list["time"][id3]
+
+                    while len(data_list) < batch_size and duplicate_time > 0:
+                        duplicate_time -= 1
+                        data_list.append(parse(y, config, transformer))
+                        self.read_cnt += 1
 
             if len(data_list) < batch_size:
                 return None
