@@ -188,9 +188,9 @@ class reader():
                 if check(y, config):
                     duplicate_time = 1
                     if self.train:
-                        id1 = get_law_id(y["meta"]["law"])
-                        id2 = get_crit_id(y["meta"]["crit"])
-                        id3 = get_time_id(y["meta"]["time"])
+                        id1 = get_law_id(y["meta"]["law"], config)
+                        id2 = get_crit_id(y["meta"]["crit"], config)
+                        id3 = get_time_id(y["meta"]["time"], config)
                         if id1 in duplicate_list["law1"].keys():
                             duplicate_time += duplicate_list["law1"][id1]
                         if id2 in duplicate_list["crit"].keys():
