@@ -24,9 +24,18 @@ transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
 
 print("working done")
 
+duplicate_list = {
+    "crit": {
+        2: 2,
+        5: 5,
+    },
+    "law1": {},
+    "time": {}
+}
+
 
 class reader():
-    def __init__(self, file_list, config, num_process):
+    def __init__(self, file_list, config, num_process, train):
         self.file_list = file_list
 
         self.temp_file = None
@@ -138,18 +147,18 @@ class reader():
         return data
 
 
-def create_dataset(file_list, config, num_process):
-    return reader(file_list, config, num_process)
+def create_dataset(file_list, config, num_process, train):
+    return reader(file_list, config, num_process, train)
 
 
 def init_train_dataset(config):
     return create_dataset(get_data_list(config.get("data", "train_data")), config,
-                          config.getint("train", "train_num_process"))
+                          config.getint("train", "train_num_process"), True)
 
 
 def init_test_dataset(config):
     return create_dataset(get_data_list(config.get("data", "test_data")), config,
-                          config.getint("train", "test_num_process"))
+                          config.getint("train", "test_num_process"), False)
 
 
 def init_dataset(config):
