@@ -194,7 +194,7 @@ class reader():
                         if id1 in duplicate_list["law1"].keys():
                             duplicate_time += duplicate_list["law1"][id1]
                         if id2 in duplicate_list["crit"].keys():
-                            duplicate_time += duplicate_list["crit"][id3]
+                            duplicate_time += duplicate_list["crit"][id2]
                         if id3 in duplicate_list["time"].keys():
                             duplicate_time += duplicate_list["time"][id3]
 
