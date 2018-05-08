@@ -4,7 +4,7 @@ min_frequency = 1000
 
 accusation_list = []
 accusation_dict = {}
-f = open("net/result/crit_hisory.txt", "r")
+f = open("net/result/crit_history.txt", "r")
 for line in f:
     data = line[:-1].split(" ")
     name = data[0]
