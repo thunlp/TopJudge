@@ -89,9 +89,9 @@ def analyze_time(data, config):
     elif v > 1 * 12:
         opt = 6
     elif v > 0:
-        opt = 8
+        opt = 7
     else:
-        opt = 9
+        opt = 8
     """ 
     elif v > 9:
         opt = 7
