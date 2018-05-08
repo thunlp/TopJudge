@@ -129,7 +129,7 @@ def analyze_law_tiao(data, config):
 def analyze_time(data, config):
     res = torch.from_numpy(np.zeros(get_num_classes("time")))
 
-    get_time_id(data, config, data)
+    opt = get_time_id(data, config)
 
     res[opt] = 1
     return res
