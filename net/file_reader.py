@@ -24,7 +24,7 @@ transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
 
 print("working done")
 
-duplicate_list = {
+"""duplicate_list = {
     "crit": {
         0: 5,
         1: 5,
@@ -100,7 +100,9 @@ duplicate_list = {
         2: 3,
         3: 3
     }
-}
+}"""
+
+duplicate_list = {"crit" :{},"law1":{},"time":{}}
 
 
 class reader():

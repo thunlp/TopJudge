@@ -127,7 +127,7 @@ def gen_result(res, test=False, file_path=None, class_name=None):
             temp["total"] = temp["TP"] + temp["FN"]
             temp["precision"], temp["recall"], temp["f1"] = get_value(temp)
             if not (class_name is None):
-                print("%d %s " % (a, get_name(class_name, a)), res[a], file=f)
+                print("%d %s " % (a, get_name(class_name, a)), temp, file=f)
             else:
                 print("%d " % a, res[a], file=f)
         f.close()
