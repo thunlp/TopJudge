@@ -67,6 +67,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
     batch_size = config.getint("data", "batch_size")
     learning_rate = config.getfloat("train", "learning_rate")
     momemtum = config.getfloat("train", "momentum")
+    weight_decay = config.getfloat("train", "weight_decay")
 
     output_time = config.getint("output", "output_time")
     task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
@@ -87,7 +88,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
         else:
             gg
     if optimizer_type == "adam":
-        optimizer = optim.Adam(net.parameters(), lr=learning_rate, weight_decay=1e-3)
+        optimizer = optim.Adam(net.parameters(), lr=learning_rate, weight_decay=weight_decay)
     elif optimizer_type == "sgd":
         optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=momemtum)
     else:

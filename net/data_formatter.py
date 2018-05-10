@@ -25,7 +25,7 @@ def check_law(data):
             continue
         if not ((x, y) in law_dict.keys()):
             return False
-        arr.append((x, y, z))
+        arr.append((x, y))
 
     arr = list(set(arr))
     arr.sort()
@@ -105,7 +105,7 @@ def analyze_crit(data, config):
 def analyze_law(data, config):
     res = torch.from_numpy(np.zeros(get_num_classes("law")))
     for x in data:
-        y = (x[0], x[1], x[2])
+        y = (x[0], x[1])
         if y in law_dict.keys():
             res[law_dict[y]] = 1
     return res

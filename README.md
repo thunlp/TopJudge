@@ -24,15 +24,55 @@ If your data format is different from this project's setting, you need to modify
 To run our project, a config file is needed. If your config file is ``config``, we will first query the config setting in ``config``, and then if failed, query the config setting in ``default_config``. You can find ``default_config`` in the directory ``config``. If you want to learn the details of the config file, you can read the following list:
 
 * Field ``net``
-    * ``name``:
-    * 
+    * ``name``: The type of model. There are some possible models listing following:
+        * ``CNN``: The model using CNN as encoder.
+        * ``LSTM``: The model using LSTM as encoder.
+        * ``MultiLSTM``: The model using hierarchical LSTM as encoder.
+        * ``ArtFact``: The model in ``Luo, Bingfeng, et al. "Learning to Predict Charges for Criminal Cases with Legal Basis." (2017).``
+        * ``ArtFactSeq``: Combine the model metioned before with SeqJudge.
+        * ``CNNSeq``: Combine CNN encoder with SeqJudge.
+        * ``MultiLSTMSeq``: Combine hierarchical LSTM encoder with SeqJudge.
+        * ``Article``: Use artilce information as known knowledge to improve the results of SeqJudge.
+    * ``max_gram``: The max gram of CNN encoder.
+    * ``min_gram``: The min gram of CNN encoder.
+    * ``fc1_feature``: The num of features of fc layer.
+    * ``filters``: The num of filters of CNN.
+    * ``more_fc``: Whether to add a more fc for every tasks or not.
 * Field ``data``
+    * ``data_path``: The path of data. Under the data path, there should be two files named as ``crit.txt`` and ``law.txt``, containing the frequency information.
+    * ``train_data``: The list of train data filenames.
+    * ``test_data``: The list of test data filenames.
+    * ``type_of_label``: The list of tasks.
+    * ``type_of_loss``: The list of loss of every task. The posssble loss function are:
+        * ``single_classification``: Single class classifcation loss, with cross entropy.
+        * ``multi_classification``: Multi classes classifcation loss, with cross entropy.
+        * ``log_regression``: $\log^2\left(\left|y_{label}-y_{predict}\right|+1\right)$, unimplemented yet.
+    * ``graph``: The DAG structure of SeqJudge.
+    * ``batch_size``: The batch size.
+    * ``shuffle``: Whether to shuffle the data or not.
+    * ``vec_size``: The vector size of every word embedding.
+    * ``sentence_num``: The maximum number of sentences in documents.
+    * ``sentence_len``: The maximum length of a sentence.
+    * ``min_frequency``: The min frequency of a label in the data.
 * Field ``train``
+    * ``epoch``: The maximum training epoches.
+    * ``learning_rate``: The learning rate.
+    * ``momentum``: The momentum of sgd.
+    * ``weight_decay``: The weight decay.
+    * ``optimizer``: The optimizer, now you can use ``adam`` or ``sgd``.
+    * ``dropout``: The dropout ratio.
+    * ``train_num_process``: The num of processes to read training data.
+    * ``test_num_process``: The num of processes to read testing data.
 * Field ``debug``
-
-Under construction.
+    * ``output_time``: The num of batches to output debug information.
+    * ``model_path``: The basic path to save models.
+    * ``test_path``: The basic path to save test results,
+    * ``model_name``: The name of this config model. We will store all the things in the directory with name basic path add model name.
+    * ``test_time``: The num of epoches to run a test.
 
 ## Reference
 
 Under construction.
+
+
 
