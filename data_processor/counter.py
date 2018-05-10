@@ -1,0 +1,72 @@
+# coding: UTF-8
+
+import os
+import json
+import re
+
+in_path = r"/data/zhx/law/data"
+out_path = r"/disk/mysql/law_data/count_data"
+
+num_file = 20
+num_process = 1
+
+total_cnt = 0
+
+crit = {}
+law = {}
+
+
+def analyze_law(data):
+    for x, y, z in data:
+        if not ((x, y) in law.keys()):
+            law[(x, y)] = 0
+        law[(x, y)] += 1
+
+
+def analyze_crit(data):
+    for x in data:
+        if not (x in crit.keys()):
+            crit[x] = 0
+        crit[x] += 1
+
+
+def count(data):
+    global total_cnt
+    total_cnt += 1
+
+    analyze_law(data["law"])
+    analyze_crit(data["crit"])
+
+
+def draw_out(in_path, out_path):
+    print(in_path)
+    inf = open(in_path, "r")
+
+    cnt = 0
+    for line in inf:
+        data = json.loads(line)
+        count(data["meta"])
+        cnt += 1
+        if cnt % 500000 == 0:
+            print(cnt)
+
+
+def work(from_id, to_id):
+    for a in range(int(from_id), int(to_id)):
+        print(str(a) + " begin to work")
+        draw_out(os.path.join(in_path, str(a)), os.path.join(out_path, str(a)))
+        print(str(a) + " work done")
+
+
+if __name__ == "__main__":
+    work(0, 20)
+
+    f = open(os.path.join(in_path, "crit.txt"), "w")
+    for x in crit.keys():
+        print(x, crit[x], file=f)
+    f.close()
+
+    f = open(os.path.join(in_path, "law.txt"), "w")
+    for x, y in law.keys():
+        print(x, y, crit[(x, y)], file=f)
+    f.close()
