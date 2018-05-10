@@ -4,7 +4,7 @@ import torch
 import random
 import numpy as np
 
-from net.loader import accusation_dict, accusation_list, law_dict, law_list, law_dict_tiao, law_list_tiao
+from net.loader import accusation_dict, accusation_list, law_dict, law_list
 from net.loader import get_num_classes
 
 
@@ -23,7 +23,7 @@ def check_law(data):
     for x, y, z in data:
         if x < 102 or x > 452:
             continue
-        if not ((x, y) in law_dict_tiao.keys()):
+        if not ((x, y) in law_dict.keys()):
             return False
         arr.append((x, y, z))
 
@@ -46,8 +46,8 @@ def get_crit_id(data, config):
 def get_law_id(data, config):
     for x in data:
         y = (x[0], x[1])
-        if y in law_dict_tiao.keys():
-            return law_dict_tiao[y]
+        if y in law_dict.keys():
+            return law_dict[y]
 
 
 def get_time_id(data, config):
@@ -82,12 +82,6 @@ def get_time_id(data, config):
         opt = 5
     elif v > 1 * 12:
         opt = 6
-    elif v > 0:
-        opt = 7
-    else:
-        opt = 8
-
-    """ 
     elif v > 9:
         opt = 7
     elif v > 6:
@@ -95,7 +89,7 @@ def get_time_id(data, config):
     elif v > 0:
         opt = 9
     else:
-        opt = 10"""
+        opt = 10
 
     return opt
 
@@ -114,15 +108,6 @@ def analyze_law(data, config):
         y = (x[0], x[1], x[2])
         if y in law_dict.keys():
             res[law_dict[y]] = 1
-    return res
-
-
-def analyze_law_tiao(data, config):
-    res = torch.from_numpy(np.zeros(get_num_classes("law1")))
-    for x in data:
-        y = (x[0], x[1])
-        if y in law_dict_tiao.keys():
-            res[law_dict_tiao[y]] = 1
     return res
 
 
@@ -234,8 +219,6 @@ def parse(data, config, transformer):
             label.append(analyze_crit(data["meta"]["crit"], config))
         if x == "law":
             label.append(analyze_law(data["meta"]["law"], config))
-        if x == "law1":
-            label.append(analyze_law_tiao(data["meta"]["law"], config))
         if x == "time":
             label.append(analyze_time(data["meta"]["time"], config))
     vector, len_vec = generate_vector(data["content"], config, transformer)

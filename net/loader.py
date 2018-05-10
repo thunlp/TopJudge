@@ -1,39 +1,35 @@
+import os
+
 min_frequency = 1000
 
 # 10 214 474
 
+
 accusation_list = []
 accusation_dict = {}
-f = open("net/result/crit_history.txt", "r")
-for line in f:
-    data = line[:-1].split(" ")
-    name = data[0]
-    num = int(data[2])
-    if num > min_frequency:
-        accusation_list.append(name)
-        accusation_dict[name] = len(accusation_list) - 1
-
 law_list = []
 law_dict = {}
-f = open("net/result/law_result.txt", "r")
-for line in f:
-    data = line[:-1].split(" ")
-    name = (int(data[0]), int(data[1]), int(data[2]))
-    num = int(data[3])
-    if num > min_frequency:
-        law_list.append(name)
-        law_dict[name] = len(law_list) - 1
 
-law_list_tiao = []
-law_dict_tiao = {}
-f = open("net/result/law_history.txt", "r")
-for line in f:
-    data = line[:-1].split(" ")
-    name = (int(data[0]), int(data[1]))
-    num = int(data[2])
-    if num > min_frequency:
-        law_list_tiao.append(name)
-        law_dict_tiao[name] = len(law_list_tiao) - 1
+
+def init(config):
+    data_path = config.get("data", "data_path")
+    f = open(os.path.join(data_path, "crit.txt"), "r")
+    for line in f:
+        data = line[:-1].split(" ")
+        name = data[0]
+        num = int(data[2])
+        if num > min_frequency:
+            accusation_list.append(name)
+            accusation_dict[name] = len(accusation_list) - 1
+
+    f = open(os.path.join(data_path, "law.txt"), "r")
+    for line in f:
+        data = line[:-1].split(" ")
+        name = (int(data[0]), int(data[1]))
+        num = int(data[2])
+        if num > min_frequency:
+            law_list.append(name)
+            law_dict[name] = len(law_list) - 1
 
 
 def get_num_classes(s):
@@ -41,8 +37,6 @@ def get_num_classes(s):
         return len(accusation_list)
     if s == "law":
         return len(law_list)
-    if s == "law1":
-        return len(law_list_tiao)
     if s == "time":
         return 11
     gg
@@ -53,8 +47,6 @@ def get_name(s, num):
         return accusation_list[num]
     if s == "law":
         return law_list[num]
-    if s == "law1":
-        return law_list_tiao[num]
     if s == "time":
         map_list = {
             0: "死刑或无期",
@@ -76,5 +68,4 @@ def get_name(s, num):
 
 
 print(len(accusation_list))
-# print(len(law_list))
-print(len(law_list_tiao))
+print(len(law_list))

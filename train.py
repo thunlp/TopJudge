@@ -8,6 +8,7 @@ from net.file_reader import init_dataset
 from net.work import train_file
 from net.utils import print_info
 from net.parser import ConfigParser
+from net.loader import init
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', '-c')
@@ -27,6 +28,7 @@ else:
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
 config = ConfigParser(configFilePath)
+init(config)
 
 train_dataset, test_dataset = init_dataset(config)
 
