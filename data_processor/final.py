@@ -6,7 +6,7 @@ import thulac
 import re
 import pdb
 
-cutter = thulac.thulac(model_path=r"/home/zhx/models", seg_only=True, filt=False)
+cutter = thulac.thulac(model_path=r"/data/zhx/thulac/models", seg_only=True, filt=False)
 
 in_path = "/data/zhx/pkuData/give_zhx"
 out_path = "/data/zhx/pkuData/data"
@@ -317,7 +317,7 @@ def check(x, s):
 
 
 def parse_name_of_accusation(data):
-    if "PJJG" in data["documnet"]:
+    if "PJJG" in data["document"]:
         s = data["document"]["PJJG"]
     else:
         s = data["document"]["content"]
