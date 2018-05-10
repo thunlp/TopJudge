@@ -14,9 +14,10 @@ def test_file(net, test_dataset, usegpu, config, epoch):
     running_acc = []
     task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
     task_loss_type = config.get("data", "type_of_loss").replace(" ", "").split(",")
-    if not (os.path.exists(config.get("train", "test_path"))):
-        os.makedirs(config.get("train", "test_path"))
-    test_result_path = os.path.join(config.get("train", "test_path"), str(epoch))
+    test_result_path = os.path.join(config.get("output", "test_path"), config.get("output", "model_name"))
+    if not (os.path.exists(test_result_path)):
+        os.makedirs(test_result_path)
+    test_result_path = os.path.join(config.get("output", "test_path"), config.get("output", "model_name"), str(epoch))
     for a in range(0, len(task_name)):
         running_acc.append([])
         for b in range(0, get_num_classes(task_name[a])):
@@ -47,7 +48,7 @@ def test_file(net, test_dataset, usegpu, config, epoch):
 
         outputs = net.forward(inputs, doc_len, config)
         for a in range(0, len(task_name)):
-            running_acc[a] = calc_accuracy(outputs[a], labels[a],task_loss_type[a],running_acc[a])
+            running_acc[a] = calc_accuracy(outputs[a], labels[a], task_loss_type[a], running_acc[a])
 
     net.train()
 
@@ -66,15 +67,13 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
     batch_size = config.getint("data", "batch_size")
     learning_rate = config.getfloat("train", "learning_rate")
     momemtum = config.getfloat("train", "momentum")
-    shuffle = config.getboolean("data", "shuffle")
 
     output_time = config.getint("debug", "output_time")
-    test_time = config.getint("debug", "test_time")
     task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
     task_loss_type = config.get("data", "type_of_loss").replace(" ", "").split(",")
     optimizer_type = config.get("train", "optimizer")
 
-    model_path = config.get("train", "model_path")
+    model_path = os.path.join(config.get("output", "model_path"), config.get("output", "model_name"))
 
     criterion = []
     for a in range(0, len(task_name)):
@@ -194,7 +193,8 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
 
         for a in range(0, len(task_name)):
             gen_result(total_acc[a], True,
-                       file_path=os.path.join(config.get("train", "test_path"), "total") + "-" + task_name[a],
+                       file_path=os.path.join(config.get("output", "test_path"), config.get("output", "model_name"),
+                                              "total") + "-" + task_name[a],
                        class_name=task_name[a])
 
         if (epoch_num + 1) % 1 == 0:

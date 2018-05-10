@@ -41,7 +41,9 @@ match_list = {
     "CNNSeq": CNNSeq,
     "MultiLSTMSeq": MultiLSTMSeq,
     "Article": Article,
-    "LSTM": LSTM
+    "LSTM": LSTM,
+    "ArtFact": NNFactArt,
+    "ArtFactSeq": NNFactArtSeq
 }
 
 if model_name in match_list.keys():
