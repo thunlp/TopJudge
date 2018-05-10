@@ -387,7 +387,7 @@ def sort_reason(l):
         gg = list(set(gg))
         gg.sort()
         for (y, z, r) in gg:
-            result_list.append({"law_name": x, "tiao_num": y, "kuan_num": z, "zhiyi": r})
+            result_list.append((y, r, z))
 
     return result_list
 
