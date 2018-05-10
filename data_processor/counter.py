@@ -68,5 +68,5 @@ if __name__ == "__main__":
 
     f = open(os.path.join(in_path, "law.txt"), "w")
     for x, y in law.keys():
-        print(x, y, crit[(x, y)], file=f)
+        print(x, y, law[(x, y)], file=f)
     f.close()
