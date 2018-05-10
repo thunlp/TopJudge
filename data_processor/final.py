@@ -75,7 +75,7 @@ accusation_regex = r"(被告人){0,1}(\S{2,3}?(、([^、]{2,3}?))*)(犯){0,1}(�
 # print(accusation_regex)
 accusation_regex = re.compile(accusation_regex)
 
-num_process = 1
+num_process = 4
 num_file = 20
 
 
@@ -751,7 +751,7 @@ def draw_out(in_path, out_path):
                 # break
 
         except Exception as e:
-            gg  # print(e)
+            continue#gg  # print(e)
             # gg
 
 
