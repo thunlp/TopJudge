@@ -8,8 +8,8 @@ import pdb
 
 cutter = thulac.thulac(model_path=r"/home/zhx/models", seg_only=True, filt=False)
 
-in_path = "/data/zhx/pkuData/give_zhx"
-out_path = "/data/zhx/pkuData/data"
+in_path = "/disk/mysql/law_data/classified_data/刑事判决书"
+out_path = "/disk/mysql/law_data/final_data2/"
 mid_text = u"\t"
 title_list = ["docId", "caseNumber", "caseName", "spcx", "court", "time", "caseType", "bgkly", "yuanwen", "document",
               "cause", "docType", "keyword", "lawyer", "punishment", "result", "judge"]
@@ -81,12 +81,16 @@ num_file = 20
 
 def cut(s):
     data = cutter.cut(s)
-    result = []
+    result = ""
     first = True
     for x, y in data:
         if x == " ":
             continue
-        result.append(x)
+        if first:
+            first = False
+        else:
+            result = result + mid_text
+        result = result + x
     return result
 
 
@@ -551,11 +555,11 @@ def parse(data):
     result = {}
     # print(data["document"]["PJJG"])
 
-    result["crit"] = parse_name_of_accusation(data)
+    result["name_of_accusation"] = parse_name_of_accusation(data)
     result["criminals"] = list(parse_criminals(data))
-    result["time"] = parse_term_of_imprisonment(data)
-    result["law"] = parse_name_of_law(data)
-    result["money"] = parse_money(data)
+    result["term_of_imprisonment"] = parse_term_of_imprisonment(data)
+    result["name_of_law"] = parse_name_of_law(data)
+    result["punish_of_money"] = parse_money(data)
 
     return result
 
@@ -709,10 +713,10 @@ def reformat_fact_money(fact, money):
 
 
 def reformat_fact(fact, meta):
-    fact = reformat_fact_accusation(fact, meta["crit"])
-    fact = reformat_fact_imprisonment(fact, meta["time"])
-    fact = reformat_fact_law(fact, meta["law"])
-    fact = reformat_fact_money(fact, meta["money"])
+    fact = reformat_fact_accusation(fact, meta["name_of_accusation"])
+    fact = reformat_fact_imprisonment(fact, meta["term_of_imprisonment"])
+    fact = reformat_fact_law(fact, meta["name_of_law"])
+    fact = reformat_fact_money(fact, meta["punish_of_money"])
 
     return fact
 
@@ -732,21 +736,18 @@ def draw_out(in_path, out_path):
                 continue
             meta = parse(data)
             fact = reformat_fact(fact, meta)
+            print(data["document"]["content"])
+            print(fact)
+            print(meta)
 
-            for a in range(0, len(meta["crit"])):
-                meta["crit"][a] = meta["crit"][a].replace("[", "").replace("]", "")
-            fact = cut(fact)
-            res = [[]]
-            for x in fact:
-                if x == "。":
-                    res.append([])
-                else:
-                    res[-1].append(x)
+            for a in range(0, len(meta["name_of_accusation"])):
+                meta["name_of_accusation"][a] = meta["name_of_accusation"][a].replace("[", "").replace("]", "")
+            #fact = cut(fact)
 
-            print(json.dumps({"content": res, "meta": meta}, ensure_ascii=False), file=ouf)
+            #print(json.dumps({"content": fact, "meta": meta}, ensure_ascii=False), file=ouf)
 
             cnt += 1
-            if cnt % 5000 == 0:
+            if cnt % 750 == 0:
                 print(in_path, cnt, cx)
                 # break
 
