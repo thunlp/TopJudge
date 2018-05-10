@@ -68,7 +68,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
     learning_rate = config.getfloat("train", "learning_rate")
     momemtum = config.getfloat("train", "momentum")
 
-    output_time = config.getint("debug", "output_time")
+    output_time = config.getint("output", "output_time")
     task_name = config.get("data", "type_of_label").replace(" ", "").split(",")
     task_loss_type = config.get("data", "type_of_loss").replace(" ", "").split(",")
     optimizer_type = config.get("train", "optimizer")
