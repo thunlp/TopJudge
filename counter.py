@@ -48,6 +48,7 @@ def count(data):
 
     analyze_law(data["law"])
     analyze_crit(data["crit"])
+    analyze_time(data["time"])
 
 
 def draw_out(in_path, out_path):
