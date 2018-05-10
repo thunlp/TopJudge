@@ -30,6 +30,9 @@ def init(config):
         if num > min_frequency:
             law_list.append(name)
             law_dict[name] = len(law_list) - 1
+    
+    print(len(accusation_list))
+    print(len(law_list))
 
 
 def get_num_classes(s):
@@ -67,5 +70,3 @@ def get_name(s, num):
     gg
 
 
-print(len(accusation_list))
-print(len(law_list))
