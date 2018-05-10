@@ -4,6 +4,9 @@ import os
 import json
 import re
 
+from net.data_formatter import get_time_id
+from net.loader import get_name
+
 in_path = r"/data/zhx/law/data"
 out_path = r"/disk/mysql/law_data/count_data"
 
@@ -14,6 +17,7 @@ total_cnt = 0
 
 crit = {}
 law = {}
+term = {}
 
 
 def analyze_law(data):
@@ -28,6 +32,14 @@ def analyze_crit(data):
         if not (x in crit.keys()):
             crit[x] = 0
         crit[x] += 1
+
+
+def analyze_time(data):
+    idx = get_time_id(data, None)
+    name = get_name("time", idx)
+    if not (name in term.keys()):
+        term[name] = 0
+    term[name] += 1
 
 
 def count(data):
@@ -66,7 +78,16 @@ if __name__ == "__main__":
         print(x, crit[x], file=f)
     f.close()
 
+    f = open(os.path.join(in_path, "time.txt"), "w")
+    for x in term.keys():
+        print(x, term[x], file=f)
+    f.close()
+
     f = open(os.path.join(in_path, "law.txt"), "w")
     for x, y in law.keys():
         print(x, y, law[(x, y)], file=f)
+    f.close()
+
+    f = open(os.path.join(in_path, "total.txt"), "w")
+    print(total_cnt, file=f)
     f.close()
