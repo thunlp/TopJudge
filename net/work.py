@@ -74,6 +74,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
     optimizer_type = config.get("train", "optimizer")
 
     model_path = os.path.join(config.get("output", "model_path"), config.get("output", "model_name"))
+    test_time = config.getint("output", "test_time")
 
     criterion = []
     for a in range(0, len(task_name)):
@@ -191,14 +192,14 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             os.makedirs(model_path)
         torch.save(net.state_dict(), os.path.join(model_path, "model-%d.pkl" % (epoch_num + 1)))
 
+        if (epoch_num + 1) % test_time == 0:
+            test_file(net, test_dataset, usegpu, config, epoch_num + 1)
+
         for a in range(0, len(task_name)):
             gen_result(total_acc[a], True,
                        file_path=os.path.join(config.get("output", "test_path"), config.get("output", "model_name"),
                                               "total") + "-" + task_name[a],
                        class_name=task_name[a])
-
-        if (epoch_num + 1) % 1 == 0:
-            test_file(net, test_dataset, usegpu, config, epoch_num + 1)
 
     print_info("Training done")
 
