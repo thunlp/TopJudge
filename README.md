@@ -17,6 +17,9 @@ For testing, you can run like:
 ```
 python test.py --config CONFIG_FILE --gpu GPU_ID --model MODEL_PATH
 ```
+
+If you want to use our data setting, you need to promise that there are the frequency count result in the data folder. You can run ``python counter.py`` to generate the count result. This version of ``conuter.py`` has not been written in OOP form yet.
+
 If your data format is different from this project's setting, you need to modify ``net/data_formatter.py``. You need to implement two functions, ``check`` and ``parse``. The function ``check`` has two parameters: ``data`` and ``config``, and it will return whether this data is suitable for the config. The function ``parse`` has three parameters: ``data``, ``config`` and ``transformer``. The ``transformer`` is the Word2Vec object, you can view the function ``net/data_formatter.py/load`` for usage. The ``parse`` function should return three things. The first is the documents embedding with size $sentence\_num\times sentence\_len\times vec\_size$. The second is the length of every sentence with total size $sentence\_num$. The third is the label whose size should be fixed for your tasks.
 
 ## Config File
@@ -38,6 +41,8 @@ To run our project, a config file is needed. If your config file is ``config``, 
     * ``fc1_feature``: The num of features of fc layer.
     * ``filters``: The num of filters of CNN.
     * ``more_fc``: Whether to add a more fc for every tasks or not.
+    * ``hidden_size``: The hidden size of LSTM cell.
+    * ``attention``: Whether to use attention or not.
 * Field ``data``
     * ``data_path``: The path of data. Under the data path, there should be two files named as ``crit.txt`` and ``law.txt``, containing the frequency information.
     * ``train_data``: The list of train data filenames.
