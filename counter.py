@@ -54,6 +54,23 @@ def count(data):
     analyze_time(data["time"])
 
 
+def check(data):
+    if len(data["meta"]["crit"]) != 1:
+        return False
+    cnt = 0
+
+    arr = []
+    for x, y, z in data["meta"]["law"]:
+        if x < 102 or x > 452:
+            continue
+        arr.append((x, y))
+
+    arr = list(set(arr))
+    arr.sort()
+
+    return len(arr) == 1
+
+
 def draw_out(in_path, out_path):
     print(in_path)
     inf = open(in_path, "r")
@@ -61,8 +78,8 @@ def draw_out(in_path, out_path):
     cnt = 0
     for line in inf:
         data = json.loads(line)
-        if not (check_sentence(data["content"], config)):
-            return False
+        if not (check(data)):
+            continue
         count(data["meta"])
         cnt += 1
         if cnt % 500000 == 0:
