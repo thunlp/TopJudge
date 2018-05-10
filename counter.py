@@ -8,7 +8,7 @@ from net.parser import ConfigParser
 from net.data_formatter import get_time_id, check_sentence
 from net.loader import get_name
 
-in_path = r"/data/zhx/law/data"
+in_path = r"/data/zhx/law/data/pku"
 out_path = r"/disk/mysql/law_data/count_data"
 
 num_file = 20

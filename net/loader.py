@@ -14,7 +14,7 @@ def init(config):
     for line in f:
         data = line[:-1].split(" ")
         name = data[0]
-        num = int(data[2])
+        num = int(data[1])
         if num > min_frequency:
             cnt1 += num
             accusation_list.append(name)
