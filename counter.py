@@ -7,7 +7,7 @@ import re
 from net.data_formatter import get_time_id
 from net.loader import get_name
 
-in_path = r"/data/zhx/law/data"
+in_path = r"/data/zhx/law/data/pku"
 out_path = r"/disk/mysql/law_data/count_data"
 
 num_file = 20
