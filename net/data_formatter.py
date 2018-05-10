@@ -139,40 +139,12 @@ cnt1 = 0
 cnt2 = 0
 
 
-def format_sentence(data, config):
-    result = data.split("。")
-    for a in range(0, len(result)):
-        temp = result[a].split("\t")
-        result[a] = []
-        for x in temp:
-            if x != "":
-                result[a].append(x)
-
-    return result
-
-
-def parse_sentence(data, config):
-    global cnt1, cnt2
-    # data = data.split("\t")
-    result = data
-    if result is None:
+def check_sentence(data, config):
+    if len(data) > config.getint("data", "sentence_num"):
         return False
-
-    result = format_sentence(data, config)
-
-    if len(result) == 0:
-        return False
-
-    if len(result) > config.getint("data", "sentence_num"):
-        cnt1 += 1
-        # print("cnt1 %d" % cnt1)
-        return False
-    for a in range(0, len(result)):
-        if len(result[a]) > config.getint("data", "sentence_len"):
-            cnt2 += 1
-            # print("cnt2 %d" % cnt2)
+    for x in data:
+        if len(x) > config.getint("data", "sentence_len"):
             return False
-
     return True
 
 
@@ -226,6 +198,8 @@ def parse(data, config, transformer):
 
 
 def check(data, config):
+    #if not (check_sentence(data["content"], config)):
+    #    return False
     if len(data["meta"]["criminals"]) != 1:
         return False
     if len(data["meta"]["crit"]) == 0 or len(data["meta"]["law"]) == 0:

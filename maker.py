@@ -5,8 +5,12 @@ import json
 import thulac
 import re
 import pdb
+from net.parser import ConfigParser
+from net.data_formatter import check_sentence
 
 cutter = thulac.thulac(model_path=r"/data/zhx/thulac/models", seg_only=True, filt=False)
+
+config = ConfigParser("/home/zhx/law_pre/config/default_config.config")
 
 in_path = "/data/zhx/pkuData/give_zhx"
 out_path = "/data/zhx/pkuData/data"
@@ -626,7 +630,7 @@ def generate_fact(data):
 def reformat_fact_accusation(fact, charge_list):
     for charge in charge_list:
         if check(charge, fact):
-            fact = fact.replace(charge.replace("[", "").replace("]", ""), "××")
+            fact = fact.replace(charge.replace("[", "").replace("]", ""), "×")
 
     return fact
 
@@ -647,14 +651,14 @@ def reformat_fact_imprisonment(fact, term):
     for x in pattern.finditer(fact):
         pos = x.start()
         data = get_numstr(fact, pos, len(u"有期徒刑"))
-        new_fact = new_fact.replace(data, "××")
+        new_fact = new_fact.replace(data, "×")
 
     # 拘役
     pattern = re.compile(u"拘役")
     for x in pattern.finditer(fact):
         pos = x.start()
         data = get_numstr(fact, pos, len(u"拘役"))
-        new_fact = new_fact.replace(data, "××")
+        new_fact = new_fact.replace(data, "×")
 
     # 管制
     guanzhi_arr = []
@@ -662,7 +666,7 @@ def reformat_fact_imprisonment(fact, term):
     for x in pattern.finditer(fact):
         pos = x.start()
         data = get_numstr(fact, pos, len(u"管制"))
-        new_fact = new_fact.replace(data, "××")
+        new_fact = new_fact.replace(data, "×")
 
     # 缓刑
     guanzhi_arr = []
@@ -670,9 +674,9 @@ def reformat_fact_imprisonment(fact, term):
     for x in pattern.finditer(fact):
         pos = x.start()
         data = get_numstr(fact, pos, len(u"缓刑"))
-        new_fact = new_fact.replace(data, "××")
+        new_fact = new_fact.replace(data, "×")
 
-    new_fact = new_fact.replace("无期徒刑", "××").replace("死刑", "××")
+    new_fact = new_fact.replace("无期徒刑", "×").replace("死刑", "×")
 
     return new_fact
 
@@ -691,7 +695,7 @@ def reformat_fact_law(fact, law):
     for reg in reg_list:
         result = reg.finditer(fact)
         for x in result:
-            new_fact = new_fact.replace(x.group(0), "××")
+            new_fact = new_fact.replace(x.group(0), "×")
 
     return new_fact
 
@@ -703,7 +707,7 @@ def reformat_fact_money(fact, money):
     new_fact = fact
 
     for x in result:
-        new_fact = new_fact.replace(x.group(1), "××")
+        new_fact = new_fact.replace(x.group(1), "×")
 
     return new_fact
 
@@ -742,6 +746,8 @@ def draw_out(in_path, out_path):
                     res.append([])
                 else:
                     res[-1].append(x)
+            if not(check_sentence(res,config)):
+                continue
 
             print(json.dumps({"content": res, "meta": meta}, ensure_ascii=False), file=ouf)
 

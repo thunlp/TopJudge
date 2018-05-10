@@ -3,8 +3,9 @@
 import os
 import json
 import re
+from net.parser import ConfigParser
 
-from net.data_formatter import get_time_id
+from net.data_formatter import get_time_id, check_sentence
 from net.loader import get_name
 
 in_path = r"/data/zhx/law/data"
@@ -18,6 +19,8 @@ total_cnt = 0
 crit = {}
 law = {}
 term = {}
+
+config = ConfigParser("/home/zhx/law_pre/config/default_config.config")
 
 
 def analyze_law(data):
@@ -58,6 +61,8 @@ def draw_out(in_path, out_path):
     cnt = 0
     for line in inf:
         data = json.loads(line)
+        if not (check_sentence(data["content"], config)):
+            return False
         count(data["meta"])
         cnt += 1
         if cnt % 500000 == 0:
