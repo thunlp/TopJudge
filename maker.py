@@ -746,7 +746,7 @@ def draw_out(in_path, out_path):
                     res.append([])
                 else:
                     res[-1].append(x)
-            if not(check_sentence(res,config)):
+            if not (check_sentence(res, config)):
                 continue
 
             print(json.dumps({"content": res, "meta": meta}, ensure_ascii=False), file=ouf)
@@ -757,7 +757,7 @@ def draw_out(in_path, out_path):
                 # break
 
         except Exception as e:
-            continue#gg  # print(e)
+            continue  # gg  # print(e)
             # gg
 
 
