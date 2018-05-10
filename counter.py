@@ -25,6 +25,8 @@ config = ConfigParser("/home/zhx/law_pre/config/default_config.config")
 
 def analyze_law(data):
     for x, y, z in data:
+        if x < 102 or x > 452:
+            continue
         if not ((x, y) in law.keys()):
             law[(x, y)] = 0
         law[(x, y)] += 1
