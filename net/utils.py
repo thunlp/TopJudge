@@ -122,6 +122,10 @@ def gen_result(res, test=False, file_path=None, class_name=None):
         print("Micro f1\t%.3f" % micro_f1, file=f)
         print("Macro f1\t%.3f" % macro_f1, file=f)
         print("", file=f)
+        total_cnt = 0
+        for a in range(0, len(res)):
+            total_cnt += res[a]["TP"] + res[a]["FN"]
+        print(total_cnt, file=f)
         for a in range(0, len(res)):
             temp = res[a]
             temp["total"] = temp["TP"] + temp["FN"]
