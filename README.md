@@ -43,6 +43,10 @@ To run our project, a config file is needed. If your config file is ``config``, 
     * ``more_fc``: Whether to add a more fc for every tasks or not.
     * ``hidden_size``: The hidden size of LSTM cell.
     * ``attention``: Whether to use attention or not.
+    * ``num_layers``: The number of layers in LSTM.
+    * ``method``: The method of LSTM to generate embedding. The possible options are:
+        * ``MAX``: Using max-pooling on the LSTM output.
+        * ``LAST``: Using the last output.
 * Field ``data``
     * ``data_path``: The path of data. Under the data path, there should be two files named as ``crit.txt`` and ``law.txt``, containing the frequency information.
     * ``train_data``: The list of train data filenames.
@@ -60,6 +64,7 @@ To run our project, a config file is needed. If your config file is ``config``, 
     * ``sentence_len``: The maximum length of a sentence.
     * ``min_frequency``: The min frequency of a label in the data.
     * ``word2vec`` : The word2vec path.
+    * ``top_k``: The top-k relevant articles, see the paper we mentioned.
 * Field ``train``
     * ``epoch``: The maximum training epoches.
     * ``learning_rate``: The learning rate.
