@@ -3,10 +3,11 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.optim as optim
-from net.model.loss import cross_entropy_loss, one_cross_entropy_loss, log_regression
 
+from net.model.loss import cross_entropy_loss, one_cross_entropy_loss, log_regression
 from net.utils import calc_accuracy, gen_result, print_info
 from net.loader import get_num_classes
+from net.model.model import Pipeline
 
 
 def test_file(net, test_dataset, usegpu, config, epoch):
@@ -37,6 +38,11 @@ def test_file(net, test_dataset, usegpu, config, epoch):
         else:
             inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
+        if isinstance(net, Pipeline):
+            outputs = net.forward(inputs, doc_len, config, labels)
+        else:
+            outputs = net.forward(inputs, doc_len, config)
+
         reals = []
         accumulate = 0
         for a in range(0, len(task_name)):
@@ -45,8 +51,6 @@ def test_file(net, test_dataset, usegpu, config, epoch):
             accumulate += num_class
 
         labels = reals
-
-        outputs = net.forward(inputs, doc_len, config)
         for a in range(0, len(task_name)):
             running_acc[a] = calc_accuracy(outputs[a], labels[a], task_loss_type[a], running_acc[a])
 
@@ -130,6 +134,16 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             else:
                 inputs, doc_len, labels = Variable(inputs), Variable(doc_len), Variable(labels)
 
+            # print_info("Data fetch done, forwarding...")
+
+            net.init_hidden(config, usegpu)
+            optimizer.zero_grad()
+
+            if isinstance(net, Pipeline):
+                outputs = net.forward(inputs, doc_len, config, labels)
+            else:
+                outputs = net.forward(inputs, doc_len, config)
+
             reals = []
             accumulate = 0
             for a in range(0, len(task_name)):
@@ -138,13 +152,6 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
                 accumulate += num_class
 
             labels = reals
-
-            # print_info("Data fetch done, forwarding...")
-
-            net.init_hidden(config, usegpu)
-            optimizer.zero_grad()
-
-            outputs = net.forward(inputs, doc_len, config)
 
             # print_info("Forward done, lossing...")
             # print(labels)

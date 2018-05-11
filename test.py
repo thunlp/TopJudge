@@ -2,7 +2,7 @@ import argparse
 import os
 import torch
 
-from net.model import *
+from net.model import get_model
 from net.file_reader import init_dataset, init_transformer
 from net.work import test_file
 from net.parser import ConfigParser
@@ -33,25 +33,9 @@ init_transformer(config)
 train_dataset, test_dataset = init_dataset(config)
 
 print("Building net...")
-net = None
-
 model_name = config.get("net", "name")
 
-match_list = {
-    "CNN": CNN,
-    "MultiLSTM": MultiLSTM,
-    "CNNSeq": CNNSeq,
-    "MultiLSTMSeq": MultiLSTMSeq,
-    "Article": Article,
-    "LSTM": LSTM,
-    "ArtFact": NNFactArt,
-    "ArtFactSeq": NNFactArtSeq
-}
-
-if model_name in match_list.keys():
-    net = match_list[model_name](config, usegpu)
-else:
-    gg
+net = get_model(model_name, config, usegpu)
 
 print("Net building done.")
 

@@ -3,8 +3,8 @@ import os
 import pdb
 import torch
 
-from net.model import *
-from net.file_reader import init_dataset,init_transformer
+from net.model import get_model
+from net.file_reader import init_dataset, init_transformer
 from net.work import train_file
 from net.utils import print_info
 from net.parser import ConfigParser
@@ -38,21 +38,7 @@ net = None
 
 model_name = config.get("net", "name")
 
-match_list = {
-    "CNN": CNN,
-    "MultiLSTM": MultiLSTM,
-    "CNNSeq": CNNSeq,
-    "MultiLSTMSeq": MultiLSTMSeq,
-    "Article": Article,
-    "LSTM": LSTM,
-    "ArtFact": NNFactArt,
-    "ArtFactSeq": NNFactArtSeq
-}
-
-if model_name in match_list.keys():
-    net = match_list[model_name](config, usegpu)
-else:
-    gg
+net = get_model(model_name, config, usegpu)
 
 try:
     net.load_state_dict(
