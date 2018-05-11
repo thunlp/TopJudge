@@ -15,14 +15,17 @@ from net.utils import cut, print_info
 # print("working...")
 import h5py
 
-transformer = word2vec()
-# manager = multiprocessing.Manager()
-transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
-# transformer = None
-# print(len(transformer))
-# transformer = manager.list([transformer])
+transformer = None
 
-print("working done")
+
+def init_transformer(config):
+    global transformer
+    transformer = word2vec(os.path.join(config.get("data", "word2vec"), "word2id.pkl"),
+                           os.path.join(config.get("data", "word2vec"), "vec_nor.npy"))
+    transformer = {x: transformer.vec[y] for x, y in transformer.word2id.items()}
+
+    print("Transformer init done")
+
 
 """duplicate_list = {
     "crit": {
@@ -102,7 +105,7 @@ print("working done")
     }
 }"""
 
-duplicate_list = {"crit" :{},"law1":{},"time":{}}
+duplicate_list = {"crit": {}, "law1": {}, "time": {}}
 
 
 class reader():

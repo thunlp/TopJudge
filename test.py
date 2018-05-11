@@ -3,7 +3,7 @@ import os
 import torch
 
 from net.model import *
-from net.file_reader import init_dataset
+from net.file_reader import init_dataset, init_transformer
 from net.work import test_file
 from net.parser import ConfigParser
 from net.loader import init
@@ -27,8 +27,9 @@ else:
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
 config = ConfigParser(configFilePath)
-init(config)
 
+init(config)
+init_transformer(config)
 train_dataset, test_dataset = init_dataset(config)
 
 print("Building net...")

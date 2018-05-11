@@ -59,6 +59,7 @@ To run our project, a config file is needed. If your config file is ``config``, 
     * ``sentence_num``: The maximum number of sentences in documents.
     * ``sentence_len``: The maximum length of a sentence.
     * ``min_frequency``: The min frequency of a label in the data.
+    * ``word2vec`` : The word2vec path.
 * Field ``train``
     * ``epoch``: The maximum training epoches.
     * ``learning_rate``: The learning rate.
