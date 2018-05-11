@@ -58,9 +58,12 @@ for a in range(0, 58):
                     res[-1].append(x)
             if not (check_sentence(res, config)):
                 continue
+            result["fact"]=res
 
             cnt += 1
             op = cnt % 20
             print(json.dumps(result, ensure_ascii=False), file=ouf[op])
+            if cnt % 5000 == 0:
+                print(a,cnt)
         except Exception as e:
             gg
