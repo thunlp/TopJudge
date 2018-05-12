@@ -41,7 +41,8 @@ except Exception as e:
     print(e)
 
 f = open("result/%s" % name, "w")
-for x in result.keys():
-    print(x, json.dumps(result[x]), file=f)
+for x in ["law","crit","time"]:
+    print(x,[result[x]["acc"],result[x]["mp"],result[x]["mr"],result[x]["f1"]], file=f)
+    print(x,[result[x]["acc"],result[x]["mp"],result[x]["mr"],result[x]["f1"]])
 
 f.close()
