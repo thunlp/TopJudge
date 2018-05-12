@@ -19,26 +19,22 @@ class CNNEncoder(nn.Module):
         x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
         conv_out = []
         gram = config.getint("net", "min_gram")
+        self.attetion = []
         for conv in self.convs:
+            y = F.relu(conv(x)).view(config.getint("data", "batch_size"), config.getint("net", "filters"), -1)
+            self.attention.append(F.pad(y, (0, gram - 1)))
             # print("gg",type(x))
-            y = F.max_pool1d(
-                F.relu(conv(x)).view(config.getint("data", "batch_size"), config.getint("net", "filters"), -1),
-                kernel_size=config.getint("data", "sentence_num") * config.getint("data",
-                                                                                  "sentence_len") - gram + 1).view(
+            y = F.max_pool1d(y, kernel_size=config.getint("data", "sentence_num") * config.getint("data",
+                                                                                                  "sentence_len") - gram + 1).view(
                 config.getint("data", "batch_size"), -1)
-            # y = F.pad(y,
-            #          (0, config.getint("data", "sentence_num") * config.getint("data", "sentence_len") - len(y[0][0])))
+            # y =
             conv_out.append(y)
             gram += 1
 
         conv_out = torch.cat(conv_out, dim=1)
-        # conv_out = conv_out.view(config.getint("data", "batch_size"), -1,
-        #                         config.getint("data", "sentence_num") * config.getint("data", "sentence_len"))
 
-        self.attention = conv_out
-        # print(conv_out)
+        self.attention = torch.cat(self.attention, dim=1)
         fc_input = conv_out
-        # print(fc_input)
 
         features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
                                                                                                              "filters")
