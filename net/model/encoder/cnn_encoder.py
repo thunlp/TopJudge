@@ -35,7 +35,7 @@ class CNNEncoder(nn.Module):
         # conv_out = conv_out.view(config.getint("data", "batch_size"), -1,
         #                         config.getint("data", "sentence_num") * config.getint("data", "sentence_len"))
 
-        # self.attention = conv_out.transpose(1, 2)
+        self.attention = conv_out
         # print(conv_out)
         fc_input = conv_out
         # print(fc_input)
