@@ -18,17 +18,22 @@ class CNNEncoder(nn.Module):
     def forward(self, x, doc_len, config):
         x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
         conv_out = []
-
+        gram = config.getint("net", "min_gram")
         for conv in self.convs:
             # print("gg",type(x))
-            y = conv(x).view(config.getint("data", "batch_size"), config.getint("net", "filters"), -1)
-            y = F.pad(y,
-                      (0, config.getint("data", "sentence_num") * config.getint("data", "sentence_len") - len(y[0][0])))
+            y = F.max_pool1d(F.relu(conv(x)).view(config.getint("data", "batch_size"), config.getint("net", "filters")),
+                             kernel_size=config.getint("data", "sentence_num") * config.getint("data",
+                                                                                               "sentence_len") - gram + 1)
+            print(y)
+            gg
+            # y = F.pad(y,
+            #          (0, config.getint("data", "sentence_num") * config.getint("data", "sentence_len") - len(y[0][0])))
             conv_out.append(y)
+            gram += 1
 
         conv_out = torch.cat(conv_out, dim=1)
-        conv_out = conv_out.view(config.getint("data", "batch_size"), -1,
-                                 config.getint("data", "sentence_num") * config.getint("data", "sentence_len"))
+        # conv_out = conv_out.view(config.getint("data", "batch_size"), -1,
+        #                         config.getint("data", "sentence_num") * config.getint("data", "sentence_len"))
 
         self.attention = conv_out.transpose(1, 2)
         # print(conv_out)
