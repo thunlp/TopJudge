@@ -19,7 +19,7 @@ class CNNEncoder(nn.Module):
         x = x.view(config.getint("data", "batch_size"), 1, -1, config.getint("data", "vec_size"))
         conv_out = []
         gram = config.getint("net", "min_gram")
-        self.attetion = []
+        self.attention = []
         for conv in self.convs:
             y = F.relu(conv(x)).view(config.getint("data", "batch_size"), config.getint("net", "filters"), -1)
             self.attention.append(F.pad(y, (0, gram - 1)))
