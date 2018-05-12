@@ -8,7 +8,7 @@ from net.parser import ConfigParser
 from net.data_formatter import get_time_id, check_sentence
 from net.loader import get_name
 
-in_path = r"/data/zhx/law/data/pku"
+in_path = r"/data/zhx/law/data/cjo"
 out_path = r"/disk/mysql/law_data/count_data"
 
 num_file = 20
@@ -82,6 +82,8 @@ def draw_out(in_path, out_path):
         data = json.loads(line)
         if not (check(data)):
             continue
+        if not (check_sentence(data["content"],config)):
+            continue
         count(data["meta"])
         cnt += 1
         if cnt % 500000 == 0:
@@ -97,6 +99,7 @@ def work(from_id, to_id):
 
 if __name__ == "__main__":
     work(0, 20)
+    print(total_cnt)
 
     f = open(os.path.join(in_path, "crit.txt"), "w")
     for x in crit.keys():
