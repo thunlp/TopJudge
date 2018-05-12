@@ -27,6 +27,7 @@ else:
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
 
 config = ConfigParser(configFilePath)
+config.config.set("train", "train_num_process", 0)
 
 init(config)
 init_transformer(config)
