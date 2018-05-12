@@ -14,7 +14,7 @@ class Pipeline(nn.Module):
         self.features = config.getint("net", "fc1_feature")
         for a in range(0, len(self.task_name)):
             self.encoder_list.append(CNNEncoder(config, usegpu))
-        self.encoder_list = torch.nn.ModuleList(self.encoder_list)
+        self.encoder_list = nn.ModuleList(self.encoder_list)
 
         self.out_fc = []
         for a in range(0, len(self.task_name)):
@@ -25,7 +25,7 @@ class Pipeline(nn.Module):
         for a in range(0, len(self.task_name)):
             mix_fc = []
             for b in range(0, len(self.task_name)):
-                mix_fc.append(nn.Linear(get_num_classes(self.task_name[a]), get_num_classes(self.task_name[b])))
+                mix_fc.append(nn.Linear(get_num_classes(self.task_name[a]), self.features))
             mix_fc = nn.ModuleList(mix_fc)
             self.mix_fc.append(mix_fc)
         self.mix_fc = nn.ModuleList(self.mix_fc)
@@ -33,6 +33,7 @@ class Pipeline(nn.Module):
         self.combine_fc = []
         for a in range(0, len(self.task_name)):
             self.combine_fc.append(nn.Linear(self.features, self.features))
+        self.combine_fc = nn.ModuleList(self.combine_fc)
 
         self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         self.softmax = nn.Softmax()
@@ -45,7 +46,7 @@ class Pipeline(nn.Module):
         accumulate = 0
         for a in range(0, len(self.task_name)):
             num = get_num_classes(self.task_name[a])
-            label_list.append(label[:, accumulate:accumulate + num])
+            label_list.append(label[:, accumulate:accumulate + num].float())
             accumulate += num
 
         outputs = []
@@ -53,12 +54,12 @@ class Pipeline(nn.Module):
         for a in range(0, len(self.task_name)):
             document_embedding = self.combine_fc[a](self.encoder_list[a].forward(x, doc_len, config))
             for b in range(0, a):
-                if nn.Module.training:
+                if self.training:
                     document_embedding = document_embedding + self.mix_fc[b][a](label_list[b])
                 else:
                     document_embedding = document_embedding + self.mix_fc[b][a](format_outputs[b])
-            output = self.out_fc(document_embedding)
-            self.out_fc.append(output)
+            output = self.out_fc[a](document_embedding)
+            outputs.append(output)
             output = self.softmax(output)
             format_outputs.append(output)
 
