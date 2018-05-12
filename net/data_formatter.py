@@ -198,8 +198,8 @@ def parse(data, config, transformer):
 
 
 def check(data, config):
-    #if not (check_sentence(data["content"], config)):
-    #    return False
+    if not (check_sentence(data["content"], config)):
+        return False
     if len(data["meta"]["criminals"]) != 1:
         return False
     if len(data["meta"]["crit"]) == 0 or len(data["meta"]["law"]) == 0:
