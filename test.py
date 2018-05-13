@@ -49,3 +49,14 @@ print("Model loaded.")
 print("Testing model...")
 test_file(net, test_dataset, usegpu, config, 0)
 print("Test done.")
+
+for x in train_dataset.read_process:
+    x.terminate()
+    print(x, x.is_alive())
+    x.join()
+    print(x, x.is_alive())
+for x in test_dataset.read_process:
+    x.terminate()
+    print(x, x.is_alive())
+    x.join()
+    print(x, x.is_alive())
