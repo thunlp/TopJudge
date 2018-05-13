@@ -43,9 +43,9 @@ net = get_model(model_name, config, usegpu)
 try:
     net.load_state_dict(
         torch.load(
-            os.path.join(config.get("train", "model_path"), "model-" + config.get("train", "pre_train") + ".pkl")))
+            os.path.join(config.get("output", "model_path"),config.get("output","model_name"), "model-" + config.get("train", "pre_train") + ".pkl")))
 except Exception as e:
-    pass
+    print(e)
 
 if torch.cuda.is_available() and usegpu:
     net = net.cuda()
