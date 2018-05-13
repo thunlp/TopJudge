@@ -10,7 +10,7 @@ def one_hot(indexes, nr_classes):
     zeros = Variable(torch.zeros(indexes.size() + (nr_classes,), out=indexes.data.new()))
     ones = torch.ones_like(indexes)
     zeros.scatter_(-1, indexes.unsqueeze(-1), ones.unsqueeze(-1))
-    return zeros
+    return zeros.float()
 
 
 class Pipeline(nn.Module):
@@ -68,7 +68,7 @@ class Pipeline(nn.Module):
                     document_embedding = document_embedding + self.mix_fc[b][a](format_outputs[b])
             output = self.out_fc[a](document_embedding)
             outputs.append(output)
-            output = torch.max(output, dim=1)
+            output = torch.max(output, dim=1)[1]
             output = one_hot(output, get_num_classes(self.task_name[a]))
             format_outputs.append(output)
 
