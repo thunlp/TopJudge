@@ -168,6 +168,7 @@ class reader():
         batch_size = config.getint("data", "batch_size")
 
         data_list = []
+        content_list = []
 
         if batch_size > len(data_list):
             if self.temp_file is None:
@@ -206,6 +207,7 @@ class reader():
                     while len(data_list) < batch_size and duplicate_time > 0:
                         duplicate_time -= 1
                         data_list.append(parse(y, config, transformer))
+                        content_list.append(y["content"])
                         self.read_cnt += 1
 
             if len(data_list) < batch_size:
@@ -215,7 +217,7 @@ class reader():
                                 shuffle=config.getboolean("data", "shuffle"), drop_last=True)
 
         for idx, data in enumerate(dataloader):
-            return data
+            return data, content_list
 
         return None
 
