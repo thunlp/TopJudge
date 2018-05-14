@@ -31,7 +31,7 @@ class svm():
         m.sort(reverse = True, key = lambda i : scores[0][i])
         vecs = []
         for i in range(config.getint("data", "top_k")):
-            vec, __ = generate_vector(self.law_content[self.law_dict[m[i]]])
+            vec, __ = generate_vector(self.law_content[self.law_dict[m[i]]], config, transformer)
             vecs.append(vec)
 
         return vecs
