@@ -156,12 +156,12 @@ class NNFactArt(nn.Module):
             tmp = torch.stack(self.svm.top2law(config, co))
             x_a.append(tmp)
         x_a = torch.stack(x_a)
-        print(x_a)
+        # print(x_a)
         x_a = torch.unbind(x_a, dim=1)
-        print(x_a)
+        # print(x_a)
         for i in range(self.top_k):
             x = x_a[i]
-            print(x)
+            # print(x)
             x = x.contiguous().view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
                                     config.getint("data", "sentence_len"), config.getint("data", "vec_size"))
             # print(x.size())
