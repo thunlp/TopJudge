@@ -7,6 +7,7 @@ from net.data_formatter import generate_vector
 
 class svm():
     def __init__(self, config):
+        print("begin loading svm model")
         f = open(os.path.join(config.get("data", "svm"), "xf_cut.json"), 'r')
         self.law_content = json.loads(f.readline())
         self.tfidf = joblib.load(os.path.join(config.get("data", "svm"), "cail.tfidf"))
