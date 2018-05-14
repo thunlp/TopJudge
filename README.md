@@ -48,7 +48,8 @@ To run our project, a config file is needed. If your config file is ``config``, 
         * ``MAX``: Using max-pooling on the LSTM output.
         * ``LAST``: Using the last output.
 * Field ``data``
-    * ``data_path``: The path of data. Under the data path, there should be two files named as ``crit.txt`` and ``law.txt``, containing the frequency information.
+    * ``data_path``: The path of data. Under the data path.
+    * ``dataset``: The dataset under the path of data. There should be two files named as ``crit.txt`` and ``law.txt``, containing the frequency information.
     * ``train_data``: The list of train data filenames.
     * ``test_data``: The list of test data filenames.
     * ``type_of_label``: The list of tasks.

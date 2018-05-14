@@ -158,7 +158,7 @@ class reader():
         self.lock.acquire()
         try:
             p = file_queue.get(timeout=1)
-            self.temp_file = open(os.path.join(config.get("data", "data_path"), p), "r")
+            self.temp_file = open(os.path.join(config.get("data", "data_path"), config.get("data", "dataset"), p), "r")
             print_info("Loading file from " + str(p))
         except Exception as e:
             self.temp_file = None
