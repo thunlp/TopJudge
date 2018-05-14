@@ -4,6 +4,7 @@ import json
 import os
 
 from net.data_formatter import generate_vector
+from net.file_reader import transformer
 
 class svm():
     def __init__(self, config):
