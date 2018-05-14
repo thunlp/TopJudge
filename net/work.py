@@ -131,7 +131,9 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             idx += batch_size
             cnt += 1
 
-            inputs, doc_len, labels = data
+            inputs, doc_len, label = data[0]
+            content = data[1]
+
             if torch.cuda.is_available() and usegpu:
                 inputs, doc_len, labels = Variable(inputs.cuda()), Variable(doc_len.cuda()), Variable(labels.cuda())
             else:
@@ -144,6 +146,8 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
 
             if isinstance(net, Pipeline):
                 outputs = net.forward(inputs, doc_len, config, labels)
+            elif isinstance(net, NNFactArtSeq) or isinstance(net, NNFactArt):
+                outputs = net.forward(inputs, doc_len, config, content)
             else:
                 outputs = net.forward(inputs, doc_len, config)
 
