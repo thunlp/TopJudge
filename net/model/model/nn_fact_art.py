@@ -156,6 +156,10 @@ class NNFactArt(nn.Module):
             tmp = torch.stack(self.svm.top2law(config, co))
             x_a.append(tmp)
         x_a = torch.stack(x_a)
+        if torch.cuda.is_available() and usegpu:
+            x_a = Variable(x_a.cuda())
+        else:
+            x_a = Variable(x_a)
         print(x_a)
         x_a = torch.unbind(x_a, dim=1)
         print(x_a)
