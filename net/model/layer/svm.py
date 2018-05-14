@@ -14,7 +14,7 @@ class svm():
         from net.file_reader import transformer
         for i in self.law_content.keys():
             tmp, __ = generate_vector(self.law_content[i], config, transformer)
-            if torch.cuda.is_available() and usegpu:
+            if usegpu:
                 self.law_content[i] = Variable(tmp.cuda())
             else:
                 self.law_content[i] = Variable(tmp)
