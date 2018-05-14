@@ -2,7 +2,7 @@ from sklearn.svm import LinearSVC
 from sklearn.externals import joblib
 import json
 import os
-import torch
+from torch.autograd import Variable
 
 from net.data_formatter import generate_vector
 
