@@ -2,17 +2,22 @@ from sklearn.svm import LinearSVC
 from sklearn.externals import joblib
 import json
 import os
+import torch
 
 from net.data_formatter import generate_vector
 
 class svm():
-    def __init__(self, config):
+    def __init__(self, config, usegpu):
         print("begin loading svm model")
         f = open(os.path.join(config.get("data", "svm"), "xf_cut.json"), 'r')
         self.law_content = json.loads(f.readline())
         from net.file_reader import transformer
         for i in self.law_content.keys():
-            self.law_content[i], __ = generate_vector(self.law_content[i], config, transformer)
+            tmp, __ = generate_vector(self.law_content[i], config, transformer)
+            if torch.cuda.is_available() and usegpu:
+                self.law_content[i] = Variable(tmp.cuda())
+            else:
+                self.law_content[i] = Variable(tmp)
         self.tfidf = joblib.load(os.path.join(config.get("data", "svm"), "cail.tfidf"))
         self.svm = joblib.load(os.path.join(config.get("data", "svm"), "cail_law.model"))
         f = open(os.path.join(config.get("data", "svm"), "law_dict.json"), 'r')

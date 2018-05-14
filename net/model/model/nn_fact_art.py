@@ -66,7 +66,7 @@ class NNFactArt(nn.Module):
         self.gru_document_a = nn.ModuleList(self.gru_document_a)
         self.attentions_a = nn.ModuleList(self.attentions_a)
         self.attentionw_a = nn.ModuleList(self.attentionw_a)
-        self.svm = svm(config)
+        self.svm = svm(config, usegpu)
         # self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         # self.outfc = nn.ModuleList(self.outfc)
 
@@ -156,10 +156,6 @@ class NNFactArt(nn.Module):
             tmp = torch.stack(self.svm.top2law(config, co))
             x_a.append(tmp)
         x_a = torch.stack(x_a)
-        if torch.cuda.is_available() and usegpu:
-            x_a = Variable(x_a.cuda())
-        else:
-            x_a = Variable(x_a)
         print(x_a)
         x_a = torch.unbind(x_a, dim=1)
         print(x_a)
