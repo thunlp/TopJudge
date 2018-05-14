@@ -1,10 +1,14 @@
 import configparser
+import os
 
 
 class ConfigParser:
     def __init__(self, path):
         self.default_config = configparser.RawConfigParser()
-        self.default_config.read("config/default.config")
+        if os.path.exists("config/default_local.config"):
+            self.default_config.read("config/default_local.config")
+        else:
+            self.default_config.read("config/default.config")
         self.config = configparser.RawConfigParser()
         self.config.read(path)
 
