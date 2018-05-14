@@ -4,6 +4,8 @@ import torch.nn.functional as F
 
 from net.model.layer import AttentionTanH
 from net.loader import get_num_classes
+from net.model.layer import svm
+
 
 
 class NNFactArt(nn.Module):
@@ -64,6 +66,7 @@ class NNFactArt(nn.Module):
         self.gru_document_a = nn.ModuleList(self.gru_document_a)
         self.attentions_a = nn.ModuleList(self.attentions_a)
         self.attentionw_a = nn.ModuleList(self.attentionw_a)
+        self.svm = svm(config)
         # self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         # self.outfc = nn.ModuleList(self.outfc)
 
@@ -148,6 +151,11 @@ class NNFactArt(nn.Module):
         uad = self.attfc_ad(df)
 
         out_art = []
+        x_a = []
+        for co in content:
+            tmp = torch.stack(self.svm.top2law(co))
+            x_a.append(tmp)
+        x_a = torch.stack(x_a)
         x_a = torch.unbind(x_a, dim=1)
         for i in range(self.top_k):
             x = x_a[i]
