@@ -144,6 +144,9 @@ def generate_graph(config):
     arr = s.replace("[", "").replace("]", "").split(",")
     graph = []
     n = 0
+    if (s=="[]"):
+        arr=[]
+        n=3
     for a in range(0, len(arr)):
         arr[a] = arr[a].replace("(", "").replace(")", "").split(" ")
         arr[a][0] = int(arr[a][0])

@@ -42,15 +42,15 @@ for file_name in file_list:
             result["meta"]["crit"] = data["meta"]["accusation"]
             result["meta"]["time"] = {}
             result["meta"]["time"]["youqi"] = [data["meta"]["term_of_imprisonment"]["imprisonment"]]
-            result["meta"]["time"]["guanzhi"] = [data["meta"]["term_of_imprisonment"]["control"]]
-            result["meta"]["time"]["huanxing"] = [data["meta"]["term_of_imprisonment"]["probation"]]
-            result["meta"]["time"]["juyi"] = [data["meta"]["term_of_imprisonment"]["detention"]]
+            result["meta"]["time"]["guanzhi"] = []
+            result["meta"]["time"]["huanxing"] = []
+            result["meta"]["time"]["juyi"] = []
             result["meta"]["time"]["sixing"] = data["meta"]["term_of_imprisonment"]["death_penalty"]
             result["meta"]["time"]["wuqi"] = data["meta"]["term_of_imprisonment"]["life_imprisonment"]
             result["meta"]["criminals"] = data["meta"]["criminals"]
             result["meta"]["law"] = []
             for x in data["meta"]["relevant_articles"]:
-                result["meta"]["law"].append((x["article"], x["option"], x["section"]))
+                result["meta"]["law"].append((x, 0, 0))
 
             fact = cut(data["fact"])
             res = [[]]
