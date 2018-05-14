@@ -29,7 +29,7 @@ def test_file(net, test_dataset, usegpu, config, epoch):
         if data is None:
             break
 
-        inputs, doc_len, label = data[0]
+        inputs, doc_len, labels = data[0]
         content = data[1]
 
         net.init_hidden(config, usegpu)
@@ -131,7 +131,7 @@ def train_file(net, train_dataset, test_dataset, usegpu, config):
             idx += batch_size
             cnt += 1
 
-            inputs, doc_len, label = data[0]
+            inputs, doc_len, labels = data[0]
             content = data[1]
 
             if torch.cuda.is_available() and usegpu:
