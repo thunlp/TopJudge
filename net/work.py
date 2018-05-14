@@ -7,7 +7,7 @@ import torch.optim as optim
 from net.model.loss import cross_entropy_loss, one_cross_entropy_loss, log_regression
 from net.utils import calc_accuracy, gen_result, print_info
 from net.loader import get_num_classes
-from net.model.model import Pipeline
+from net.model.model import Pipeline, NNFactArtSeq, NNFactArt
 
 
 def test_file(net, test_dataset, usegpu, config, epoch):
@@ -29,7 +29,8 @@ def test_file(net, test_dataset, usegpu, config, epoch):
         if data is None:
             break
 
-        inputs, doc_len, labels = data
+        inputs, doc_len, label = data[0]
+        content = data[1]
 
         net.init_hidden(config, usegpu)
 
@@ -40,6 +41,8 @@ def test_file(net, test_dataset, usegpu, config, epoch):
 
         if isinstance(net, Pipeline):
             outputs = net.forward(inputs, doc_len, config, labels)
+        elif isinstance(net, NNFactArtSeq) or isinstance(net, NNFactArt):
+            outputs = net.forward(inputs, doc_len, config, content)
         else:
             outputs = net.forward(inputs, doc_len, config)
 

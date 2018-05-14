@@ -143,7 +143,7 @@ class NNFactArtSeq(nn.Module):
                     torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim)),
                     torch.autograd.Variable(torch.zeros(config.getint("data", "batch_size"), self.hidden_dim))))
 
-    def forward(self, x, x_a, doc_len, config):
+    def forward(self, x, doc_len, config, content):
 
         x = x.view(config.getint("data", "batch_size") * config.getint("data", "sentence_num"),
                    config.getint("data", "sentence_len"),
