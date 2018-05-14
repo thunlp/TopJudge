@@ -20,7 +20,7 @@ class svm():
         print("svm model load success")
     # law_content, tfidf, svm, law_dict = init()
 
-    def top2law(self,fact):
+    def top2law(self, config, fact):
         tmp = ''
         for s in fact:
                 tmp += ' '.join(s)
