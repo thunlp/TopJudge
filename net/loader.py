@@ -8,7 +8,7 @@ law_dict = {}
 
 def init(config):
     min_frequency = config.getint("data", "min_frequency")
-    data_path = config.get("data", "data_path")
+    data_path = os.path.join(config.get("data", "data_path"), config.get("data", "dataset"))
     f = open(os.path.join(data_path, "crit.txt"), "r")
     cnt1 = 0
     for line in f:
