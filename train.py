@@ -9,6 +9,7 @@ from net.work import train_file
 from net.utils import print_info
 from net.parser import ConfigParser
 from net.loader import init
+from net.utils import init_thulac
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', '-c')
@@ -29,8 +30,14 @@ else:
 
 config = ConfigParser(configFilePath)
 
-init(config)
-init_transformer(config)
+
+def self_init():
+    init(config)
+    init_transformer(config)
+    init_thulac(config)
+
+
+self_init()
 train_dataset, test_dataset = init_dataset(config)
 
 print_info("Building net...")
@@ -43,7 +50,8 @@ net = get_model(model_name, config, usegpu)
 try:
     net.load_state_dict(
         torch.load(
-            os.path.join(config.get("output", "model_path"),config.get("output","model_name"), "model-" + config.get("train", "pre_train") + ".pkl")))
+            os.path.join(config.get("output", "model_path"), config.get("output", "model_name"),
+                         "model-" + config.get("train", "pre_train") + ".pkl")))
 except Exception as e:
     print(e)
 

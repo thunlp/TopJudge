@@ -7,6 +7,7 @@ from net.file_reader import init_dataset, init_transformer
 from net.work import test_file
 from net.parser import ConfigParser
 from net.loader import init
+from net.utils import init_thulac
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', '-m')
@@ -29,8 +30,14 @@ else:
 config = ConfigParser(configFilePath)
 config.config.set("train", "train_num_process", 0)
 
-init(config)
-init_transformer(config)
+
+def self_init():
+    init(config)
+    init_transformer(config)
+    init_thulac(config)
+
+
+self_init()
 train_dataset, test_dataset = init_dataset(config)
 
 print("Building net...")

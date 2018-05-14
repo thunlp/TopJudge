@@ -7,7 +7,12 @@ import time
 
 from net.loader import get_name
 
-cutter = thulac.thulac(model_path=r"/data/zhx/thulac/models", seg_only=True, filt=False)
+cutter = None
+
+
+def init_thulac(config):
+    global cutter
+    cutter = thulac.thulac(model_path=config.get("data","thulac"), seg_only=True, filt=False)
 
 
 def print_time():
@@ -144,9 +149,9 @@ def generate_graph(config):
     arr = s.replace("[", "").replace("]", "").split(",")
     graph = []
     n = 0
-    if (s=="[]"):
-        arr=[]
-        n=3
+    if (s == "[]"):
+        arr = []
+        n = 3
     for a in range(0, len(arr)):
         arr[a] = arr[a].replace("(", "").replace(")", "").split(" ")
         arr[a][0] = int(arr[a][0])
