@@ -4,7 +4,6 @@ import json
 import os
 
 from net.data_formatter import generate_vector
-from net.file_reader import transformer
 
 class svm():
     def __init__(self, config):
@@ -31,6 +30,8 @@ class svm():
         m = [i for i in range(len(scores[0]))]
         m.sort(reverse = True, key = lambda i : scores[0][i])
         vecs = []
+        from net.file_reader import transformer
+        print(transformer)
         for i in range(config.getint("data", "top_k")):
             vec, __ = generate_vector(self.law_content[self.law_dict[m[i]]], config, transformer)
             vecs.append(vec)
