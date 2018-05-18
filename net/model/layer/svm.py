@@ -10,7 +10,11 @@ class svm():
     def __init__(self, config, usegpu):
         print("begin loading svm model")
         f = open(os.path.join(config.get("data", "svm"), "xf_cut.json"), 'r')
-        self.law_content = json.loads(f.readline())
+        tmp = json.loads(f.readline())
+        self.law_content = {}
+        for key in tmp.keys():
+            self.law_content[(key[0],key[1])] =tmp[key]
+
         from net.file_reader import transformer
         for i in self.law_content.keys():
             tmp, __ = generate_vector(self.law_content[i], config, transformer)
@@ -27,7 +31,7 @@ class svm():
         # f.close()
         self.law_dict = {}
         for key in tmp.keys():
-                self.law_dict[tmp[key]] = (key[0],key[1])
+                self.law_dict[tmp[key]] = key
         print("svm model load success")
     # law_content, tfidf, svm, law_dict = init()
 
