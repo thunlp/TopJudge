@@ -27,7 +27,7 @@ class svm():
         # f.close()
         self.law_dict = {}
         for key in tmp.keys():
-                self.law_dict[tmp[key]] = key
+                self.law_dict[tmp[key]] = list(key)
         print("svm model load success")
     # law_content, tfidf, svm, law_dict = init()
 
