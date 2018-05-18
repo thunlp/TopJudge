@@ -23,7 +23,8 @@ class svm():
         # f = open(os.path.join(config.get("data", "svm"), "law_dict.json"), 'r')
         from net.loader import law_dict
         tmp = law_dict.copy()
-        f.close()
+        print(tmp)
+        # f.close()
         self.law_dict = {}
         for key in tmp.keys():
                 self.law_dict[tmp[key]] = key
