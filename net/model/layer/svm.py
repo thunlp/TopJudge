@@ -14,7 +14,7 @@ class svm():
         self.law_content = {}
         for key in tmp.keys():
             self.law_content[(key[0],key[1])] =tmp[key]
-
+        print(self.law_content[(341, 0)])
         from net.file_reader import transformer
         for i in self.law_content.keys():
             tmp, __ = generate_vector(self.law_content[i], config, transformer)
