@@ -19,7 +19,7 @@ class svm():
             else:
                 self.law_content[i] = Variable(tmp)
         self.tfidf = joblib.load(os.path.join(config.get("data", "svm"), "{0}.tfidf".format(config.get("data", "dataset"))))
-        self.svm = joblib.load(os.path.join(config.get("data", "svm"), "{0}_{1}.model".format(config.get("data", "dataset"), config.get("data", "type_of_label"))))
+        self.svm = joblib.load(os.path.join(config.get("data", "svm"), "{0}_law.model".format(config.get("data", "dataset"))))
         # f = open(os.path.join(config.get("data", "svm"), "law_dict.json"), 'r')
         from net.loader import law_dict
         tmp = law_dict.copy()
