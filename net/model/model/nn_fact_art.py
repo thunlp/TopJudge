@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from net.model.layer import AttentionTanH
 from net.loader import get_num_classes
 from net.model.layer import svm
-
+from net.model.decoder import FCDecoder
 
 
 class NNFactArt(nn.Module):
@@ -67,6 +67,7 @@ class NNFactArt(nn.Module):
         self.attentions_a = nn.ModuleList(self.attentions_a)
         self.attentionw_a = nn.ModuleList(self.attentionw_a)
         self.svm = svm(config, usegpu)
+        self.decoder = FCDecoder(config, usegpu)
         # self.dropout = nn.Dropout(config.getfloat("train", "dropout"))
         # self.outfc = nn.ModuleList(self.outfc)
 
@@ -185,6 +186,7 @@ class NNFactArt(nn.Module):
         # print(da.size())
         final_out = torch.cat((df, da), dim=1)
         # print(final_out.size())
-        outputs = [self.outfc(F.relu(self.midfc2(F.relu(self.midfc1(final_out)))))]
+        outputs = self.decoder.forward(final_out, doc_len, config)
+        # outputs = [self.outfc(F.relu(self.midfc2(F.relu(self.midfc1(final_out)))))]
 
         return outputs
