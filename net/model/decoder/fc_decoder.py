@@ -9,8 +9,7 @@ class FCDecoder(nn.Module):
     def __init__(self, config, usegpu):
         super(FCDecoder, self).__init__()
         try:
-            features = (config.getint("net", "max_gram") - config.getint("net", "min_gram") + 1) * config.getint("net",
-                                                                                                                 "filters")
+            features = config.getint("net", "fc1_feature")
         except configparser.NoOptionError:
             features = config.getint("net", "hidden_size")
 
