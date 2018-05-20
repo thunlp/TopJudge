@@ -18,14 +18,16 @@ class svm():
                 self.law_content[i] = Variable(tmp.cuda())
             else:
                 self.law_content[i] = Variable(tmp)
-        self.tfidf = joblib.load(os.path.join(config.get("data", "svm"), "cail.tfidf"))
-        self.svm = joblib.load(os.path.join(config.get("data", "svm"), "cail_law.model"))
-        f = open(os.path.join(config.get("data", "svm"), "law_dict.json"), 'r')
-        tmp = json.loads(f.readline())
-        f.close()
+        self.tfidf = joblib.load(os.path.join(config.get("data", "svm"), "{0}.tfidf".format(config.get("data", "dataset"))))
+        self.svm = joblib.load(os.path.join(config.get("data", "svm"), "{0}_law.model".format(config.get("data", "dataset"))))
+        # f = open(os.path.join(config.get("data", "svm"), "law_dict.json"), 'r')
+        from net.loader import law_dict
+        tmp = law_dict.copy()
+        print(tmp)
+        # f.close()
         self.law_dict = {}
         for key in tmp.keys():
-                self.law_dict[tmp[key]] = key
+                self.law_dict[tmp[key]] = str([key[0], key[1]])
         print("svm model load success")
     # law_content, tfidf, svm, law_dict = init()
 
