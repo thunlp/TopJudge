@@ -24,12 +24,6 @@ def test_file(net, test_dataset, usegpu, config, epoch):
         for b in range(0, get_num_classes(task_name[a])):
             running_acc[a].append({"TP": 0, "FP": 0, "FN": 0, "TN": 0})
 
-    mat = []
-    for a in range(0, get_num_classes("time")):
-        mat.append([])
-        for b in range(0, get_num_classes("time")):
-            mat[-1].append(0)
-
     while True:
         data = test_dataset.fetch_data(config)
         if data is None:
@@ -62,20 +56,6 @@ def test_file(net, test_dataset, usegpu, config, epoch):
         labels = reals
         for a in range(0, len(task_name)):
             running_acc[a] = calc_accuracy(outputs[a], labels[a], task_loss_type[a], running_acc[a])
-            if task_name[a] == "time":
-                id1 = torch.max(outputs[a], dim=1)[1]
-                id2 = torch.max(labels[a], dim=1)[1]
-                for a in range(0, len(id1)):
-                    it_is = int(id1[a])
-                    should_be = int(id2[a])
-                    mat[should_be][it_is] += 1
-
-    f = open("test.out", "w")
-    for a in range(0, len(mat)):
-        for b in range(0, len(mat[a])):
-            print(mat[a][b], end=' ', file=f)
-        print("", file=f)
-    f.close()
 
     net.train()
 
