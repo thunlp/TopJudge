@@ -9,7 +9,8 @@ match_list = {
     "LSTM": LSTM,
     "ArtFact": NNFactArt,
     "ArtFactSeq": NNFactArtSeq,
-    "Pipeline": Pipeline
+    "Pipeline": Pipeline,
+    "HLSTMSeq": HLSTMSeq
 }
 
 
