@@ -1,6 +1,6 @@
-# Law_pre
+# TopJudge
 
-Law_pre is the shortcut for law prediction. This is a project uses the method named as SeqJudge to solve the Legal Judgment Prediction(LJP).
+This is a project uses the method named as TopJudge to solve the Legal Judgment Prediction(LJP).
 
 ## Usage
 
