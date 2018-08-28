@@ -1,6 +1,6 @@
 # TopJudge
 
-This is a project uses the method named as TopJudge to solve the Legal Judgment Prediction(LJP).
+This is source code of TopJudge which is used to solve the Legal Judgment Prediction(LJP). The details of this model can be found from <a href="http://thunlp.org/~tcc/publications/emnlp2018_dag.pdf" target="_blank">http://thunlp.org/~tcc/publications/emnlp2018_dag.pdf</a>
 
 ## Usage
 
@@ -84,7 +84,16 @@ To run our project, a config file is needed. If your config file is ``config``, 
 
 ## Reference
 
-Under construction.
+BibTex:
+
+```
+@InProceedings{zhong2018topjudge,
+  Title                    = {Legal Judgment Prediction via Topological Learning},
+  Author                   = {Zhong, Haoxi and Guo, Zhipeng and Tu, Cunchao and Xiao, Chaojun and Liu, Zhiyuan and Sun, Maosong},
+  Booktitle                = {Proceedings of EMNLP},
+  Year                     = {2018}
+}
+```
 
 
 
